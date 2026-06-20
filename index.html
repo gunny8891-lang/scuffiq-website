@@ -245,7 +245,6 @@ select option{background:#1a1a1a;color:#fff;}
         </div>
         <div class="hero-stats">
           <div class="h-stat"><div class="num">500+</div><div class="lbl">Repairs done</div></div>
-          <div class="h-stat"><div class="num">5.0★</div><div class="lbl">Google rating</div></div>
           <div class="h-stat"><div class="num">&lt;1hr</div><div class="lbl">Quote turnaround</div></div>
         </div>
       </div>
@@ -528,7 +527,7 @@ async function analysePhoto(file){
       r.onerror=rej;
       r.readAsDataURL(file);
     });
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+    var resp=await fetch('https://scuffiq-ai.gunny8891.workers.dev',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
