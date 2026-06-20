@@ -550,15 +550,40 @@ async function analysePhoto(file){
   }
 }
 
-function submitQuote(){
+async function submitQuote(){
   var fname=document.getElementById('fname').value.trim();
+  var lname=document.getElementById('lname').value.trim();
   var email=document.getElementById('email').value.trim();
+  var make=document.getElementById('vmake')?document.getElementById('vmake').value.trim():'';
+  var model=document.getElementById('vmodel')?document.getElementById('vmodel').value.trim():'';
+  var postcode=document.getElementById('postcode').value.trim();
+  var service=document.getElementById('service').value;
+  var aiAssessment=document.getElementById('ai-text')?document.getElementById('ai-text').innerHTML:'No photo uploaded';
   if(!fname||!email){alert('Please enter your name and email address so we can get back to you.');return;}
   var btn=document.querySelector('.submit-btn');
-  btn.textContent='✓ Quote request sent!';
-  btn.style.background='#00a36b';
+  btn.textContent='Sending...';
   btn.disabled=true;
-  setTimeout(function(){btn.textContent='Get my free quote →';btn.style.background='';btn.disabled=false;},5000);
+  try{
+    await fetch('https://formspree.io/f/xwvdepqv',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        name:fname+' '+lname,
+        email:email,
+        vehicle:make+' '+model,
+        postcode:postcode,
+        service:service,
+        ai_assessment:aiAssessment
+      })
+    });
+    btn.textContent='✓ Quote request sent!';
+    btn.style.background='#00a36b';
+    setTimeout(function(){btn.textContent='Get my free quote →';btn.style.background='';btn.disabled=false;},5000);
+  }catch(err){
+    btn.textContent='Get my free quote →';
+    btn.disabled=false;
+    alert('Something went wrong. Please email us at hello@scuffiq.com');
+  }
 }
 </script>
 </body>
