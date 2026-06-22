@@ -381,7 +381,7 @@ select option{background:#1a1a1a;color:#fff;}
               <div class="success-title">Quote request received!</div>
               <p class="success-sub">
                 We've emailed your AI quote summary to <span class="success-email" id="successEmail"></span>.<br><br>
-                The indicative prices are based on your photos. When you're ready to book, a ScuffIQ technician will review your photos and confirm a firm price before your appointment.<br><br>
+                The indicative prices are based on your photos. When you're ready to book, a ScuffIQ technician will review your photos and provide a firm price before your appointment.<br><br>
                 <strong style="color:var(--white);">We'll be in touch within the hour.</strong>
               </p>
             </div>
@@ -706,7 +706,7 @@ async function analysePhoto(idx) {
   var make = document.getElementById('make').value;
   var model = document.getElementById('model').value;
   try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+    var resp = await fetch('https://scuffiq-ai.gunny8891.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -724,9 +724,10 @@ async function analysePhoto(idx) {
     var data = await resp.json();
     var raw = data.content && data.content[0] && data.content[0].text;
     var parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    var priceVal = parsed.price && parsed.price !== 'N/A' && parsed.price !== 'Unknown' ? 'Indicative price: ' + parsed.price : null;
     uploadedPhotos[idx].result = {
       text: parsed.assessment,
-      price: parsed.price !== 'N/A' ? 'Indicative price: ' + parsed.price : null,
+      price: priceVal,
       service: parsed.service,
       confidence: parsed.confidence,
       raw: parsed
@@ -777,7 +778,7 @@ async function submitQuote() {
         service_requested: service,
         photos_uploaded: uploadedPhotos.length+' photo(s)',
         ai_quotes: photoSummaries,
-        message: 'Thank you '+fname+' — your quote request has been received. The indicative prices above are based on your photos. When you are ready to book, a ScuffIQ technician will review your photos and confirm a firm price before your appointment. We will be in touch within the hour.',
+        message: 'Thank you '+fname+' — your quote request has been received. The indicative prices above are based on your photos. When you are ready to book, a ScuffIQ technician will review your photos and provide a firm price before your appointment. We will be in touch within the hour.',
         _cc: 'hello@scuffiq.com'
       })
     });
