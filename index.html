@@ -762,24 +762,64 @@ async function submitQuote() {
     return 'Photo '+(i+1)+' ('+p.name+'):\nAssessment: '+(r ? r.text : 'Pending')+'\nIndicative price: '+(r && r.price ? r.price.replace('Indicative price: ','') : 'Pending')+'\nService: '+(r && r.service ? r.service : service);
   }).join('\n\n---\n\n');
 
+  // Build detailed customer email body
+  var customerEmailLines = [
+    'Thank you for uploading your details, please see a current summary of the information submitted and indicative quotes provided. We will be back with a firm quote within the hour with a booking link of next availability. Many thanks ScuffIQ.',
+    '',
+    '─────────────────────────────',
+    'YOUR DETAILS',
+    '─────────────────────────────',
+    'Name: '+fname+' '+lname,
+    'Email: '+email,
+    'Phone: '+phone,
+    'Vehicle: '+make+' '+model,
+    'Postcode: '+postcode,
+    'Service requested: '+service,
+    'Photos uploaded: '+uploadedPhotos.length+' photo(s)',
+    '',
+    '─────────────────────────────',
+    'AI QUOTE SUMMARY',
+    '─────────────────────────────',
+    ''
+  ];
+
+  uploadedPhotos.forEach(function(p, i) {
+    var r = p.result;
+    customerEmailLines.push('Photo '+(i+1)+': '+p.name);
+    customerEmailLines.push('Assessment: '+(r ? r.text : 'Pending technician review'));
+    customerEmailLines.push('Indicative price: '+(r && r.price ? r.price.replace('Indicative price: ','') : 'Pending technician review'));
+    customerEmailLines.push('Service: '+(r && r.service ? r.service : service));
+    customerEmailLines.push('');
+    customerEmailLines.push('- - -');
+    customerEmailLines.push('');
+  });
+
+  customerEmailLines.push('─────────────────────────────');
+  customerEmailLines.push('IMPORTANT: Indicative prices are based on AI analysis of your photos. A ScuffIQ technician will review your submission and provide a firm price within the hour, along with a booking link showing our next available appointments.');
+  customerEmailLines.push('─────────────────────────────');
+  customerEmailLines.push('');
+  customerEmailLines.push('ScuffIQ | hello@scuffiq.com | 07793 279739');
+  customerEmailLines.push('Covering North London, Hertfordshire & Essex');
+
+  var customerEmailBody = customerEmailLines.join('\n');
+
   try {
-    // Customer confirmation email
+    // Customer confirmation email — sent TO the customer
     await fetch('https://formspree.io/f/xwvdepqv', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify({
-        _replyto: email,
-        _subject: 'ScuffIQ — Your AI quote summary for your '+make+' '+model,
-        name: fname+' '+lname,
-        email: email,
-        phone: phone,
+        _replyto: 'hello@scuffiq.com',
+        _subject: 'ScuffIQ — Your quote summary | '+make+' '+model,
+        _to: email,
+        full_email_body: customerEmailBody,
+        customer_name: fname+' '+lname,
         vehicle: make+' '+model,
         postcode: postcode,
-        service_requested: service,
-        photos_uploaded: uploadedPhotos.length+' photo(s)',
-        ai_quotes: photoSummaries,
-        message: 'Thank you '+fname+' — your quote request has been received. The indicative prices above are based on your photos. When you are ready to book, a ScuffIQ technician will review your photos and provide a firm price before your appointment. We will be in touch within the hour.',
-        _cc: 'hello@scuffiq.com'
+        service: service,
+        photos: uploadedPhotos.length+' photo(s)',
+        ai_quote_summary: photoSummaries,
+        message: customerEmailBody
       })
     });
 
