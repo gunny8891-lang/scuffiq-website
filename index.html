@@ -804,26 +804,22 @@ async function submitQuote() {
   var customerEmailBody = customerEmailLines.join('\n');
 
   try {
-    // Customer confirmation email — sent TO the customer
-    await fetch('https://formspree.io/f/xwvdepqv', {
+    // EMAIL 1: Customer confirmation — sent directly to customer via Web3Forms (free, supports dynamic to address)
+    // Web3Forms access key is FREE — get yours at web3forms.com using hello@scuffiq.com
+    await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify({
-        _replyto: 'hello@scuffiq.com',
-        _subject: 'ScuffIQ — Your quote summary | '+make+' '+model,
-        _to: email,
-        full_email_body: customerEmailBody,
-        customer_name: fname+' '+lname,
-        vehicle: make+' '+model,
-        postcode: postcode,
-        service: service,
-        photos: uploadedPhotos.length+' photo(s)',
-        ai_quote_summary: photoSummaries,
-        message: customerEmailBody
+        access_key: '8cbeb59e-0b79-4969-89b1-1ecaab41638f',
+        to: email,
+        from_name: 'ScuffIQ',
+        subject: 'ScuffIQ — Your quote summary | '+make+' '+model,
+        message: customerEmailBody,
+        botcheck: ''
       })
     });
 
-    // Technician notification email
+    // EMAIL 2: Technician alert — sent to hello@scuffiq.com via Formspree
     await fetch('https://formspree.io/f/xwvdepqv', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Accept':'application/json'},
@@ -838,8 +834,7 @@ async function submitQuote() {
         service_requested: service,
         photos_count: uploadedPhotos.length+' photo(s)',
         ai_assessments: photoSummaries,
-        action_required: 'Please review the AI assessments above and confirm firm prices to the customer within 1 hour. Reply to this email or call '+phone+'.',
-        _to: 'hello@scuffiq.com'
+        action_required: 'Please review the AI assessments above and provide a firm price to the customer within 1 hour. Reply to this email or call '+phone+'.'
       })
     });
 
