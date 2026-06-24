@@ -767,6 +767,17 @@ async function submitQuote() {
       + 'Service: ' + (r && r.service ? r.service : service);
   }).join('\n\n---\n\n');
 
+  // Prepare uploaded photos as base64 attachment variables for EmailJS.
+  // In each EmailJS template, add Variable Attachments using these parameter names:
+  // photo_1, photo_2, photo_3, photo_4, photo_5, photo_6
+  // Suggested filename variables: {{photo_1_name}}, {{photo_2_name}}, etc.
+  var photoAttachments = {};
+  uploadedPhotos.forEach(function(p, i) {
+    var num = i + 1;
+    photoAttachments['photo_' + num] = p.dataUrl;
+    photoAttachments['photo_' + num + '_name'] = p.name || ('scuffiq-photo-' + num + '.jpg');
+  });
+
   var templateParams = {
     customer_name:   fname + ' ' + lname,
     customer_email:  email,
@@ -777,7 +788,21 @@ async function submitQuote() {
     service_type:    service,
     photo_count:     uploadedPhotos.length,
     ai_summary:      aiSummary,
-    submission_time: new Date().toLocaleString('en-GB')
+    submission_time: new Date().toLocaleString('en-GB'),
+
+    // Photo attachment variables for EmailJS templates
+    photo_1: photoAttachments.photo_1 || '',
+    photo_1_name: photoAttachments.photo_1_name || '',
+    photo_2: photoAttachments.photo_2 || '',
+    photo_2_name: photoAttachments.photo_2_name || '',
+    photo_3: photoAttachments.photo_3 || '',
+    photo_3_name: photoAttachments.photo_3_name || '',
+    photo_4: photoAttachments.photo_4 || '',
+    photo_4_name: photoAttachments.photo_4_name || '',
+    photo_5: photoAttachments.photo_5 || '',
+    photo_5_name: photoAttachments.photo_5_name || '',
+    photo_6: photoAttachments.photo_6 || '',
+    photo_6_name: photoAttachments.photo_6_name || ''
   };
 
   try {
@@ -793,7 +818,7 @@ async function submitQuote() {
     console.error('EmailJS error:', err);
     btn.disabled = false;
     btn.textContent = 'Submit quote request \u2192';
-    alert('Something went wrong sending your quote. Please email us directly at hello@scuffiq.com');
+    alert('Email error: ' + (err.text || err.message || JSON.stringify(err)) + '\n\nPlease email us directly at hello@scuffiq.com');
   }
 }
 
