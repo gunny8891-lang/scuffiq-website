@@ -216,8 +216,6 @@ select option{background:#1a1a1a;color:#fff;}
 ::-webkit-scrollbar-track{background:var(--black);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init('o6E2E27bQP4s86uTc');</script>
 </head>
 <body>
 
@@ -767,18 +765,7 @@ async function submitQuote() {
       + 'Service: ' + (r && r.service ? r.service : service);
   }).join('\n\n---\n\n');
 
-  // Prepare uploaded photos as base64 attachment variables for EmailJS.
-  // In each EmailJS template, add Variable Attachments using these parameter names:
-  // photo_1, photo_2, photo_3, photo_4, photo_5, photo_6
-  // Suggested filename variables: {{photo_1_name}}, {{photo_2_name}}, etc.
-  var photoAttachments = {};
-  uploadedPhotos.forEach(function(p, i) {
-    var num = i + 1;
-    photoAttachments['photo_' + num] = p.dataUrl;
-    photoAttachments['photo_' + num + '_name'] = p.name || ('scuffiq-photo-' + num + '.jpg');
-  });
-
-  var templateParams = {
+  var quotePayload = {
     customer_name:   fname + ' ' + lname,
     customer_email:  email,
     customer_phone:  phone,
@@ -789,33 +776,33 @@ async function submitQuote() {
     photo_count:     uploadedPhotos.length,
     ai_summary:      aiSummary,
     submission_time: new Date().toLocaleString('en-GB'),
-
-    // Photo attachment variables for EmailJS templates
-    photo_1: photoAttachments.photo_1 || '',
-    photo_1_name: photoAttachments.photo_1_name || '',
-    photo_2: photoAttachments.photo_2 || '',
-    photo_2_name: photoAttachments.photo_2_name || '',
-    photo_3: photoAttachments.photo_3 || '',
-    photo_3_name: photoAttachments.photo_3_name || '',
-    photo_4: photoAttachments.photo_4 || '',
-    photo_4_name: photoAttachments.photo_4_name || '',
-    photo_5: photoAttachments.photo_5 || '',
-    photo_5_name: photoAttachments.photo_5_name || '',
-    photo_6: photoAttachments.photo_6 || '',
-    photo_6_name: photoAttachments.photo_6_name || ''
+    photos: uploadedPhotos.map(function(p, i) {
+      return {
+        name: p.name || ('scuffiq-photo-' + (i + 1) + '.jpg'),
+        dataUrl: p.dataUrl
+      };
+    })
   };
 
   try {
-    // Template 1 → customer confirmation email
-    await emailjs.send('service_pgaip4m', 'template_9g88qco', templateParams);
-    // Template 2 → internal lead alert to hello@scuffiq.com
-    await emailjs.send('service_pgaip4m', 'template_i2syebr', templateParams);
+    var response = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(quotePayload)
+    });
+
+    if (!response.ok) {
+      var errorText = await response.text();
+      throw new Error(errorText || 'Failed to send quote request');
+    }
 
     document.getElementById('successEmail').textContent = email;
     setStep(3);
 
   } catch(err) {
-    console.error('EmailJS error:', err);
+    console.error('Worker email error:', err);
     btn.disabled = false;
     btn.textContent = 'Submit quote request \u2192';
     alert('Email error: ' + (err.text || err.message || JSON.stringify(err)) + '\n\nPlease email us directly at hello@scuffiq.com');
