@@ -1,432 +1,840 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="x-apple-disable-message-reformatting" />
-  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
-  <title>Quote Request Received — ScuffIQ</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScuffIQ — Smart Repair Specialists | North London, Hertfordshire & Essex</title>
+<meta name="description" content="ScuffIQ offers expert scratch, scuff and alloy wheel smart repair across North London, Hertfordshire and Essex. Upload a photo for an instant AI quote.">
+<style>
+:root{
+  --black:#000;--carbon:#080808;--panel:#111;--border:#1e1e1e;
+  --grey:#555;--light:#999;--neon:#00D4FF;--neon-dk:#00A3C4;
+  --white:#fff;--rad:10px;--rad-lg:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+.container{max-width:1060px;margin:0 auto;padding:0 20px;}
 
-  <!--[if mso]>
-  <xml>
-    <o:OfficeDocumentSettings>
-      <o:AllowPNG/>
-      <o:PixelsPerInch>96</o:PixelsPerInch>
-    </o:OfficeDocumentSettings>
-  </xml>
-  <![endif]-->
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;}
+.nav-logo{font-size:21px;font-weight:700;letter-spacing:-0.5px;}
+.nav-logo span{color:var(--neon);}
+.nav-links{display:flex;align-items:center;gap:24px;list-style:none;}
+.nav-links a{font-size:13px;color:var(--grey);transition:color .2s;}
+.nav-links a:hover{color:var(--white);}
+.nav-cta{background:var(--neon);color:var(--black);border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--white);border-radius:2px;}
+.mob-menu{display:none;flex-direction:column;background:var(--carbon);border-bottom:1px solid var(--border);padding:14px 20px;}
+.mob-menu.open{display:flex;}
+.mob-menu a{font-size:15px;color:var(--grey);padding:11px 0;border-bottom:1px solid var(--border);}
+.mob-menu a:last-child{border-bottom:none;}
+.mob-cta{margin-top:12px;background:var(--neon);color:var(--black);font-weight:700;padding:13px;border-radius:8px;text-align:center;font-size:15px;display:block;}
 
-  <style type="text/css">
-    /* ── Reset ── */
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; }
-    body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #0d0d0d; }
+/* HERO */
+.hero{background:var(--black);padding:60px 0 50px;border-bottom:1px solid var(--border);}
+.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.25);color:var(--neon);font-size:11px;font-weight:700;letter-spacing:.07em;padding:5px 14px;border-radius:20px;margin-bottom:20px;text-transform:uppercase;}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--neon);border-radius:50%;flex-shrink:0;}
+.hero h1{font-size:clamp(32px,5vw,52px);font-weight:700;letter-spacing:-1.5px;line-height:1.08;margin-bottom:16px;}
+.hero h1 em{color:var(--neon);font-style:normal;}
+.hero-sub{font-size:15px;color:var(--grey);line-height:1.7;margin-bottom:24px;max-width:440px;}
+.hero-trust{display:flex;flex-direction:column;gap:9px;margin-bottom:26px;}
+.trust-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#aaa;}
+.trust-row svg{color:var(--neon);flex-shrink:0;}
+.hero-stats{display:flex;gap:28px;padding-top:18px;border-top:1px solid var(--border);}
+.h-stat .num{font-size:22px;font-weight:700;color:var(--neon);}
+.h-stat .lbl{font-size:11px;color:var(--grey);margin-top:1px;text-transform:uppercase;letter-spacing:.04em;}
 
-    /* ── Typography — web-safe stack (Google Fonts blocked in most clients) ── */
-    body, td, th, p, a {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    }
+/* LEASE BANNER */
+.lease-banner{background:linear-gradient(135deg,#001a22 0%,#002d3d 50%,#001a22 100%);border:1px solid rgba(0,212,255,0.25);border-radius:var(--rad-lg);padding:20px 24px;margin-bottom:0;display:flex;align-items:center;gap:16px;}
+.lease-icon{width:44px;height:44px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lease-icon svg{color:var(--neon);width:22px;height:22px;}
+.lease-text strong{display:block;font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.lease-text span{font-size:13px;color:#7ac8d8;line-height:1.5;}
 
-    /* ── Links ── */
-    a { color: #00d4ff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+/* QUOTE FORM — MULTI-STEP */
+.quote-box{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);padding:26px;}
+.quote-box h3{font-size:17px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.qsub{font-size:13px;color:var(--grey);margin-bottom:18px;}
+.q-steps{display:flex;gap:0;margin-bottom:22px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.q-step{flex:1;padding:9px 6px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--grey);background:var(--panel);transition:all .2s;cursor:default;}
+.q-step.active{background:var(--neon);color:var(--black);}
+.q-step.done{background:rgba(0,212,255,0.12);color:var(--neon);}
+.q-panel{display:none;}
+.q-panel.visible{display:block;}
+.fg{margin-bottom:13px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.fg input,.fg select,.fg textarea{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--white);font-family:inherit;outline:none;transition:border-color .2s;appearance:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--neon);}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.field-error{font-size:11px;color:#ff6b6b;margin-top:4px;display:none;}
+.fg.has-error input,.fg.has-error select{border-color:#ff6b6b;}
+.fg.has-error .field-error{display:block;}
+.photo-upload-zone{border:1.5px dashed rgba(0,212,255,0.35);border-radius:10px;background:rgba(0,212,255,0.03);padding:22px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:13px;}
+.photo-upload-zone:hover,.photo-upload-zone.drag-over{border-color:var(--neon);background:rgba(0,212,255,0.07);}
+.photo-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{width:40px;height:40px;background:rgba(0,212,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.upload-icon svg{color:var(--neon);width:18px;height:18px;}
+.upload-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:3px;}
+.upload-hint{font-size:12px;color:var(--grey);}
+.upload-hint span{color:var(--neon);}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);color:var(--neon);font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;margin-top:8px;}
+.photo-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:13px;}
+.photo-card{background:#040d0f;border:1px solid rgba(0,212,255,0.2);border-radius:10px;overflow:hidden;}
+.photo-card-header{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);}
+.photo-thumb{width:52px;height:52px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+.photo-meta{flex:1;min-width:0;}
+.photo-name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.photo-size{font-size:11px;color:var(--grey);margin-top:1px;}
+.photo-remove{background:none;border:none;color:var(--grey);cursor:pointer;font-size:16px;padding:4px;border-radius:4px;transition:color .2s;flex-shrink:0;}
+.photo-remove:hover{color:#ff6b6b;}
+.photo-card-body{padding:12px;}
+.ai-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--neon);}
+.spinner{width:13px;height:13px;border:2px solid rgba(0,212,255,0.2);border-top-color:var(--neon);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-result-label{font-size:10px;font-weight:700;color:var(--neon);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
+.ai-result-text{font-size:13px;color:#aaa;line-height:1.6;}
+.ai-result-price{display:inline-block;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);color:var(--neon);font-size:13px;font-weight:700;padding:3px 10px;border-radius:6px;margin-top:6px;}
+.btn-primary{width:100%;background:var(--neon);color:var(--black);border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;margin-top:4px;}
+.btn-primary:hover{background:var(--neon-dk);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-secondary{width:100%;background:transparent;color:var(--neon);border:1px solid var(--neon);border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-secondary:hover{background:rgba(0,212,255,0.07);}
+.form-note{font-size:11px;color:#2a2a2a;text-align:center;margin-top:8px;}
+.analyse-btn{width:100%;background:rgba(0,212,255,0.1);color:var(--neon);border:1px solid rgba(0,212,255,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:12px;}
+.analyse-btn:hover{background:rgba(0,212,255,0.18);}
+.analyse-btn:disabled{opacity:.4;cursor:not-allowed;}
+.success-box{text-align:center;padding:20px 10px;}
+.success-icon{width:56px;height:56px;background:rgba(0,212,255,0.1);border:2px solid var(--neon);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.success-icon svg{color:var(--neon);width:26px;height:26px;}
+.success-title{font-size:18px;font-weight:700;color:var(--white);margin-bottom:8px;}
+.success-sub{font-size:13px;color:var(--grey);line-height:1.6;}
+.success-email{color:var(--neon);font-weight:600;}
 
-    /* ── Responsive ── */
-    @media only screen and (max-width: 620px) {
-      .wrapper { width: 100% !important; }
-      .content-pad { padding: 20px 20px !important; }
-      .header-pad { padding: 24px 20px 20px !important; }
-      .footer-pad { padding: 20px !important; }
-      .step-table { width: 100% !important; }
-      .hide-mobile { display: none !important; }
-      .summary-label, .summary-value { font-size: 13px !important; }
-      .badge-cell { display: block !important; padding-bottom: 6px !important; }
-    }
-  </style>
+/* GALLERY */
+.gallery{background:var(--carbon);padding:64px 0;border-bottom:1px solid var(--border);}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--neon);margin-bottom:10px;}
+.sec-title{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;color:var(--white);margin-bottom:8px;}
+.sec-sub{font-size:14px;color:var(--grey);max-width:460px;margin-bottom:40px;line-height:1.7;}
+.gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.ba-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);overflow:hidden;transition:border-color .2s;}
+.ba-card:hover{border-color:rgba(0,212,255,0.4);}
+.ba-visual{display:grid;grid-template-columns:1fr 1fr;height:420px;position:relative;}
+.ba-side{position:relative;overflow:hidden;}
+.ba-side img{width:100%;height:100%;object-fit:cover;display:block;}
+.ba-lbl{position:absolute;top:9px;left:9px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:5px;z-index:2;}
+.lbl-before{background:rgba(0,0,0,0.65);color:#aaa;border:1px solid #333;}
+.lbl-after{background:rgba(0,212,255,0.2);color:var(--neon);border:1px solid rgba(0,212,255,0.35);}
+.ba-divider{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#000;z-index:3;transform:translateX(-50%);}
+.ba-divider::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;background:#000;border:2px solid var(--neon);border-radius:50%;}
+.ba-info{padding:14px 16px 16px;border-top:1px solid var(--border);}
+.ba-title{font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.ba-desc{font-size:12px;color:var(--grey);line-height:1.55;}
+
+/* SERVICES */
+.services{background:var(--black);padding:64px 0;border-bottom:1px solid var(--border);}
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.svc-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);padding:26px 22px;transition:border-color .2s;}
+.svc-card:hover{border-color:rgba(0,212,255,0.4);}
+.svc-icon{width:42px;height:42px;background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;}
+.svc-icon svg{color:var(--neon);width:21px;height:21px;}
+.svc-card h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:7px;}
+.svc-card p{font-size:13px;color:var(--grey);line-height:1.65;margin-bottom:14px;}
+.svc-from{font-size:13px;color:var(--neon);font-weight:700;}
+
+/* PRICING */
+.pricing{background:var(--carbon);padding:64px 0;border-bottom:1px solid var(--border);}
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.price-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);padding:24px 22px;position:relative;transition:border-color .2s;}
+.price-card:hover{border-color:rgba(0,212,255,0.4);}
+.price-card.hot{border:2px solid var(--neon);}
+.hot-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--neon);color:var(--black);font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 13px;border-radius:20px;white-space:nowrap;text-transform:uppercase;}
+.price-tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--neon);margin-bottom:6px;}
+.price-card h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:12px;}
+.price-tiers{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.pt-row{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.pt-row:last-child{border-bottom:none;}
+.pt-name{color:#aaa;}
+.pt-price{color:var(--neon);font-weight:700;}
+.price-incl{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.pi{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--grey);}
+.pi svg{color:var(--neon);width:13px;height:13px;flex-shrink:0;}
+.price-btn{display:block;width:100%;text-align:center;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:background .2s;}
+.pb-outline{background:transparent;color:var(--neon);border:1px solid var(--neon);}
+.pb-outline:hover{background:rgba(0,212,255,0.07);}
+.pb-solid{background:var(--neon);color:var(--black);}
+.pb-solid:hover{background:var(--neon-dk);}
+.price-note{text-align:center;font-size:12px;color:#2a2a2a;margin-top:20px;}
+.price-note span{color:var(--neon);}
+
+/* AREAS */
+.areas{background:var(--black);padding:56px 0;border-bottom:1px solid var(--border);}
+.areas-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;}
+.pill{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:13px;color:var(--grey);transition:border-color .2s,color .2s;cursor:default;}
+.pill:hover{border-color:var(--neon);color:var(--neon);}
+
+/* FOOTER */
+footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 0 24px;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;padding-bottom:30px;border-bottom:1px solid var(--border);}
+.f-logo{font-size:19px;font-weight:700;color:var(--white);margin-bottom:10px;}
+.f-logo span{color:var(--neon);}
+.f-desc{font-size:13px;color:var(--grey);line-height:1.65;margin-bottom:12px;}
+.f-email{font-size:13px;color:var(--neon);}
+.f-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--white);margin-bottom:14px;}
+.f-col ul{list-style:none;display:flex;flex-direction:column;gap:9px;}
+.f-col ul li a{font-size:13px;color:var(--grey);transition:color .2s;}
+.f-col ul li a:hover{color:var(--neon);}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:18px;flex-wrap:wrap;gap:10px;}
+.footer-bottom p{font-size:11px;color:#2a2a2a;}
+.footer-bottom p span{color:var(--neon);}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  .hero-inner{grid-template-columns:1fr;gap:32px;}
+  .svc-grid{grid-template-columns:1fr;}
+  .price-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto;}
+  .gallery-grid{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:580px){
+  .ba-visual{height:320px;}
+  .nav-links,.nav-cta{display:none;}
+  .hamburger{display:flex;}
+  .hero{padding:36px 0 32px;}
+  .fg-row{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+  .lease-banner{flex-direction:column;text-align:center;}
+}
+select option{background:#1a1a1a;color:#fff;}
+::placeholder{color:#2e2e2e;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--black);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
 </head>
+<body>
 
-<!-- PAGE BACKGROUND -->
-<body style="margin:0;padding:0;background-color:#0d0d0d;">
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo"><img src="scuffiq-logo.png" alt="ScuffIQ" style="height:36px;width:auto;display:block;"></a>
+      <ul class="nav-links">
+        <li><a href="#quote">Get a quote</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#areas">Areas</a></li>
+      </ul>
+      <button class="nav-cta" onclick="document.getElementById('quote').scrollIntoView({behavior:'smooth'})">Get instant quote</button>
+      <button class="hamburger" onclick="toggleMenu()" aria-label="Open menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="mob-menu" id="mobMenu">
+    <a href="#quote" onclick="closeMenu()">Get a quote</a>
+    <a href="#gallery" onclick="closeMenu()">Gallery</a>
+    <a href="#pricing" onclick="closeMenu()">Pricing</a>
+    <a href="#areas" onclick="closeMenu()">Areas</a>
+    <a href="#quote" class="mob-cta" onclick="closeMenu()">Get instant quote</a>
+  </div>
+</nav>
 
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-  <tr>
-    <td style="padding: 32px 16px;" align="center" bgcolor="#0d0d0d">
+<!-- HERO + QUOTE -->
+<section class="hero" id="quote">
+  <div class="container">
+    <div class="hero-inner">
 
-      <!-- OUTER WRAPPER — 600px max -->
-      <table role="presentation" class="wrapper" cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#111111;border:1px solid #222222;">
-        <!--[if mso]><tr><td width="600"><![endif]-->
+      <!-- LEFT -->
+      <div>
+        <div class="hero-badge">Smart repair specialists</div>
+        <h1>Your car,<br><em>flawless</em><br>again.</h1>
+        <p class="hero-sub">Scratches, scuffs and alloy wheel repairs — fixed fast at your door, for a fraction of the bodyshop price. Covering North London, Hertfordshire &amp; Essex.</p>
+        <div class="hero-trust">
+          <div class="trust-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Mobile service — we come to you
+          </div>
+          <div class="trust-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Same-day &amp; weekend appointments
+          </div>
+          <div class="trust-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Upload photos — get AI quotes per photo
+          </div>
+          <div class="trust-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Fully insured, certified technicians
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="h-stat"><div class="num">500+</div><div class="lbl">Repairs done</div></div>
+          <div class="h-stat"><div class="num">&lt;1hr</div><div class="lbl">Quote turnaround</div></div>
+        </div>
+      </div>
 
-        <!-- ══════════════════════════════════
-             HEADER
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="header-pad" align="center" style="background-color:#0a0a0a;padding:32px 40px 24px;border-bottom:3px solid #00d4ff;">
+      <!-- RIGHT: Multi-step quote form -->
+      <div>
+        <div class="quote-box" id="quoteBox">
+          <h3>Get your instant AI quote</h3>
+          <p class="qsub">Fill in your details, then upload damage photos for individual AI assessments.</p>
 
-            <!-- Logo image — renders as-is; no filter applied -->
-            <img src="https://scuffiq.com/scuffiq-logo.png"
-                 alt="ScuffIQ"
-                 width="140"
-                 height="auto"
-                 style="display:block;margin:0 auto 14px;max-width:140px;" />
+          <div class="q-steps">
+            <div class="q-step active" id="step-tab-1">1 · Your details</div>
+            <div class="q-step" id="step-tab-2">2 · Upload photos</div>
+            <div class="q-step" id="step-tab-3">3 · AI quotes</div>
+          </div>
 
-            <!-- Wordmark fallback (visible if image blocked) -->
-            <!--[if !mso]><!-->
-            <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
-            <!--<![endif]-->
-            <!--[if mso]>
-            <p style="font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;margin:0 0 6px;">
-              Scuff<span style="color:#00d4ff;">IQ</span>
-            </p>
-            <![endif]-->
-            <!--[if !mso]><!-->
+          <!-- PANEL 1: Personal details -->
+          <div class="q-panel visible" id="panel-1">
+            <div class="fg-row">
+              <div class="fg" id="fg-fname">
+                <label>First name *</label>
+                <input type="text" id="fname" placeholder="John" autocomplete="given-name">
+                <div class="field-error">Please enter your first name</div>
+              </div>
+              <div class="fg" id="fg-lname">
+                <label>Last name *</label>
+                <input type="text" id="lname" placeholder="Smith" autocomplete="family-name">
+                <div class="field-error">Please enter your last name</div>
+              </div>
             </div>
-            <!--<![endif]-->
+            <div class="fg" id="fg-email">
+              <label>Email address *</label>
+              <input type="email" id="email" placeholder="john@email.com" autocomplete="email">
+              <div class="field-error">Please enter a valid email address</div>
+            </div>
+            <div class="fg" id="fg-phone">
+              <label>Phone number *</label>
+              <input type="tel" id="phone" placeholder="07700 900000" autocomplete="tel">
+              <div class="field-error">Please enter your phone number</div>
+            </div>
+            <div class="fg-row">
+              <div class="fg" id="fg-make">
+                <label>Vehicle make *</label>
+                <input type="text" id="make" placeholder="e.g. BMW" autocomplete="off">
+                <div class="field-error">Please enter your vehicle make</div>
+              </div>
+              <div class="fg" id="fg-model">
+                <label>Vehicle model *</label>
+                <input type="text" id="model" placeholder="e.g. 3 Series" autocomplete="off">
+                <div class="field-error">Please enter your vehicle model</div>
+              </div>
+            </div>
+            <div class="fg" id="fg-postcode">
+              <label>Postcode *</label>
+              <input type="text" id="postcode" placeholder="EN1 1AA" autocomplete="postal-code">
+              <div class="field-error">Please enter your postcode</div>
+            </div>
+            <div class="fg" id="fg-service">
+              <label>Service needed *</label>
+              <select id="service">
+                <option value="" disabled selected>Select a service</option>
+                <option value="Scratch &amp; scuff repair">Scratch &amp; scuff repair</option>
+                <option value="Alloy wheel repair">Alloy wheel repair</option>
+                <option value="Both services">Both services</option>
+                <option value="Not sure — assess from photos">Not sure — assess from photos</option>
+              </select>
+              <div class="field-error">Please select a service</div>
+            </div>
+            <button class="btn-primary" onclick="goToStep2()">Continue to photo upload →</button>
+            <p class="form-note">Your details are never shared with third parties.</p>
+          </div>
 
-            <p style="margin:0;font-size:11px;color:#888888;letter-spacing:1.5px;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Smart Repair Specialists
-            </p>
-          </td>
-        </tr>
+          <!-- PANEL 2: Photo upload -->
+          <div class="q-panel" id="panel-2">
+            <div class="photo-upload-zone" id="uploadZone">
+              <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotos(event)">
+              <div class="upload-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="upload-title">Upload damage photos</div>
+              <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> — up to 6 photos</div>
+              <div class="ai-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Each photo gets its own AI assessment
+              </div>
+            </div>
 
-        <!-- ══════════════════════════════════
-             STATUS BANNER
-        ══════════════════════════════════ -->
-        <tr>
-          <td style="padding:24px 36px 0;" bgcolor="#111111">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                   style="background-color:#001f2b;border:1px solid #003d5c;">
-              <tr>
-                <td style="padding:16px 20px;" width="14" valign="middle">
-                  <!-- Neon dot -->
-                  <div style="width:10px;height:10px;background-color:#00d4ff;border-radius:50%;"></div>
-                </td>
-                <td style="padding:16px 20px 16px 0;" valign="middle">
-                  <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#00d4ff;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Quote request received
-                  </p>
-                  <p style="margin:0;font-size:12px;color:#667788;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    We'll be in touch within the hour
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+            <div class="photo-grid" id="photoGrid"></div>
 
-        <!-- ══════════════════════════════════
-             GREETING & INTRO
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="content-pad" style="padding:28px 36px 0;" bgcolor="#111111">
-            <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#ffffff;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Hi {{first_name}},
-            </p>
-            <p style="margin:0 0 8px;font-size:14px;line-height:1.7;color:#aaaaaa;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Thanks for getting in touch with ScuffIQ. We've received your photos and quote request — you're one step closer to having your car looking
-              <span style="color:#e0e0e0;font-weight:600;">flawless again.</span>
-            </p>
-            <p style="margin:0;font-size:14px;line-height:1.7;color:#aaaaaa;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              A certified ScuffIQ technician is reviewing your submission and will get back to you shortly with a personalised quote.
-            </p>
-          </td>
-        </tr>
+            <button class="analyse-btn" id="analyseBtn" onclick="analyseAllPhotos()" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Analyse all photos with AI
+            </button>
 
-        <!-- ══════════════════════════════════
-             REQUEST SUMMARY CARD
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="content-pad" style="padding:24px 36px 0;" bgcolor="#111111">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                   style="background-color:#181818;border:1px solid #252525;">
+            <button class="btn-primary" id="submitBtn" onclick="submitQuote()" disabled>Submit quote request →</button>
+            <button class="btn-secondary" onclick="goToStep1()">← Back to details</button>
+            <p class="form-note">We respond within the hour. Your details are never shared.</p>
+          </div>
 
-              <!-- Card header -->
-              <tr>
-                <td colspan="2" style="padding:12px 20px;background-color:#001a20;border-bottom:1px solid #003040;">
-                  <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;
-                             letter-spacing:1px;color:#00d4ff;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Your Request Summary
-                  </p>
-                </td>
-              </tr>
+          <!-- PANEL 3: Success -->
+          <div class="q-panel" id="panel-3">
+            <div class="success-box">
+              <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="success-title">Quote request received!</div>
+              <p class="success-sub">
+                We've emailed your AI quote summary to <span class="success-email" id="successEmail"></span>.<br><br>
+                The indicative prices are based on your photos. When you're ready to book, a ScuffIQ technician will review your photos and provide a firm price before your appointment.<br><br>
+                <strong style="color:var(--white);">We'll be in touch within the hour.</strong>
+              </p>
+            </div>
+          </div>
 
-              <!-- Row: Vehicle -->
-              <tr>
-                <td class="summary-label" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
-                           border-bottom:1px solid #1e1e1e;width:50%;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  Vehicle
-                </td>
-                <td class="summary-value" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;
-                           text-align:right;border-bottom:1px solid #1e1e1e;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  {{vehicle_make}} {{vehicle_model}}
-                </td>
-              </tr>
+        </div>
+      </div>
 
-              <!-- Row: Service -->
-              <tr>
-                <td class="summary-label" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
-                           border-bottom:1px solid #1e1e1e;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  Service
-                </td>
-                <td class="summary-value" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;
-                           text-align:right;border-bottom:1px solid #1e1e1e;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  {{service_requested}}
-                </td>
-              </tr>
+    </div>
 
-              <!-- Row: Response time -->
-              <tr>
-                <td class="summary-label" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  Response time
-                </td>
-                <td style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;
-                           text-align:right;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  Within 1 hour
-                </td>
-              </tr>
+    <!-- LEASE BANNER -->
+    <div style="margin-top:32px;">
+      <div class="lease-banner">
+        <div class="lease-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="lease-text">
+          <strong>🔑 Returning a lease vehicle soon?</strong>
+          <span>Avoid costly end-of-lease damage charges. ScuffIQ specialises in getting lease cars looking as good as new before they go back — scratches, scuffs and alloy wheels sorted fast, at a fraction of what the leasing company will charge you.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-            </table>
-          </td>
-        </tr>
+<!-- GALLERY -->
+<section class="gallery" id="gallery">
+  <div class="container">
+    <div class="eyebrow">Before &amp; after</div>
+    <h2 class="sec-title">Real repairs. Real results.</h2>
+    <p class="sec-sub">Every job is different. Here's what our technicians deliver — results that rival a full bodyshop respray.</p>
+    <div class="gallery-grid">
+      <div class="ba-card">
+        <div class="ba-visual">
+          <div class="ba-side">
+            <div class="ba-lbl lbl-before">Before</div>
+            <img src="Scuff Before.png" alt="Car scuff damage before ScuffIQ smart repair">
+          </div>
+          <div class="ba-divider"></div>
+          <div class="ba-side">
+            <div class="ba-lbl lbl-after">After</div>
+            <img src="Scuff After.png" alt="Car scuff fully restored by ScuffIQ">
+          </div>
+        </div>
+        <div class="ba-info">
+          <div class="ba-title">Scratch &amp; scuff repair — front wing</div>
+          <div class="ba-desc">Deep paint scratches along the driver's door — colour matched, refinished and lacquered to factory standard. Completed on-site in under 2 hours.</div>
+        </div>
+      </div>
+      <div class="ba-card">
+        <div class="ba-visual">
+          <div class="ba-side">
+            <div class="ba-lbl lbl-before">Before</div>
+            <img src="Alloy damage.png" alt="Nissan alloy wheel kerb damage before ScuffIQ repair">
+          </div>
+          <div class="ba-divider"></div>
+          <div class="ba-side">
+            <div class="ba-lbl lbl-after">After</div>
+            <img src="Alloy repair.png" alt="Nissan alloy wheel fully refurbished by ScuffIQ">
+          </div>
+        </div>
+        <div class="ba-info">
+          <div class="ba-title">Alloy wheel refurbishment — kerb damage</div>
+          <div class="ba-desc">Severe kerb rash and gouging on a 19" alloy — sanded, filled, colour matched and resprayed to a showroom finish. As good as new.</div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#2a2a2a;margin-top:14px;">Real ScuffIQ repairs. Results may vary by damage type and severity.</p>
+  </div>
+</section>
 
-        <!-- ══════════════════════════════════
-             WHAT HAPPENS NEXT
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="content-pad" style="padding:28px 36px 0;" bgcolor="#111111">
-            <p style="margin:0 0 18px;font-size:15px;font-weight:700;color:#ffffff;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              What happens next?
-            </p>
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="container">
+    <div class="eyebrow">What we fix</div>
+    <h2 class="sec-title">Two services. One call.</h2>
+    <p class="sec-sub">Both carried out on-site by our certified mobile technicians — no bodyshop, no waiting, no hassle.</p>
+    <div class="svc-grid">
+      <div class="svc-card">
+        <div class="svc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <h3>Scratch &amp; scuff repair</h3>
+        <p>Surface scratches and paint scuffs removed using precision colour-matching and smart refinishing technology. Results that look factory fresh — at a fraction of the bodyshop cost.</p>
+        <div class="svc-from">From £80</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <h3>Alloy wheel repair</h3>
+        <p>Kerb damage, scuffs, chips and corrosion on alloy wheels repaired, refinished and resprayed to a perfect finish — carried out on your driveway or workplace.</p>
+        <div class="svc-from">From £65</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-            <!-- Step 1 -->
-            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
-              <tr>
-                <td width="36" valign="top" style="padding-right:14px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td width="28" height="28" align="center" valign="middle"
-                          style="background-color:#001a20;border:1px solid #003d5c;
-                                 font-size:12px;font-weight:700;color:#00d4ff;
-                                 font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                        1
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-                <td valign="top">
-                  <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e0e0e0;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Photo review
-                  </p>
-                  <p style="margin:0;font-size:14px;line-height:1.6;color:#aaaaaa;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Our technician carefully assesses your damage photos and identifies the best repair approach.
-                  </p>
-                </td>
-              </tr>
-            </table>
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="eyebrow">Pricing</div>
+    <h2 class="sec-title">Transparent pricing. No surprises.</h2>
+    <p class="sec-sub">The price you're quoted is the price you pay. Upload a photo above for an AI estimate in seconds.</p>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-tag">Scratch &amp; scuff</div>
+        <h3>Paintwork repair</h3>
+        <div class="price-tiers">
+          <div class="pt-row"><span class="pt-name">Light surface scuff</span><span class="pt-price">£80</span></div>
+          <div class="pt-row"><span class="pt-name">Single panel scratch</span><span class="pt-price">£120</span></div>
+          <div class="pt-row"><span class="pt-name">Deep or long scratch</span><span class="pt-price">£160</span></div>
+          <div class="pt-row"><span class="pt-name">Multiple panels</span><span class="pt-price">POA</span></div>
+        </div>
+        <div class="price-incl">
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Precision colour matching</div>
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Blended lacquer finish</div>
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Satisfaction check on completion</div>
+        </div>
+        <button class="price-btn pb-outline" onclick="document.getElementById('quote').scrollIntoView({behavior:'smooth'})">Get a quote</button>
+      </div>
+      <div class="price-card hot">
+        <div class="hot-badge">Most popular</div>
+        <div class="price-tag">Alloy wheels</div>
+        <h3>Wheel refurbishment</h3>
+        <div class="price-tiers">
+          <div class="pt-row"><span class="pt-name">Single wheel — light</span><span class="pt-price">£65</span></div>
+          <div class="pt-row"><span class="pt-name">Single wheel — deep</span><span class="pt-price">£90</span></div>
+          <div class="pt-row"><span class="pt-name">Two wheels</span><span class="pt-price">£160</span></div>
+          <div class="pt-row"><span class="pt-name">Full set (4 wheels)</span><span class="pt-price">£280</span></div>
+        </div>
+        <div class="price-incl">
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Sand, fill &amp; refinish</div>
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Colour-matched respray</div>
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Satisfaction check on completion</div>
+        </div>
+        <button class="price-btn pb-solid" onclick="document.getElementById('quote').scrollIntoView({behavior:'smooth'})">Get a quote</button>
+      </div>
+    </div>
+    <p class="price-note">All prices are indicative. Final price confirmed after photo assessment. <span>No hidden charges, ever.</span></p>
+  </div>
+</section>
 
-            <!-- Step 2 -->
-            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
-              <tr>
-                <td width="36" valign="top" style="padding-right:14px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td width="28" height="28" align="center" valign="middle"
-                          style="background-color:#001a20;border:1px solid #003d5c;
-                                 font-size:12px;font-weight:700;color:#00d4ff;
-                                 font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                        2
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-                <td valign="top">
-                  <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e0e0e0;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Personalised quote
-                  </p>
-                  <p style="margin:0;font-size:14px;line-height:1.6;color:#aaaaaa;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    You'll receive a clear, no-obligation quote with fully transparent pricing — no hidden costs, ever.
-                  </p>
-                </td>
-              </tr>
-            </table>
+<!-- AREAS -->
+<section class="areas" id="areas">
+  <div class="container">
+    <div class="eyebrow">Coverage</div>
+    <h2 class="sec-title">North London · Hertfordshire · Essex</h2>
+    <p class="sec-sub" style="margin-bottom:0;">Enter your postcode in the quote form to confirm we serve your area.</p>
+    <div class="areas-pills">
+      <div class="pill">North London</div><div class="pill">Barnet</div><div class="pill">Enfield</div>
+      <div class="pill">Haringey</div><div class="pill">Watford</div><div class="pill">St Albans</div>
+      <div class="pill">Hertford</div><div class="pill">Stevenage</div><div class="pill">Welwyn Garden City</div>
+      <div class="pill">Hoddesdon</div><div class="pill">Chelmsford</div><div class="pill">Romford</div>
+      <div class="pill">Brentwood</div><div class="pill">Harlow</div><div class="pill">Epping</div>
+      <div class="pill">Chigwell</div><div class="pill">Loughton</div><div class="pill">Waltham Abbey</div>
+    </div>
+  </div>
+</section>
 
-            <!-- Step 3 -->
-            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td width="36" valign="top" style="padding-right:14px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td width="28" height="28" align="center" valign="middle"
-                          style="background-color:#001a20;border:1px solid #003d5c;
-                                 font-size:12px;font-weight:700;color:#00d4ff;
-                                 font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                        3
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-                <td valign="top">
-                  <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#e0e0e0;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Book your slot
-                  </p>
-                  <p style="margin:0;font-size:14px;line-height:1.6;color:#aaaaaa;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Choose a time that works for you. We come to your door — same-day and weekend appointments available.
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="f-logo"><img src="scuffiq-logo.png" alt="ScuffIQ" style="height:28px;width:auto;display:block;"></div>
+        <p class="f-desc">Smart repair specialists covering North London, Hertfordshire and Essex. Scratch, scuff and alloy wheel repairs — we come to you.</p>
+        <a href="mailto:hello@scuffiq.com" class="f-email">hello@scuffiq.com</a>
+      </div>
+      <div class="f-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Scratch &amp; scuff repair</a></li>
+          <li><a href="#services">Alloy wheel repair</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Quick links</h4>
+        <ul>
+          <li><a href="#quote">Get a free quote</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#areas">Areas covered</a></li>
+          <li><a href="mailto:hello@scuffiq.com">hello@scuffiq.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 <span>ScuffIQ</span> Ltd. Registered in England &amp; Wales.</p>
+      <p><a href="#" style="color:#333">Privacy</a> &nbsp;·&nbsp; <a href="#" style="color:#333">Terms</a></p>
+    </div>
+  </div>
+</footer>
 
-        <!-- ══════════════════════════════════
-             DIVIDER
-        ══════════════════════════════════ -->
-        <tr>
-          <td style="padding:28px 36px 0;" bgcolor="#111111">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td height="1" style="background-color:#252525;font-size:1px;line-height:1px;">&nbsp;</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<script>
+// ── State ──────────────────────────────────────────────────────
+var uploadedPhotos = [];
 
-        <!-- ══════════════════════════════════
-             LEASE CTA BLOCK
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="content-pad" style="padding:28px 36px 0;" bgcolor="#111111">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                   style="background-color:#181818;border:1px solid #252525;">
-              <tr>
-                <td style="padding:24px;" align="center">
-                  <p style="margin:0 0 6px;font-size:22px;">&#128273;</p>
-                  <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#cccccc;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Returning a lease vehicle soon?
-                  </p>
-                  <p style="margin:0 0 18px;font-size:13px;line-height:1.65;color:#888888;
-                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Avoid costly end-of-lease damage charges. ScuffIQ gets lease cars looking showroom-ready before handback — at a fraction of what your leasing company would charge.
-                  </p>
-                  <!-- CTA button — MSO fallback via VML -->
-                  <!--[if mso]>
-                  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-                    href="https://www.scuffiq.com/#quote"
-                    style="height:42px;v-text-anchor:middle;width:180px;" arcsize="12%" stroke="f" fillcolor="#00d4ff">
-                    <w:anchorlock/>
-                    <center style="color:#000000;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">
-                      Get a free quote &rarr;
-                    </center>
-                  </v:roundrect>
-                  <![endif]-->
-                  <!--[if !mso]><!-->
-                  <a href="https://www.scuffiq.com/#quote"
-                     style="display:inline-block;background-color:#00d4ff;color:#000000;
-                            font-size:13px;font-weight:700;padding:12px 28px;
-                            text-decoration:none;letter-spacing:0.2px;
-                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Get a free quote &rarr;
-                  </a>
-                  <!--<![endif]-->
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+// ── Step navigation ────────────────────────────────────────────
+function setStep(n) {
+  [1,2,3].forEach(function(i) {
+    document.getElementById('panel-'+i).classList.toggle('visible', i===n);
+    var tab = document.getElementById('step-tab-'+i);
+    tab.classList.remove('active','done');
+    if (i===n) tab.classList.add('active');
+    if (i<n) tab.classList.add('done');
+  });
+}
 
-        <!-- ══════════════════════════════════
-             SIGN OFF
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="content-pad" style="padding:28px 36px 36px;" bgcolor="#111111">
-            <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#888888;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Have a question in the meantime? Just reply to this email — we're always happy to help.
-            </p>
-            <p style="margin:0;font-size:14px;line-height:1.7;color:#888888;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Talk soon,<br />
-              <span style="color:#00d4ff;font-weight:700;">The ScuffIQ Team</span>
-            </p>
-          </td>
-        </tr>
+function goToStep1() { setStep(1); }
 
-        <!-- ══════════════════════════════════
-             FOOTER
-        ══════════════════════════════════ -->
-        <tr>
-          <td class="footer-pad" style="padding:24px 36px;background-color:#0a0a0a;border-top:1px solid #1a1a1a;"
-              align="center">
+function goToStep2() {
+  if (!validateStep1()) return;
+  setStep(2);
+  updateSubmitBtn();
+}
 
-            <!-- Trust badges -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom:16px;">
-              <tr>
-                <td class="badge-cell" style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  <span style="color:#00d4ff;">&#10003;</span>&nbsp;Mobile — we come to you
-                </td>
-                <td class="badge-cell hide-mobile" style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  <span style="color:#00d4ff;">&#10003;</span>&nbsp;Fully insured technicians
-                </td>
-                <td class="badge-cell hide-mobile" style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                  <span style="color:#00d4ff;">&#10003;</span>&nbsp;500+ repairs completed
-                </td>
-              </tr>
-            </table>
+// ── Validation ─────────────────────────────────────────────────
+function validateStep1() {
+  var ok = true;
+  function check(id, fgId, testFn) {
+    var el = document.getElementById(id);
+    var fg = document.getElementById(fgId);
+    var valid = testFn(el.value.trim());
+    fg.classList.toggle('has-error', !valid);
+    if (!valid) ok = false;
+  }
+  check('fname','fg-fname', function(v){return v.length>0;});
+  check('lname','fg-lname', function(v){return v.length>0;});
+  check('email','fg-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);});
+  check('phone','fg-phone', function(v){return v.length>=7;});
+  check('make','fg-make',   function(v){return v.length>0;});
+  check('model','fg-model', function(v){return v.length>0;});
+  check('postcode','fg-postcode', function(v){return v.length>2;});
+  check('service','fg-service', function(v){return v!=='';});
+  return ok;
+}
 
-            <p style="margin:0 0 6px;font-size:12px;color:#444444;line-height:1.7;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              ScuffIQ Ltd &middot; North London, Hertfordshire &amp; Essex<br />
-              <a href="mailto:hello@scuffiq.com" style="color:#00d4ff;text-decoration:none;">hello@scuffiq.com</a>
-              &nbsp;&middot;&nbsp;
-              <a href="https://www.scuffiq.com" style="color:#00d4ff;text-decoration:none;">scuffiq.com</a>
-            </p>
+// ── Photo handling ─────────────────────────────────────────────
+function handlePhotos(e) {
+  var files = Array.from(e.target.files);
+  if (!files.length) return;
+  var remaining = 6 - uploadedPhotos.length;
+  files = files.slice(0, remaining);
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var dataUrl = ev.target.result;
+      var base64 = dataUrl.split(',')[1];
+      uploadedPhotos.push({file:file, dataUrl:dataUrl, base64:base64, name:file.name, size:file.size, result:null, analysing:false});
+      renderPhotoGrid();
+      updateSubmitBtn();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
 
-            <p style="margin:0 0 12px;font-size:12px;color:#444444;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              <a href="https://www.scuffiq.com/privacy" style="color:#00d4ff;text-decoration:none;">Privacy Policy</a>
-              &nbsp;&middot;&nbsp;
-              <a href="https://www.scuffiq.com/terms" style="color:#00d4ff;text-decoration:none;">Terms &amp; Conditions</a>
-            </p>
+function removePhoto(idx) {
+  uploadedPhotos.splice(idx, 1);
+  renderPhotoGrid();
+  updateSubmitBtn();
+}
 
-            <p style="margin:0;font-size:11px;color:#333333;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              You're receiving this because you submitted a quote request at
-              <a href="https://www.scuffiq.com" style="color:#333333;">scuffiq.com</a>.
-            </p>
+function renderPhotoGrid() {
+  var grid = document.getElementById('photoGrid');
+  var analyseBtn = document.getElementById('analyseBtn');
+  if (!uploadedPhotos.length) { grid.innerHTML = ''; analyseBtn.disabled = true; return; }
+  grid.innerHTML = uploadedPhotos.map(function(p, i) {
+    var sizeKb = Math.round(p.size/1024);
+    var bodyHtml = '';
+    if (p.analysing) {
+      bodyHtml = '<div class="ai-loading"><div class="spinner"></div>Analysing damage...</div>';
+    } else if (p.result) {
+      bodyHtml = '<div class="ai-result-label">AI Assessment</div>'
+               + '<div class="ai-result-text">'+p.result.text+'</div>'
+               + (p.result.price ? '<div class="ai-result-price">'+p.result.price+'</div>' : '');
+    } else {
+      bodyHtml = '<div style="font-size:12px;color:var(--grey);">Ready for AI analysis — click the button below</div>';
+    }
+    return '<div class="photo-card" id="card-'+i+'">'
+      + '<div class="photo-card-header">'
+      + '<img class="photo-thumb" src="'+p.dataUrl+'" alt="'+p.name+'">'
+      + '<div class="photo-meta"><div class="photo-name">Photo '+(i+1)+': '+p.name+'</div><div class="photo-size">'+sizeKb+'KB</div></div>'
+      + '<button class="photo-remove" onclick="removePhoto('+i+')" title="Remove">&#x2715;</button>'
+      + '</div><div class="photo-card-body">'+bodyHtml+'</div></div>';
+  }).join('');
+  analyseBtn.disabled = uploadedPhotos.length === 0;
+  document.getElementById('uploadZone').style.display = uploadedPhotos.length >= 6 ? 'none' : '';
+}
 
-          </td>
-        </tr>
+function updateSubmitBtn() {
+  var btn = document.getElementById('submitBtn');
+  var hasPhotos = uploadedPhotos.length > 0;
+  var allAnalysed = hasPhotos && uploadedPhotos.every(function(p){return p.result !== null;});
+  btn.disabled = !allAnalysed;
+  btn.textContent = allAnalysed ? 'Submit quote request \u2192' : (hasPhotos ? 'Analyse photos first to submit' : 'Upload at least one photo to submit');
+}
 
-        <!--[if mso]></td></tr><![endif]-->
-      </table>
-      <!-- END WRAPPER -->
+// ── AI analysis ────────────────────────────────────────────────
+async function analyseAllPhotos() {
+  if (!uploadedPhotos.length) return;
+  var btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Analysing...';
+  for (var i = 0; i < uploadedPhotos.length; i++) {
+    if (uploadedPhotos[i].result) continue;
+    uploadedPhotos[i].analysing = true;
+    renderPhotoGrid();
+    await analysePhoto(i);
+    uploadedPhotos[i].analysing = false;
+    renderPhotoGrid();
+  }
+  btn.textContent = '\u2713 All photos analysed';
+  btn.disabled = true;
+  updateSubmitBtn();
+}
 
-    </td>
-  </tr>
-</table>
+async function analysePhoto(idx) {
+  var photo = uploadedPhotos[idx];
+  var service = document.getElementById('service').value;
+  var make = document.getElementById('make').value;
+  var model = document.getElementById('model').value;
+  try {
+    var resp = await fetch('https://scuffiq-ai.gunny8891.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: photo.file.type || 'image/jpeg', data: photo.base64 } },
+            { type: 'text', text: 'You are a ScuffIQ smart repair quoting assistant. ScuffIQ is a UK mobile smart repair company. Services: (1) Scratch & scuff repair from \u00a380-\u00a3160, (2) Alloy wheel repair from \u00a365-\u00a3280 for a full set. Customer has a '+make+' '+model+' and selected: '+service+'.\n\nAnalyse this damage photo. Respond in this exact JSON format only:\n{"assessment":"2-3 sentence description of damage type, location and severity","price":"e.g. \u00a390-\u00a3120","service":"which service applies","confidence":"high/medium/low"}\n\nIf no car damage visible, set assessment to "No car damage visible \u2014 please upload a clear photo of the affected area" and price to "N/A".' }
+          ]
+        }]
+      })
+    });
+    var data = await resp.json();
+    var raw = data.content && data.content[0] && data.content[0].text;
+    var parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    var priceVal = parsed.price && parsed.price !== 'N/A' && parsed.price !== 'Unknown' ? 'Indicative price: ' + parsed.price : null;
+    uploadedPhotos[idx].result = {
+      text: parsed.assessment,
+      price: priceVal,
+      service: parsed.service,
+      confidence: parsed.confidence,
+      raw: parsed
+    };
+  } catch(err) {
+    uploadedPhotos[idx].result = {
+      text: 'Photo received. Our technician will assess this damage and provide a quote.',
+      price: null,
+      service: service,
+      confidence: 'pending'
+    };
+  }
+}
 
+// ── Submit — EmailJS ───────────────────────────────────────────
+async function submitQuote() {
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  var fname    = document.getElementById('fname').value.trim();
+  var lname    = document.getElementById('lname').value.trim();
+  var email    = document.getElementById('email').value.trim();
+  var phone    = document.getElementById('phone').value.trim();
+  var make     = document.getElementById('make').value.trim();
+  var model    = document.getElementById('model').value.trim();
+  var postcode = document.getElementById('postcode').value.trim();
+  var service  = document.getElementById('service').value;
+
+  var aiSummary = uploadedPhotos.map(function(p, i) {
+    var r = p.result;
+    return 'Photo ' + (i+1) + ':\n'
+      + 'Assessment: ' + (r ? r.text : 'Pending') + '\n'
+      + 'Price: ' + (r && r.price ? r.price.replace('Indicative price: ','') : 'Pending') + '\n'
+      + 'Service: ' + (r && r.service ? r.service : service);
+  }).join('\n\n---\n\n');
+
+  var quotePayload = {
+    customer_name:   fname + ' ' + lname,
+    customer_email:  email,
+    customer_phone:  phone,
+    vehicle_make:    make,
+    vehicle_model:   model,
+    postcode:        postcode,
+    service_type:    service,
+    photo_count:     uploadedPhotos.length,
+    ai_summary:      aiSummary,
+    submission_time: new Date().toLocaleString('en-GB'),
+    photos: uploadedPhotos.map(function(p, i) {
+      return {
+        name: p.name || ('scuffiq-photo-' + (i + 1) + '.jpg'),
+        dataUrl: p.dataUrl
+      };
+    })
+  };
+
+  try {
+    var response = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(quotePayload)
+    });
+
+    if (!response.ok) {
+      var errorText = await response.text();
+      throw new Error(errorText || 'Failed to send quote request');
+    }
+
+    document.getElementById('successEmail').textContent = email;
+    setStep(3);
+
+  } catch(err) {
+    console.error('Worker email error:', err);
+    btn.disabled = false;
+    btn.textContent = 'Submit quote request \u2192';
+    alert('Email error: ' + (err.text || err.message || JSON.stringify(err)) + '\n\nPlease email us directly at hello@scuffiq.com');
+  }
+}
+
+// ── Nav ────────────────────────────────────────────────────────
+function toggleMenu(){document.getElementById('mobMenu').classList.toggle('open');}
+function closeMenu(){document.getElementById('mobMenu').classList.remove('open');}
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var id=this.getAttribute('href').slice(1);
+    if(!id)return;
+    var el=document.getElementById(id);
+    if(el){e.preventDefault();el.scrollIntoView({behavior:'smooth'});}
+  });
+});
+
+// ── Drag and drop ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var zone = document.getElementById('uploadZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', function(e){e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave', function(){zone.classList.remove('drag-over');});
+  zone.addEventListener('drop', function(e){
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    var files = Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');});
+    if (files.length) handlePhotos({target:{files:files, value:''}});
+  });
+});
+</script>
 </body>
 </html>
