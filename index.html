@@ -124,7 +124,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 .gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
 .ba-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);overflow:hidden;transition:border-color .2s;}
 .ba-card:hover{border-color:rgba(0,212,255,0.4);}
-.ba-visual{display:grid;grid-template-columns:1fr 1fr;height:220px;position:relative;}
+.ba-visual{display:grid;grid-template-columns:1fr 1fr;height:420px;position:relative;}
 .ba-side{position:relative;overflow:hidden;}
 .ba-side img{width:100%;height:100%;object-fit:cover;display:block;}
 .ba-lbl{position:absolute;top:9px;left:9px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:5px;z-index:2;}
@@ -202,6 +202,7 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:580px){
+  .ba-visual{height:320px;}
   .nav-links,.nav-cta{display:none;}
   .hamburger{display:flex;}
   .hero{padding:36px 0 32px;}
