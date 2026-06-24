@@ -23,13 +23,10 @@
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; }
     body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #0d0d0d; }
 
-    /* ── Web-safe font stack — Google Fonts blocked in most email clients ── */
+    /* ── Typography — web-safe stack (Google Fonts blocked in most clients) ── */
     body, td, th, p, a {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
     }
-
-    /* ── Styled alt text — shown when images are blocked ── */
-    img.logo { font-size: 22px; font-weight: bold; color: #ffffff; line-height: 38px; }
 
     /* ── Links ── */
     a { color: #00d4ff; text-decoration: none; }
@@ -37,56 +34,56 @@
 
     /* ── Responsive ── */
     @media only screen and (max-width: 620px) {
-      .wrapper      { width: 100% !important; }
-      .content-pad  { padding: 20px 20px !important; }
-      .header-pad   { padding: 24px 20px 20px !important; }
-      .footer-pad   { padding: 20px !important; }
-      .step-table   { width: 100% !important; }
-      .hide-mobile  { display: none !important; }
-      .badge-cell   { display: block !important; padding-bottom: 6px !important; }
+      .wrapper { width: 100% !important; }
+      .content-pad { padding: 20px 20px !important; }
+      .header-pad { padding: 24px 20px 20px !important; }
+      .footer-pad { padding: 20px !important; }
+      .step-table { width: 100% !important; }
+      .hide-mobile { display: none !important; }
+      .summary-label, .summary-value { font-size: 13px !important; }
+      .badge-cell { display: block !important; padding-bottom: 6px !important; }
     }
   </style>
 </head>
 
+<!-- PAGE BACKGROUND -->
 <body style="margin:0;padding:0;background-color:#0d0d0d;">
 
-<!-- ═══════════════════════════════════════════
-     PAGE WRAPPER
-═══════════════════════════════════════════ -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-       style="background-color:#0d0d0d;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
   <tr>
-    <td align="center" style="padding:32px 16px;">
+    <td style="padding: 32px 16px;" align="center" bgcolor="#0d0d0d">
 
-      <!-- CARD — fixed 600px, scales to 100% on mobile -->
-      <table role="presentation" class="wrapper" cellpadding="0" cellspacing="0" border="0"
-             width="600" style="background-color:#111111;border:1px solid #222222;">
+      <!-- OUTER WRAPPER — 600px max -->
+      <table role="presentation" class="wrapper" cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#111111;border:1px solid #222222;">
+        <!--[if mso]><tr><td width="600"><![endif]-->
 
         <!-- ══════════════════════════════════
              HEADER
         ══════════════════════════════════ -->
         <tr>
-          <td class="header-pad" align="center"
-              style="background-color:#0a0a0a;padding:32px 40px 24px;border-bottom:3px solid #00d4ff;">
+          <td class="header-pad" align="center" style="background-color:#0a0a0a;padding:32px 40px 24px;border-bottom:3px solid #00d4ff;">
 
-            <!--
-              Logo strategy:
-              • Non-MSO clients (Gmail, Apple Mail, web): <img> renders.
-                If images are blocked, styled alt text "ScuffIQ" shows in white.
-              • Outlook (MSO): <img> renders fine; VML not needed for a simple image.
-                Outlook respects width/height attributes on <img>.
-            -->
-            <img class="logo"
-                 src="https://scuffiq.com/scuffiq-logo.png"
+            <!-- Logo image — renders as-is; no filter applied -->
+            <img src="https://scuffiq.com/scuffiq-logo.png"
                  alt="ScuffIQ"
                  width="140"
-                 height="38"
-                 style="display:block;margin:0 auto 14px;width:140px;height:auto;
-                        font-size:22px;font-weight:bold;color:#ffffff;line-height:38px;" />
+                 height="auto"
+                 style="display:block;margin:0 auto 14px;max-width:140px;" />
 
-            <p style="margin:0;font-size:11px;color:#888888;letter-spacing:1.5px;
-                       text-transform:uppercase;
-                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+            <!-- Wordmark fallback (visible if image blocked) -->
+            <!--[if !mso]><!-->
+            <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
+            <!--<![endif]-->
+            <!--[if mso]>
+            <p style="font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;margin:0 0 6px;">
+              Scuff<span style="color:#00d4ff;">IQ</span>
+            </p>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            </div>
+            <!--<![endif]-->
+
+            <p style="margin:0;font-size:11px;color:#888888;letter-spacing:1.5px;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
               Smart Repair Specialists
             </p>
           </td>
@@ -96,22 +93,15 @@
              STATUS BANNER
         ══════════════════════════════════ -->
         <tr>
-          <td style="padding:24px 36px 0;background-color:#111111;">
+          <td style="padding:24px 36px 0;" bgcolor="#111111">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
                    style="background-color:#001f2b;border:1px solid #003d5c;">
               <tr>
-                <!-- Neon dot — fixed pixel cell so Outlook doesn't collapse it -->
-                <td width="42" valign="middle" style="padding:16px 0 16px 16px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td width="10" height="10"
-                          style="background-color:#00d4ff;font-size:1px;line-height:1px;">
-                        &nbsp;
-                      </td>
-                    </tr>
-                  </table>
+                <td style="padding:16px 20px;" width="14" valign="middle">
+                  <!-- Neon dot -->
+                  <div style="width:10px;height:10px;background-color:#00d4ff;border-radius:50%;"></div>
                 </td>
-                <td valign="middle" style="padding:16px 16px 16px 0;">
+                <td style="padding:16px 20px 16px 0;" valign="middle">
                   <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#00d4ff;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                     Quote request received
@@ -130,21 +120,19 @@
              GREETING & INTRO
         ══════════════════════════════════ -->
         <tr>
-          <td class="content-pad" style="padding:28px 36px 0;background-color:#111111;">
+          <td class="content-pad" style="padding:28px 36px 0;" bgcolor="#111111">
             <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#ffffff;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
               Hi {{first_name}},
             </p>
-            <p style="margin:0 0 10px;font-size:14px;line-height:1.7;color:#aaaaaa;
+            <p style="margin:0 0 8px;font-size:14px;line-height:1.7;color:#aaaaaa;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Thanks for getting in touch with ScuffIQ. We've received your photos and quote
-              request — you're one step closer to having your car looking
+              Thanks for getting in touch with ScuffIQ. We've received your photos and quote request — you're one step closer to having your car looking
               <span style="color:#e0e0e0;font-weight:600;">flawless again.</span>
             </p>
             <p style="margin:0;font-size:14px;line-height:1.7;color:#aaaaaa;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              A certified ScuffIQ technician is reviewing your submission and will get back to
-              you shortly with a personalised quote.
+              A certified ScuffIQ technician is reviewing your submission and will get back to you shortly with a personalised quote.
             </p>
           </td>
         </tr>
@@ -153,13 +141,13 @@
              REQUEST SUMMARY CARD
         ══════════════════════════════════ -->
         <tr>
-          <td class="content-pad" style="padding:24px 36px 0;background-color:#111111;">
+          <td class="content-pad" style="padding:24px 36px 0;" bgcolor="#111111">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
                    style="background-color:#181818;border:1px solid #252525;">
 
+              <!-- Card header -->
               <tr>
-                <td colspan="2"
-                    style="padding:12px 20px;background-color:#001a20;border-bottom:1px solid #003040;">
+                <td colspan="2" style="padding:12px 20px;background-color:#001a20;border-bottom:1px solid #003040;">
                   <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;
                              letter-spacing:1px;color:#00d4ff;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -168,38 +156,41 @@
                 </td>
               </tr>
 
+              <!-- Row: Vehicle -->
               <tr>
-                <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
-                           border-bottom:1px solid #1e1e1e;
+                <td class="summary-label" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
+                           border-bottom:1px solid #1e1e1e;width:50%;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   Vehicle
                 </td>
-                <td width="50%" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;
+                <td class="summary-value" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;
                            text-align:right;border-bottom:1px solid #1e1e1e;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   {{vehicle_make}} {{vehicle_model}}
                 </td>
               </tr>
 
+              <!-- Row: Service -->
               <tr>
-                <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
+                <td class="summary-label" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
                            border-bottom:1px solid #1e1e1e;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   Service
                 </td>
-                <td width="50%" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;
+                <td class="summary-value" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;
                            text-align:right;border-bottom:1px solid #1e1e1e;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   {{service_requested}}
                 </td>
               </tr>
 
+              <!-- Row: Response time -->
               <tr>
-                <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
+                <td class="summary-label" style="padding:13px 20px;font-size:13px;color:#666666;font-weight:500;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   Response time
                 </td>
-                <td width="50%" style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;
+                <td style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;
                            text-align:right;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   Within 1 hour
@@ -214,17 +205,16 @@
              WHAT HAPPENS NEXT
         ══════════════════════════════════ -->
         <tr>
-          <td class="content-pad" style="padding:28px 36px 0;background-color:#111111;">
+          <td class="content-pad" style="padding:28px 36px 0;" bgcolor="#111111">
             <p style="margin:0 0 18px;font-size:15px;font-weight:700;color:#ffffff;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
               What happens next?
             </p>
 
             <!-- Step 1 -->
-            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0"
-                   border="0" width="100%">
+            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
               <tr>
-                <td width="42" valign="top" style="padding-right:14px;">
+                <td width="36" valign="top" style="padding-right:14px;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td width="28" height="28" align="center" valign="middle"
@@ -243,23 +233,16 @@
                   </p>
                   <p style="margin:0;font-size:14px;line-height:1.6;color:#aaaaaa;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Our technician carefully assesses your damage photos and identifies the
-                    best repair approach.
+                    Our technician carefully assesses your damage photos and identifies the best repair approach.
                   </p>
                 </td>
               </tr>
             </table>
 
-            <!-- Spacer row — replaces margin-bottom on table (not supported in Outlook) -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr><td height="14" style="font-size:1px;line-height:1px;">&nbsp;</td></tr>
-            </table>
-
             <!-- Step 2 -->
-            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0"
-                   border="0" width="100%">
+            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
               <tr>
-                <td width="42" valign="top" style="padding-right:14px;">
+                <td width="36" valign="top" style="padding-right:14px;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td width="28" height="28" align="center" valign="middle"
@@ -278,23 +261,16 @@
                   </p>
                   <p style="margin:0;font-size:14px;line-height:1.6;color:#aaaaaa;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    You'll receive a clear, no-obligation quote with fully transparent
-                    pricing — no hidden costs, ever.
+                    You'll receive a clear, no-obligation quote with fully transparent pricing — no hidden costs, ever.
                   </p>
                 </td>
               </tr>
             </table>
 
-            <!-- Spacer -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr><td height="14" style="font-size:1px;line-height:1px;">&nbsp;</td></tr>
-            </table>
-
             <!-- Step 3 -->
-            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0"
-                   border="0" width="100%">
+            <table role="presentation" class="step-table" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
-                <td width="42" valign="top" style="padding-right:14px;">
+                <td width="36" valign="top" style="padding-right:14px;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td width="28" height="28" align="center" valign="middle"
@@ -313,8 +289,7 @@
                   </p>
                   <p style="margin:0;font-size:14px;line-height:1.6;color:#aaaaaa;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Choose a time that works for you. We come to your door — same-day and
-                    weekend appointments available.
+                    Choose a time that works for you. We come to your door — same-day and weekend appointments available.
                   </p>
                 </td>
               </tr>
@@ -326,12 +301,10 @@
              DIVIDER
         ══════════════════════════════════ -->
         <tr>
-          <td style="padding:28px 36px 0;background-color:#111111;">
+          <td style="padding:28px 36px 0;" bgcolor="#111111">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
-                <td height="1" style="background-color:#252525;font-size:1px;line-height:1px;">
-                  &nbsp;
-                </td>
+                <td height="1" style="background-color:#252525;font-size:1px;line-height:1px;">&nbsp;</td>
               </tr>
             </table>
           </td>
@@ -341,40 +314,27 @@
              LEASE CTA BLOCK
         ══════════════════════════════════ -->
         <tr>
-          <td class="content-pad" style="padding:28px 36px 0;background-color:#111111;">
+          <td class="content-pad" style="padding:28px 36px 0;" bgcolor="#111111">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
                    style="background-color:#181818;border:1px solid #252525;">
               <tr>
                 <td style="padding:24px;" align="center">
-
-                  <p style="margin:0 0 8px;font-size:22px;line-height:1;">&#128273;</p>
-
-                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#cccccc;
+                  <p style="margin:0 0 6px;font-size:22px;">&#128273;</p>
+                  <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#cccccc;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                     Returning a lease vehicle soon?
                   </p>
-                  <p style="margin:0 0 20px;font-size:13px;line-height:1.65;color:#888888;
+                  <p style="margin:0 0 18px;font-size:13px;line-height:1.65;color:#888888;
                              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-                    Avoid costly end-of-lease damage charges. ScuffIQ gets lease cars looking
-                    showroom-ready before handback — at a fraction of what your leasing company
-                    would charge.
+                    Avoid costly end-of-lease damage charges. ScuffIQ gets lease cars looking showroom-ready before handback — at a fraction of what your leasing company would charge.
                   </p>
-
-                  <!--
-                    CTA BUTTON
-                    Outlook (MSO): VML rounded rectangle — renders as a proper button.
-                    All other clients: standard <a> tag with inline styles.
-                    The two blocks are mutually exclusive via conditional comments.
-                  -->
+                  <!-- CTA button — MSO fallback via VML -->
                   <!--[if mso]>
-                  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
-                               xmlns:w="urn:schemas-microsoft-com:office:word"
-                               href="https://www.scuffiq.com/#quote"
-                               style="height:42px;v-text-anchor:middle;width:190px;"
-                               arcsize="10%" stroke="f" fillcolor="#00d4ff">
+                  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                    href="https://www.scuffiq.com/#quote"
+                    style="height:42px;v-text-anchor:middle;width:180px;" arcsize="12%" stroke="f" fillcolor="#00d4ff">
                     <w:anchorlock/>
-                    <center style="color:#000000;font-family:Arial,sans-serif;
-                                   font-size:13px;font-weight:bold;">
+                    <center style="color:#000000;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">
                       Get a free quote &rarr;
                     </center>
                   </v:roundrect>
@@ -388,7 +348,6 @@
                     Get a free quote &rarr;
                   </a>
                   <!--<![endif]-->
-
                 </td>
               </tr>
             </table>
@@ -399,11 +358,10 @@
              SIGN OFF
         ══════════════════════════════════ -->
         <tr>
-          <td class="content-pad" style="padding:28px 36px 36px;background-color:#111111;">
+          <td class="content-pad" style="padding:28px 36px 36px;" bgcolor="#111111">
             <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#888888;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              Have a question in the meantime? Just reply to this email — we're always happy
-              to help.
+              Have a question in the meantime? Just reply to this email — we're always happy to help.
             </p>
             <p style="margin:0;font-size:14px;line-height:1.7;color:#888888;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -417,66 +375,54 @@
              FOOTER
         ══════════════════════════════════ -->
         <tr>
-          <td class="footer-pad"
-              style="padding:24px 36px;background-color:#0a0a0a;border-top:1px solid #1a1a1a;"
+          <td class="footer-pad" style="padding:24px 36px;background-color:#0a0a0a;border-top:1px solid #1a1a1a;"
               align="center">
 
             <!-- Trust badges -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom:16px;">
               <tr>
-                <td class="badge-cell"
-                    style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
+                <td class="badge-cell" style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   <span style="color:#00d4ff;">&#10003;</span>&nbsp;Mobile — we come to you
                 </td>
-                <td class="badge-cell hide-mobile"
-                    style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
+                <td class="badge-cell hide-mobile" style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   <span style="color:#00d4ff;">&#10003;</span>&nbsp;Fully insured technicians
                 </td>
-                <td class="badge-cell hide-mobile"
-                    style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
+                <td class="badge-cell hide-mobile" style="padding:0 8px;font-size:11px;color:#555555;white-space:nowrap;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
                   <span style="color:#00d4ff;">&#10003;</span>&nbsp;500+ repairs completed
                 </td>
-              </tr>
-              <!-- Spacer — replaces margin-bottom:16px (ignored by Outlook) -->
-              <tr>
-                <td colspan="3" height="16" style="font-size:1px;line-height:1px;">&nbsp;</td>
               </tr>
             </table>
 
             <p style="margin:0 0 6px;font-size:12px;color:#444444;line-height:1.7;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
               ScuffIQ Ltd &middot; North London, Hertfordshire &amp; Essex<br />
-              <a href="mailto:hello@scuffiq.com"
-                 style="color:#00d4ff;text-decoration:none;">hello@scuffiq.com</a>
+              <a href="mailto:hello@scuffiq.com" style="color:#00d4ff;text-decoration:none;">hello@scuffiq.com</a>
               &nbsp;&middot;&nbsp;
-              <a href="https://www.scuffiq.com"
-                 style="color:#00d4ff;text-decoration:none;">scuffiq.com</a>
+              <a href="https://www.scuffiq.com" style="color:#00d4ff;text-decoration:none;">scuffiq.com</a>
             </p>
 
             <p style="margin:0 0 12px;font-size:12px;color:#444444;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-              <a href="https://www.scuffiq.com/privacy"
-                 style="color:#00d4ff;text-decoration:none;">Privacy Policy</a>
+              <a href="https://www.scuffiq.com/privacy" style="color:#00d4ff;text-decoration:none;">Privacy Policy</a>
               &nbsp;&middot;&nbsp;
-              <a href="https://www.scuffiq.com/terms"
-                 style="color:#00d4ff;text-decoration:none;">Terms &amp; Conditions</a>
+              <a href="https://www.scuffiq.com/terms" style="color:#00d4ff;text-decoration:none;">Terms &amp; Conditions</a>
             </p>
 
             <p style="margin:0;font-size:11px;color:#333333;
                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
               You're receiving this because you submitted a quote request at
-              <a href="https://www.scuffiq.com"
-                 style="color:#333333;text-decoration:none;">scuffiq.com</a>.
+              <a href="https://www.scuffiq.com" style="color:#333333;">scuffiq.com</a>.
             </p>
 
           </td>
         </tr>
 
+        <!--[if mso]></td></tr><![endif]-->
       </table>
-      <!-- END CARD -->
+      <!-- END WRAPPER -->
 
     </td>
   </tr>
