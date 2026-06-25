@@ -50,16 +50,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 .h-stat .num{font-size:22px;font-weight:700;color:var(--neon);}
 .h-stat .lbl{font-size:11px;color:var(--grey);margin-top:1px;text-transform:uppercase;letter-spacing:.04em;}
 
-/* LEASE BANNER — standalone section */
-.lease-section{background:var(--black);padding:0 0 0;border-bottom:1px solid var(--border);}
-.lease-banner{background:linear-gradient(135deg,#001a22 0%,#002d3d 50%,#001a22 100%);border-top:1px solid rgba(0,212,255,0.18);border-bottom:1px solid rgba(0,212,255,0.18);padding:18px 24px;display:flex;align-items:center;gap:16px;}
-.lease-icon{width:40px;height:40px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.lease-icon svg{color:var(--neon);width:20px;height:20px;}
-.lease-text{flex:1;}
-.lease-text strong{display:inline;font-size:14px;font-weight:700;color:var(--white);margin-right:6px;}
+/* LEASE BANNER */
+.lease-banner{background:linear-gradient(135deg,#001a22 0%,#002d3d 50%,#001a22 100%);border:1px solid rgba(0,212,255,0.25);border-radius:var(--rad-lg);padding:20px 24px;margin-bottom:0;display:flex;align-items:center;gap:16px;}
+.lease-icon{width:44px;height:44px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lease-icon svg{color:var(--neon);width:22px;height:22px;}
+.lease-text strong{display:block;font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;}
 .lease-text span{font-size:13px;color:#7ac8d8;line-height:1.5;}
-.lease-cta{flex-shrink:0;background:var(--neon);color:var(--black);border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
-.lease-cta:hover{background:var(--neon-dk);}
 
 /* QUOTE FORM — MULTI-STEP */
 .quote-box{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);padding:26px;}
@@ -213,8 +209,7 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
   .fg-row{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr;}
   .footer-bottom{flex-direction:column;text-align:center;}
-  .lease-banner{flex-direction:column;text-align:center;gap:12px;}
-  .lease-cta{width:100%;}
+  .lease-banner{flex-direction:column;text-align:center;}
 }
 select option{background:#1a1a1a;color:#fff;}
 ::placeholder{color:#2e2e2e;}
@@ -397,22 +392,21 @@ select option{background:#1a1a1a;color:#fff;}
       </div>
 
     </div>
+
+    <!-- LEASE BANNER -->
+    <div style="margin-top:32px;">
+      <div class="lease-banner">
+        <div class="lease-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="lease-text">
+          <strong>🔑 Returning a lease vehicle soon?</strong>
+          <span>Avoid costly end-of-lease damage charges. ScuffIQ specialises in getting lease cars looking as good as new before they go back — scratches, scuffs and alloy wheels sorted fast, at a fraction of what the leasing company will charge you.</span>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
-
-<!-- ═══ LEASE BANNER — between hero and gallery ═══ -->
-<div class="lease-banner">
-  <div class="container" style="display:flex;align-items:center;gap:16px;width:100%;">
-    <div class="lease-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-    </div>
-    <div class="lease-text">
-      <strong>🔑 Returning a lease vehicle soon?</strong>
-      <span>Avoid costly end-of-lease damage charges — ScuffIQ gets your car showroom-ready before it goes back, for a fraction of what the leasing company will charge you.</span>
-    </div>
-    <button class="lease-cta" onclick="document.getElementById('quote').scrollIntoView({behavior:'smooth'})">Get a quote →</button>
-  </div>
-</div>
 
 <!-- GALLERY -->
 <section class="gallery" id="gallery">
