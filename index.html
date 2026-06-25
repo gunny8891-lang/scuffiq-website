@@ -138,7 +138,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 
 /* SERVICES */
 .services{background:var(--black);padding:64px 0;border-bottom:1px solid var(--border);}
-.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.svc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .svc-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);padding:26px 22px;transition:border-color .2s;}
 .svc-card:hover{border-color:rgba(0,212,255,0.4);}
 .svc-icon{width:42px;height:42px;background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;}
@@ -149,7 +149,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 
 /* PRICING */
 .pricing{background:var(--carbon);padding:64px 0;border-bottom:1px solid var(--border);}
-.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .price-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);padding:24px 22px;position:relative;transition:border-color .2s;}
 .price-card:hover{border-color:rgba(0,212,255,0.4);}
 .price-card.hot{border:2px solid var(--neon);}
@@ -196,8 +196,8 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
 /* RESPONSIVE */
 @media(max-width:860px){
   .hero-inner{grid-template-columns:1fr;gap:32px;}
-  .svc-grid{grid-template-columns:1fr;}
-  .price-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto;}
+  .svc-grid{grid-template-columns:1fr 1fr;}
+  .price-grid{grid-template-columns:1fr 1fr;}
   .gallery-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
@@ -207,6 +207,8 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
   .hamburger{display:flex;}
   .hero{padding:36px 0 32px;}
   .fg-row{grid-template-columns:1fr;}
+  .svc-grid{grid-template-columns:1fr;}
+  .price-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr;}
   .footer-bottom{flex-direction:column;text-align:center;}
   .lease-banner{flex-direction:column;text-align:center;}
@@ -336,8 +338,9 @@ select option{background:#1a1a1a;color:#fff;}
               <select id="service">
                 <option value="" disabled selected>Select a service</option>
                 <option value="Scratch &amp; scuff repair">Scratch &amp; scuff repair</option>
+                <option value="Bumper repair">Bumper repair</option>
                 <option value="Alloy wheel repair">Alloy wheel repair</option>
-                <option value="Both services">Both services</option>
+                <option value="Multiple services">Multiple services</option>
                 <option value="Not sure — assess from photos">Not sure — assess from photos</option>
               </select>
               <div class="field-error">Please select a service</div>
@@ -458,8 +461,8 @@ select option{background:#1a1a1a;color:#fff;}
 <section class="services" id="services">
   <div class="container">
     <div class="eyebrow">What we fix</div>
-    <h2 class="sec-title">Two services. One call.</h2>
-    <p class="sec-sub">Both carried out on-site by our certified mobile technicians — no bodyshop, no waiting, no hassle.</p>
+    <h2 class="sec-title">Three services. One call.</h2>
+    <p class="sec-sub">All carried out on-site by our certified mobile technicians — no bodyshop, no waiting, no hassle.</p>
     <div class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon">
@@ -467,7 +470,15 @@ select option{background:#1a1a1a;color:#fff;}
         </div>
         <h3>Scratch &amp; scuff repair</h3>
         <p>Surface scratches and paint scuffs removed using precision colour-matching and smart refinishing technology. Results that look factory fresh — at a fraction of the bodyshop cost.</p>
-        <div class="svc-from">From £80</div>
+        <div class="svc-from">From £120</div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-4h16l1 4"/><path d="M3 9h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><line x1="9" y1="13" x2="9" y2="17"/><line x1="15" y1="13" x2="15" y2="17"/></svg>
+        </div>
+        <h3>Bumper repair</h3>
+        <p>Scuffs, scratches and corner damage on front and rear bumpers repaired using precision colour-matching — completed at your door, no bodyshop drop-off required.</p>
+        <div class="svc-from">From £150</div>
       </div>
       <div class="svc-card">
         <div class="svc-icon">
@@ -475,7 +486,7 @@ select option{background:#1a1a1a;color:#fff;}
         </div>
         <h3>Alloy wheel repair</h3>
         <p>Kerb damage, scuffs, chips and corrosion on alloy wheels repaired, refinished and resprayed to a perfect finish — carried out on your driveway or workplace.</p>
-        <div class="svc-from">From £65</div>
+        <div class="svc-from">From £95</div>
       </div>
     </div>
   </div>
@@ -492,9 +503,10 @@ select option{background:#1a1a1a;color:#fff;}
         <div class="price-tag">Scratch &amp; scuff</div>
         <h3>Paintwork repair</h3>
         <div class="price-tiers">
-          <div class="pt-row"><span class="pt-name">Light surface scuff</span><span class="pt-price">£80</span></div>
-          <div class="pt-row"><span class="pt-name">Single panel scratch</span><span class="pt-price">£120</span></div>
-          <div class="pt-row"><span class="pt-name">Deep or long scratch</span><span class="pt-price">£160</span></div>
+          <div class="pt-row"><span class="pt-name">Light surface scuff</span><span class="pt-price">£120</span></div>
+          <div class="pt-row"><span class="pt-name">Single panel scratch</span><span class="pt-price">£190</span></div>
+          <div class="pt-row"><span class="pt-name">Deep or long scratch</span><span class="pt-price">£240</span></div>
+          <div class="pt-row"><span class="pt-name">Keyed / vandal scratch</span><span class="pt-price">£280+</span></div>
           <div class="pt-row"><span class="pt-name">Multiple panels</span><span class="pt-price">POA</span></div>
         </div>
         <div class="price-incl">
@@ -504,15 +516,33 @@ select option{background:#1a1a1a;color:#fff;}
         </div>
         <button class="price-btn pb-outline" onclick="document.getElementById('quote').scrollIntoView({behavior:'smooth'})">Get a quote</button>
       </div>
+      <div class="price-card">
+        <div class="price-tag">Bumper repairs</div>
+        <h3>Bumper refinishing</h3>
+        <div class="price-tiers">
+          <div class="pt-row"><span class="pt-name">Minor bumper scuff</span><span class="pt-price">£150</span></div>
+          <div class="pt-row"><span class="pt-name">Bumper scratch</span><span class="pt-price">£200</span></div>
+          <div class="pt-row"><span class="pt-name">Corner / structural scuff</span><span class="pt-price">£280</span></div>
+          <div class="pt-row"><span class="pt-name">Parking sensor surcharge</span><span class="pt-price">+£75</span></div>
+        </div>
+        <div class="price-incl">
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Plastic repair &amp; reshaping</div>
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Colour-matched refinish</div>
+          <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Satisfaction check on completion</div>
+        </div>
+        <button class="price-btn pb-outline" onclick="document.getElementById('quote').scrollIntoView({behavior:'smooth'})">Get a quote</button>
+      </div>
       <div class="price-card hot">
         <div class="hot-badge">Most popular</div>
         <div class="price-tag">Alloy wheels</div>
         <h3>Wheel refurbishment</h3>
         <div class="price-tiers">
-          <div class="pt-row"><span class="pt-name">Single wheel — light</span><span class="pt-price">£65</span></div>
-          <div class="pt-row"><span class="pt-name">Single wheel — deep</span><span class="pt-price">£90</span></div>
-          <div class="pt-row"><span class="pt-name">Two wheels</span><span class="pt-price">£160</span></div>
-          <div class="pt-row"><span class="pt-name">Full set (4 wheels)</span><span class="pt-price">£280</span></div>
+          <div class="pt-row"><span class="pt-name">Single wheel — light (up to 18")</span><span class="pt-price">£95</span></div>
+          <div class="pt-row"><span class="pt-name">Single wheel — deep (up to 18")</span><span class="pt-price">£130</span></div>
+          <div class="pt-row"><span class="pt-name">Single wheel — 19" / 20"</span><span class="pt-price">£150</span></div>
+          <div class="pt-row"><span class="pt-name">Two wheels (up to 18")</span><span class="pt-price">£210</span></div>
+          <div class="pt-row"><span class="pt-name">Full set (4 wheels, up to 18")</span><span class="pt-price">£380</span></div>
+          <div class="pt-row"><span class="pt-name">21"+ / prestige wheels</span><span class="pt-price">POA</span></div>
         </div>
         <div class="price-incl">
           <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Sand, fill &amp; refinish</div>
@@ -556,6 +586,7 @@ select option{background:#1a1a1a;color:#fff;}
         <h4>Services</h4>
         <ul>
           <li><a href="#services">Scratch &amp; scuff repair</a></li>
+          <li><a href="#services">Bumper repair</a></li>
           <li><a href="#services">Alloy wheel repair</a></li>
           <li><a href="#pricing">Pricing</a></li>
         </ul>
@@ -717,7 +748,7 @@ async function analysePhoto(idx) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: photo.file.type || 'image/jpeg', data: photo.base64 } },
-            { type: 'text', text: 'You are a ScuffIQ smart repair quoting assistant. ScuffIQ is a UK mobile smart repair company. Services: (1) Scratch & scuff repair from \u00a380-\u00a3160, (2) Alloy wheel repair from \u00a365-\u00a3280 for a full set. Customer has a '+make+' '+model+' and selected: '+service+'.\n\nAnalyse this damage photo. Respond in this exact JSON format only:\n{"assessment":"2-3 sentence description of damage type, location and severity","price":"e.g. \u00a390-\u00a3120","service":"which service applies","confidence":"high/medium/low"}\n\nIf no car damage visible, set assessment to "No car damage visible \u2014 please upload a clear photo of the affected area" and price to "N/A".' }
+            { type: 'text', text: 'You are a ScuffIQ smart repair quoting assistant. ScuffIQ is a professional mobile smart repair company serving North London, Hertfordshire and Essex. All prices below are competitive 2026 South East market rates.\n\nPRICE GUIDE:\n\nSCRATCH & SCUFF (paintwork):\n- Light surface scuff (clear coat only, small area): \u00a3120\n- Single panel scratch (paint layer affected, colour match): \u00a3190\n- Deep or long scratch (metal exposed, filler needed): \u00a3240\n- Keyed or vandal scratch (full length): \u00a3280-\u00a3400\n- Stone chip cluster (per area): \u00a3100-\u00a3150\n- Multiple panels: POA\n\nBUMPER REPAIRS:\n- Minor bumper scuff (paint only): \u00a3150\n- Bumper scratch (paint through to plastic): \u00a3200\n- Bumper corner / structural scuff: \u00a3280\n- Add \u00a375 if parking sensors are present\n\nALLOY WHEEL REFURBISHMENT:\n- Single wheel light damage (up to 18"): \u00a395\n- Single wheel deep damage (up to 18"): \u00a3130\n- Single wheel 19"-20": \u00a3120-\u00a3150\n- Single wheel 21"+ (SUV/prestige): \u00a3160-\u00a3200\n- Two wheels (up to 18"): \u00a3210\n- Full set 4 wheels (up to 18"): \u00a3380\n\nDENT REMOVAL (PDR):\n- Small dent, paint intact (coin size, door ding): \u00a3100-\u00a3130\n- Medium dent, paint intact (up to 10cm): \u00a3180-\u00a3220\n- Large or complex dent: POA\n- Dent with paint damage (combined repair): \u00a3250-\u00a3400\n\nVEHICLE SURCHARGES (apply on top of base price):\n- Premium German (BMW, Mercedes, Audi): add 20%\n- Luxury SUV (Range Rover, Porsche Cayenne, BMW X5+): add 25%\n- Electric/Tesla (aluminium panels): add 25% on paintwork\n- Standard/economy cars (Ford, VW, Toyota, Vauxhall etc): no surcharge\n\nCustomer vehicle: '+make+' '+model+'. Service selected: '+service+'.\n\nAnalyse the damage photo carefully. Apply the correct price from the guide above based on damage type and severity. If the vehicle is a premium or luxury brand, apply the surcharge to your price estimate.\n\nRespond in this exact JSON format only:\n{"assessment":"2-3 sentence description of the damage type, location and severity","price":"e.g. \u00a3190-\u00a3240","service":"which ScuffIQ service applies","confidence":"high/medium/low"}\n\nIf no car damage is visible, set assessment to "No car damage visible \u2014 please upload a clear photo of the affected area" and price to "N/A".' }
           ]
         }]
       })
@@ -743,7 +774,7 @@ async function analysePhoto(idx) {
   }
 }
 
-// ── Submit — EmailJS ───────────────────────────────────────────
+// ── Submit ─────────────────────────────────────────────────────
 async function submitQuote() {
   var btn = document.getElementById('submitBtn');
   btn.disabled = true;
@@ -788,9 +819,7 @@ async function submitQuote() {
   try {
     var response = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(quotePayload)
     });
 
