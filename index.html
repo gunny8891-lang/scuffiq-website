@@ -219,6 +219,14 @@ select option{background:#1a1a1a;color:#fff;}
 ::-webkit-scrollbar-track{background:var(--black);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18259129511"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18259129511');
+</script>
 </head>
 <body>
 
@@ -830,6 +838,13 @@ async function submitQuote() {
 
     document.getElementById('successEmail').textContent = email;
     setStep(3);
+
+    // Google Ads conversion — quote submitted successfully
+    gtag('event', 'conversion', {
+      'send_to': 'AW-18259129511/S_TOCNLcxcUcEKfp0IJE',
+      'value': 120.0,
+      'currency': 'GBP'
+    });
 
   } catch(err) {
     console.error('Worker email error:', err);
