@@ -571,38 +571,17 @@ select option{background:#1a1a1a;color:#fff;}
     <h2 class="sec-title">North London · Hertfordshire · Essex</h2>
     <p class="sec-sub" style="margin-bottom:0;">Enter your postcode in the quote form to confirm we serve your area.</p>
     <div class="areas-pills">
-      <div class="pill">North London</div>
-      <div class="pill">Hampstead</div>
-      <div class="pill">Highgate</div>
-      <div class="pill">Muswell Hill</div>
-      <div class="pill">Finchley</div>
-      <div class="pill">Mill Hill</div>
-      <div class="pill">Golders Green</div>
-      <div class="pill">Totteridge</div>
-      <div class="pill">Whetstone</div>
-      <div class="pill">Barnet</div>
-      <div class="pill">East Barnet</div>
-      <div class="pill">Friern Barnet</div>
-      <div class="pill">Enfield</div>
-      <div class="pill">Southgate</div>
-      <div class="pill">Palmers Green</div>
-      <div class="pill">Haringey</div>
-      <div class="pill">Crouch End</div>
-      <div class="pill">Alexandra Palace</div>
-      <div class="pill">Watford</div>
-      <div class="pill">St Albans</div>
-      <div class="pill">Hertford</div>
-      <div class="pill">Stevenage</div>
-      <div class="pill">Welwyn Garden City</div>
-      <div class="pill">Hoddesdon</div>
-      <div class="pill">Chelmsford</div>
-      <div class="pill">Romford</div>
-      <div class="pill">Brentwood</div>
-      <div class="pill">Harlow</div>
-      <div class="pill">Epping</div>
-      <div class="pill">Chigwell</div>
-      <div class="pill">Loughton</div>
-      <div class="pill">Waltham Abbey</div>
+      <div class="pill">North London</div><div class="pill">Hampstead</div><div class="pill">Highgate</div>
+      <div class="pill">Muswell Hill</div><div class="pill">Finchley</div><div class="pill">Mill Hill</div>
+      <div class="pill">Golders Green</div><div class="pill">Totteridge</div><div class="pill">Whetstone</div>
+      <div class="pill">Barnet</div><div class="pill">East Barnet</div><div class="pill">Friern Barnet</div>
+      <div class="pill">Enfield</div><div class="pill">Southgate</div><div class="pill">Palmers Green</div>
+      <div class="pill">Haringey</div><div class="pill">Crouch End</div><div class="pill">Alexandra Palace</div>
+      <div class="pill">Watford</div><div class="pill">St Albans</div><div class="pill">Hertford</div>
+      <div class="pill">Stevenage</div><div class="pill">Welwyn Garden City</div><div class="pill">Hoddesdon</div>
+      <div class="pill">Chelmsford</div><div class="pill">Romford</div><div class="pill">Brentwood</div>
+      <div class="pill">Harlow</div><div class="pill">Epping</div><div class="pill">Chigwell</div>
+      <div class="pill">Loughton</div><div class="pill">Waltham Abbey</div>
     </div>
   </div>
 </section>
@@ -656,9 +635,7 @@ function setStep(n) {
     if (i<n) tab.classList.add('done');
   });
 }
-
 function goToStep1() { setStep(1); }
-
 function goToStep2() {
   if (!validateStep1()) return;
   setStep(2);
@@ -823,6 +800,7 @@ async function submitQuote() {
   var postcode = document.getElementById('postcode').value.trim();
   var service  = document.getElementById('service').value;
 
+  // Plain-text summary for the email (unchanged)
   var aiSummary = uploadedPhotos.map(function(p, i) {
     var r = p.result;
     return 'Photo ' + (i+1) + ':\n'
@@ -830,6 +808,11 @@ async function submitQuote() {
       + 'Price: ' + (r && r.price ? r.price.replace('Indicative price: ','') : 'Pending') + '\n'
       + 'Service: ' + (r && r.service ? r.service : service);
   }).join('\n\n---\n\n');
+
+  // Structured AI results array — used by Worker to populate Supabase DB columns
+  var aiResults = uploadedPhotos.map(function(p) {
+    return p.result || null;
+  });
 
   var quotePayload = {
     customer_name:   fname + ' ' + lname,
@@ -841,10 +824,10 @@ async function submitQuote() {
     service_type:    service,
     photo_count:     uploadedPhotos.length,
     ai_summary:      aiSummary,
-    submission_time: new Date().toLocaleString('en-GB'),
+    ai_results:      aiResults,
     photos: uploadedPhotos.map(function(p, i) {
       return {
-        name: p.name || ('scuffiq-photo-' + (i + 1) + '.jpg'),
+        name:    p.name || ('scuffiq-photo-' + (i + 1) + '.jpg'),
         dataUrl: p.dataUrl
       };
     })
@@ -865,7 +848,7 @@ async function submitQuote() {
     document.getElementById('successEmail').textContent = email;
     setStep(3);
 
-    // Google Ads conversion — quote submitted successfully
+    // Google Ads conversion
     gtag('event', 'conversion', {
       'send_to': 'AW-18259129511/S_TOCNLcxcUcEKfp0IJE',
       'value': 120.0,
