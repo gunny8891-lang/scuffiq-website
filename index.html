@@ -6,16 +6,8 @@
 <title>ScuffIQ — Smart Repair Specialists | North London, Hertfordshire & Essex</title>
 <meta name="description" content="ScuffIQ offers expert scratch, scuff, bumper and alloy wheel smart repair across North London including Hampstead, Highgate, Finchley, Muswell Hill, Barnet and Enfield, plus Hertfordshire and Essex. Upload a photo for an instant AI quote.">
 
-<!-- ═══════════════════════════════════════════════════════════
-     GOOGLE SEARCH CONSOLE VERIFICATION
-     Replace YOUR_SEARCH_CONSOLE_CODE with the code from
-     Search Console → Settings → Ownership verification → HTML tag
-     ═══════════════════════════════════════════════════════════ -->
 <meta name="google-site-verification" content="BbX_YLppp1VuxCrMX9CbUqliGDM4jrjYms45QU4fIG0">
 
-<!-- ═══════════════════════════════════════════════════════════
-     OPEN GRAPH / SOCIAL SHARING
-     ═══════════════════════════════════════════════════════════ -->
 <meta property="og:title" content="ScuffIQ — Smart Repair Specialists">
 <meta property="og:description" content="Scratches, scuffs and alloy wheel repairs fixed fast at your door. Covering North London, Hertfordshire & Essex. Upload a photo for an instant AI quote.">
 <meta property="og:image" content="https://www.scuffiq.com/scuffiq-logo.png">
@@ -23,7 +15,6 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 
-<!-- CANONICAL -->
 <link rel="canonical" href="https://www.scuffiq.com/">
 
 <style>
@@ -142,7 +133,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--neon);margin-bottom:10px;}
 .sec-title{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;color:var(--white);margin-bottom:8px;}
 .sec-sub{font-size:14px;color:var(--grey);max-width:460px;margin-bottom:40px;line-height:1.7;}
-.gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
 .ba-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--rad-lg);overflow:hidden;transition:border-color .2s;}
 .ba-card:hover{border-color:rgba(0,212,255,0.4);}
 .ba-visual{display:grid;grid-template-columns:1fr 1fr;height:420px;position:relative;}
@@ -215,11 +206,13 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
 .footer-bottom p span{color:var(--neon);}
 
 /* RESPONSIVE */
+@media(max-width:1000px){
+  .gallery-grid{grid-template-columns:1fr 1fr;}
+}
 @media(max-width:860px){
   .hero-inner{grid-template-columns:1fr;gap:32px;}
   .svc-grid{grid-template-columns:1fr 1fr;}
   .price-grid{grid-template-columns:1fr 1fr;}
-  .gallery-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:580px){
@@ -230,6 +223,7 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
   .fg-row{grid-template-columns:1fr;}
   .svc-grid{grid-template-columns:1fr;}
   .price-grid{grid-template-columns:1fr;}
+  .gallery-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr;}
   .footer-bottom{flex-direction:column;text-align:center;}
   .lease-banner{flex-direction:column;text-align:center;}
@@ -241,11 +235,6 @@ select option{background:#1a1a1a;color:#fff;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
 
-<!-- ═══════════════════════════════════════════════════════════
-     GOOGLE ANALYTICS 4 + GOOGLE ADS (combined)
-     GA4 Measurement ID: G-RTWNL5LC4Z
-     Google Ads ID:      AW-18259129511
-     ═══════════════════════════════════════════════════════════ -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RTWNL5LC4Z"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -255,22 +244,12 @@ select option{background:#1a1a1a;color:#fff;}
   gtag('config', 'AW-18259129511');
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════
-     GOOGLE TAG MANAGER
-     Replace GTM-XXXXXXX with your GTM container ID from
-     tagmanager.google.com → Admin → Install Google Tag Manager
-     ═══════════════════════════════════════════════════════════ -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GT-PJNSWS3C');</script>
 
-<!-- ═══════════════════════════════════════════════════════════
-     MICROSOFT CLARITY
-     Replace YOUR_CLARITY_ID with your ID from clarity.microsoft.com
-     → New Project → Get tracking code
-     ═══════════════════════════════════════════════════════════ -->
 <script type="text/javascript">
   (function(c,l,a,r,i,t,y){
     c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -282,10 +261,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════
-     GOOGLE TAG MANAGER (noscript fallback)
-     Must be the first thing inside <body>
-     ═══════════════════════════════════════════════════════════ -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GT-PJNSWS3C"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
@@ -485,6 +460,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <h2 class="sec-title">Real repairs. Real results.</h2>
     <p class="sec-sub">Every job is different. Here's what our technicians deliver — results that rival a full bodyshop respray.</p>
     <div class="gallery-grid">
+
+      <!-- Card 1: Scratch & scuff -->
       <div class="ba-card">
         <div class="ba-visual">
           <div class="ba-side">
@@ -502,6 +479,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="ba-desc">Deep paint scratches along the driver's door — colour matched, refinished and lacquered to factory standard. Completed on-site in under 2 hours.</div>
         </div>
       </div>
+
+      <!-- Card 2: Alloy wheel -->
       <div class="ba-card">
         <div class="ba-visual">
           <div class="ba-side">
@@ -519,6 +498,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="ba-desc">Severe kerb rash and gouging on a 19" alloy — sanded, filled, colour matched and resprayed to a showroom finish. As good as new.</div>
         </div>
       </div>
+
+      <!-- Card 3: Jaguar keyed scratch — NEW -->
+      <div class="ba-card">
+        <div class="ba-visual">
+          <div class="ba-side">
+            <div class="ba-lbl lbl-before">Before</div>
+            <img src="Jag_before.jpg" alt="Jaguar F-Type keyed scratch damage before ScuffIQ repair">
+          </div>
+          <div class="ba-divider"></div>
+          <div class="ba-side">
+            <div class="ba-lbl lbl-after">After</div>
+            <img src="Jag_scratch.png" alt="Jaguar F-Type scratch fully restored by ScuffIQ">
+          </div>
+        </div>
+        <div class="ba-info">
+          <div class="ba-title">Keyed scratch repair — Jaguar F-Type</div>
+          <div class="ba-desc">Vandal scratch running across the door and rear quarter panel — paint matched to Jaguar's Caldera Red, carefully blended and lacquered to an invisible finish. Completed on-site in under 3 hours.</div>
+        </div>
+      </div>
+
     </div>
     <p style="text-align:center;font-size:12px;color:#555;margin-top:14px;">Real ScuffIQ repairs. Results may vary by damage type and severity.</p>
   </div>
@@ -699,7 +698,6 @@ function setStep(n) {
 function goToStep1() { setStep(1); }
 function goToStep2() {
   if (!validateStep1()) return;
-  // GA4 micro-conversion: user reached photo upload step
   gtag('event', 'quote_step_2', {
     'event_category': 'Quote funnel',
     'event_label': 'Reached photo upload'
@@ -912,14 +910,12 @@ async function submitQuote() {
     document.getElementById('successEmail').textContent = email;
     setStep(3);
 
-    // Google Ads conversion
     gtag('event', 'conversion', {
       'send_to': 'AW-18259129511/S_TOCNLcxcUcEKfp0IJE',
       'value': 120.0,
       'currency': 'GBP'
     });
 
-    // GA4 conversion event
     gtag('event', 'generate_lead', {
       'event_category': 'Quote funnel',
       'event_label': 'Quote submitted',
