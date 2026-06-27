@@ -455,6 +455,13 @@ function buildModalHtml(r) {
           <div class="m-field"><label>Technician email</label><p>${esc(r.technician_email||'—')}</p></div>
           ${r.technician_notes ? `<div class="m-field" style="grid-column:span 2"><label>Technician notes</label><p>${esc(r.technician_notes)}</p></div>` : ''}
         </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,170,0,0.2);">
+          <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}')" style="background:var(--green);width:100%;">
+            ✉ Send confirmed quote to ${esc(r.customer_name||'customer')}
+          </button>
+          <p class="save-msg save-ok" id="emailSentOk" style="text-align:center;margin-top:8px;">✓ Quote email sent to customer</p>
+          <p class="save-msg save-err" id="emailSentErr" style="text-align:center;margin-top:8px;">✗ Failed to send — check console</p>
+        </div>
       </div>
     </div>`;
   }
@@ -659,6 +666,65 @@ async function sendToTechnician() {
   } finally {
     btn.disabled    = false;
     btn.textContent = 'Send job to technician';
+  }
+}
+
+// ── Send confirmed quote email to customer ────────────────────────────────────
+async function sendConfirmedQuoteEmail(id) {
+  const row = allRows.find(r => r.id === id);
+  if (!row) { alert('Job not found.'); return; }
+
+  const btn = document.getElementById('sendQuoteEmailBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  document.getElementById('emailSentOk').style.display = 'none';
+  document.getElementById('emailSentErr').style.display = 'none';
+
+  try {
+    const res = await fetch(
+      'https://plain-math-71e8scuffiq-api.gunny8891.workers.dev/send-confirmed-quote',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name:           row.customer_name,
+          customer_email:          row.customer_email,
+          vehicle_make:            row.vehicle_make,
+          vehicle_model:           row.vehicle_model,
+          service_type:            row.service_type,
+          postcode:                row.postcode,
+          technician_price:        row.technician_price,
+          technician_availability: row.technician_availability,
+          technician_notes:        row.technician_notes,
+        }),
+      }
+    );
+
+    if (!res.ok) throw new Error(await res.text());
+
+    document.getElementById('emailSentOk').style.display = 'block';
+
+    // Update local status to quoted so dashboard reflects it
+    await supaFetch(`quote_submissions?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status: 'quoted',
+        final_quote_given: row.technician_price,
+      }),
+    });
+
+    const idx = allRows.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      allRows[idx].status = 'quoted';
+      allRows[idx].final_quote_given = row.technician_price;
+    }
+    updateStats(allRows);
+    renderTable(allRows);
+
+  } catch (e) {
+    console.error('Send quote email error:', e);
+    document.getElementById('emailSentErr').style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = `✉ Send confirmed quote to customer`; }
   }
 }
 
