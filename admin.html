@@ -595,9 +595,7 @@ async function sendToTechnician() {
       { method: 'PATCH', body: JSON.stringify(payload) }
     );
 
-    alert('Technician assigned successfully. Review link created:
-
-' + reviewLink);
+    alert('Technician assigned successfully. Review link created:\n\n' + reviewLink);
     closeAssignModal();
     loadSubmissions();
   } catch (e) {
