@@ -8,7 +8,7 @@
 :root {
   --black:#000;--carbon:#080808;--panel:#111;--border:#1e1e1e;
   --grey:#555;--light:#999;--neon:#00D4FF;--neon-dk:#00A3C4;
-  --white:#fff;--red:#ff6b6b;--green:#00d48a;
+  --white:#fff;--red:#ff6b6b;--green:#00d48a;--orange:#ffaa00;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -38,7 +38,7 @@ header{background:var(--carbon);border-bottom:1px solid var(--border);padding:14
 .main{padding:24px;max-width:1400px;margin:0 auto;}
 
 /* STATS */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
 .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
 .stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);margin-bottom:6px;}
 .stat-value{font-size:26px;font-weight:700;color:var(--neon);}
@@ -67,6 +67,8 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 .pill-pending{background:rgba(255,107,107,0.12);color:var(--red);border:1px solid rgba(255,107,107,0.3);}
 .pill-quoted{background:rgba(0,212,255,0.1);color:var(--neon);border:1px solid rgba(0,212,255,0.25);}
 .pill-done{background:rgba(0,212,138,0.1);color:var(--green);border:1px solid rgba(0,212,138,0.25);}
+.pill-tech{background:rgba(255,170,0,0.12);color:var(--orange);border:1px solid rgba(255,170,0,0.3);}
+.pill-sent{background:rgba(0,212,255,0.06);color:#7ecfdf;border:1px solid rgba(0,212,255,0.15);}
 .thumb-row{display:flex;gap:4px;}
 .thumb-row img{width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);}
 .loading-row td{text-align:center;padding:40px;color:var(--grey);}
@@ -96,6 +98,11 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 .conf-high{background:rgba(0,212,138,0.15);color:var(--green);}
 .conf-medium{background:rgba(255,200,0,0.12);color:#ffc800;}
 .conf-low{background:rgba(255,107,107,0.12);color:var(--red);}
+
+/* TECHNICIAN CONFIRMED PANEL */
+.tech-confirmed-panel{background:#0a0a0a;border:1px solid rgba(255,170,0,0.3);border-radius:10px;padding:16px;margin-bottom:16px;}
+.tech-confirmed-panel h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:12px;}
+.tech-confirmed-panel .m-grid{margin-bottom:0;}
 
 /* LABEL FORM */
 .label-form{background:#0a0a0a;border:1px solid var(--border);border-radius:10px;padding:18px;}
@@ -159,8 +166,9 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card"><div class="stat-label">Total submissions</div><div class="stat-value" id="statTotal">—</div></div>
-      <div class="stat-card"><div class="stat-label">Pending label</div><div class="stat-value" id="statPending" style="color:var(--red)">—</div></div>
-      <div class="stat-card"><div class="stat-label">Quoted</div><div class="stat-value" id="statQuoted">—</div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="statPending" style="color:var(--red)">—</div></div>
+      <div class="stat-card"><div class="stat-label">Sent to technician</div><div class="stat-value" id="statSent" style="color:#7ecfdf">—</div></div>
+      <div class="stat-card"><div class="stat-label">Tech confirmed</div><div class="stat-value" id="statTechConfirmed" style="color:var(--orange)">—</div></div>
       <div class="stat-card"><div class="stat-label">Jobs completed</div><div class="stat-value" id="statDone" style="color:var(--green)">—</div></div>
     </div>
 
@@ -170,6 +178,8 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       <select id="statusFilter" onchange="filterTable()">
         <option value="">All statuses</option>
         <option value="pending">Pending</option>
+        <option value="sent_to_technician">Sent to technician</option>
+        <option value="technician_confirmed">Tech confirmed</option>
         <option value="quoted">Quoted</option>
         <option value="done">Completed</option>
       </select>
@@ -192,6 +202,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Service</th>
             <th>Photos</th>
             <th>AI price</th>
+            <th>Tech price</th>
             <th>Final quote</th>
             <th>Status</th>
             <th>Date</th>
@@ -199,7 +210,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="9">Loading submissions…</td></tr>
+          <tr class="loading-row"><td colspan="10">Loading submissions…</td></tr>
         </tbody>
       </table>
     </div>
@@ -241,11 +252,9 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 </div>
 
 <script>
-// ── Config — set these to your values ────────────────────────────────────────
-// IMPORTANT: Replace these with your actual Supabase credentials
-const SUPABASE_URL  = 'https://scohjgsjjxbkpfuhlmrz.supabase.co';       // e.g. https://xxxx.supabase.co
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjb2hqZ3Nqanhia3BmdWhsbXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODgwNjYsImV4cCI6MjA5ODA2NDA2Nn0.V-VCy_R7MRFs9o1Ybr2Uvpis13XR45d6HE-hk6gHBpY';  // eyJ... key from Project Settings → API
-const ADMIN_PASSWORD = 'ScuffIQ2026!';     // choose something strong
+const SUPABASE_URL  = 'https://scohjgsjjxbkpfuhlmrz.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjb2hqZ3Nqanhia3BmdWhsbXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODgwNjYsImV4cCI6MjA5ODA2NDA2Nn0.V-VCy_R7MRFs9o1Ybr2Uvpis13XR45d6HE-hk6gHBpY';
+const ADMIN_PASSWORD = 'ScuffIQ2026!';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 function login() {
@@ -285,7 +294,7 @@ async function supaFetch(path, options = {}) {
 
 async function loadSubmissions() {
   document.getElementById('tableBody').innerHTML =
-    '<tr class="loading-row"><td colspan="9">Loading…</td></tr>';
+    '<tr class="loading-row"><td colspan="10">Loading…</td></tr>';
   try {
     const rows = await supaFetch(
       'quote_submissions?select=*&order=submitted_at.desc&limit=500'
@@ -295,19 +304,31 @@ async function loadSubmissions() {
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
-      `<tr class="loading-row"><td colspan="9" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+      `<tr class="loading-row"><td colspan="10" style="color:var(--red)">Error: ${e.message}</td></tr>`;
   }
 }
 
+function getRowStatus(r) {
+  if (r.job_completed) return 'done';
+  if (r.status === 'technician_confirmed') return 'technician_confirmed';
+  if (r.status === 'technician_declined') return 'pending';
+  if (r.status === 'sent_to_technician') return 'sent_to_technician';
+  if (r.final_quote_given) return 'quoted';
+  return 'pending';
+}
+
 function updateStats(rows) {
-  const pending = rows.filter(r => !r.final_quote_given).length;
-  const quoted  = rows.filter(r => r.final_quote_given && !r.job_completed).length;
-  const done    = rows.filter(r => r.job_completed).length;
-  document.getElementById('statTotal').textContent   = rows.length;
-  document.getElementById('statPending').textContent = pending;
-  document.getElementById('statQuoted').textContent  = quoted;
-  document.getElementById('statDone').textContent    = done;
-  document.getElementById('headerBadge').textContent = `${rows.length} submissions`;
+  const pending          = rows.filter(r => getRowStatus(r) === 'pending').length;
+  const sent             = rows.filter(r => getRowStatus(r) === 'sent_to_technician').length;
+  const techConfirmed    = rows.filter(r => getRowStatus(r) === 'technician_confirmed').length;
+  const done             = rows.filter(r => r.job_completed).length;
+
+  document.getElementById('statTotal').textContent        = rows.length;
+  document.getElementById('statPending').textContent      = pending;
+  document.getElementById('statSent').textContent         = sent;
+  document.getElementById('statTechConfirmed').textContent = techConfirmed;
+  document.getElementById('statDone').textContent         = done;
+  document.getElementById('headerBadge').textContent      = `${rows.length} submissions`;
 }
 
 // ── Table rendering ───────────────────────────────────────────────────────────
@@ -317,16 +338,29 @@ function renderTable(rows) {
     rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="9">No submissions found.</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="10">No submissions found.</td></tr>';
     return;
   }
 
   tbody.innerHTML = rows.map(r => {
-    const status  = r.job_completed ? 'done' : (r.final_quote_given ? 'quoted' : 'pending');
-    const pillCls = {done:'pill-done', quoted:'pill-quoted', pending:'pill-pending'}[status];
-    const pillLbl = {done:'Completed', quoted:'Quoted', pending:'Pending'}[status];
+    const status  = getRowStatus(r);
 
-    // Thumbnail strip
+    const pillCls = {
+      done:                   'pill-done',
+      quoted:                 'pill-quoted',
+      pending:                'pill-pending',
+      sent_to_technician:     'pill-sent',
+      technician_confirmed:   'pill-tech',
+    }[status] || 'pill-pending';
+
+    const pillLbl = {
+      done:                   'Completed',
+      quoted:                 'Quoted',
+      pending:                'Pending',
+      sent_to_technician:     'Sent to tech',
+      technician_confirmed:   'Tech confirmed',
+    }[status] || 'Pending';
+
     const thumbs = [1,2,3,4,5,6]
       .map(i => r[`image_url_${i}`])
       .filter(Boolean)
@@ -334,8 +368,8 @@ function renderTable(rows) {
       .map(u => `<img src="${u}" alt="photo" loading="lazy">`)
       .join('');
 
-    // First AI price
-    const firstPrice = r.ai_price_1 || '—';
+    const firstPrice  = r.ai_price_1 || '—';
+    const techPrice   = r.technician_price ? `<span style="color:var(--orange);font-weight:600;">${esc(r.technician_price)}</span>` : '—';
 
     const date = r.submitted_at
       ? new Date(r.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'})
@@ -347,6 +381,7 @@ function renderTable(rows) {
       <td>${esc(r.service_type||'')}</td>
       <td><div class="thumb-row">${thumbs || '<span style="color:var(--grey);font-size:12px;">No images</span>'}</div><div style="font-size:11px;color:var(--grey);margin-top:3px;">${r.photo_count||0} photo${r.photo_count!==1?'s':''}</div></td>
       <td style="color:var(--neon);font-weight:600;">${esc(firstPrice)}</td>
+      <td>${techPrice}</td>
       <td style="color:var(--white);font-weight:600;">${esc(r.final_quote_given||'—')}</td>
       <td><span class="status-pill ${pillCls}">${pillLbl}</span></td>
       <td class="td-date">${date}</td>
@@ -367,7 +402,7 @@ function filterTable() {
   const filtered = allRows.filter(r => {
     const matchQ = !q || [r.customer_name,r.customer_email,r.vehicle_make,r.vehicle_model,r.postcode]
       .some(v => (v||'').toLowerCase().includes(q));
-    const rowStatus = r.job_completed ? 'done' : (r.final_quote_given ? 'quoted' : 'pending');
+    const rowStatus    = getRowStatus(r);
     const matchStatus  = !status  || rowStatus === status;
     const matchService = !service || (r.service_type||'').includes(service);
     return matchQ && matchStatus && matchService;
@@ -406,6 +441,24 @@ function buildModalHtml(r) {
     </div>
   </div>`;
 
+  // Technician confirmed panel
+  if (r.status === 'technician_confirmed' || r.technician_price) {
+    html += `
+    <div class="m-section">
+      <div class="m-section-title">Technician response</div>
+      <div class="tech-confirmed-panel">
+        <h4>✓ Quote confirmed by ${esc(r.technician_name || 'technician')}</h4>
+        <div class="m-grid">
+          <div class="m-field"><label>Confirmed price</label><p style="color:var(--orange);font-size:18px;font-weight:700;">${esc(r.technician_price||'—')}</p></div>
+          <div class="m-field"><label>Availability</label><p>${esc(r.technician_availability||'—')}</p></div>
+          <div class="m-field"><label>Technician</label><p>${esc(r.technician_name||'—')}</p></div>
+          <div class="m-field"><label>Technician email</label><p>${esc(r.technician_email||'—')}</p></div>
+          ${r.technician_notes ? `<div class="m-field" style="grid-column:span 2"><label>Technician notes</label><p>${esc(r.technician_notes)}</p></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+
   // Photos + AI results
   const photos = [1,2,3,4,5,6]
     .map(i => ({ url: r[`image_url_${i}`], assessment: r[`ai_assessment_${i}`], price: r[`ai_price_${i}`], confidence: r[`ai_confidence_${i}`], service: r[`ai_service_${i}`] }))
@@ -428,8 +481,8 @@ function buildModalHtml(r) {
     html += `</div>`;
   }
 
-  // Label form — fill in after the job
-  const status = r.job_completed ? 'done' : (r.final_quote_given ? 'quoted' : 'pending');
+  // Label form
+  const status = getRowStatus(r);
   html += `
   <div class="m-section">
     <div class="m-section-title">Label this submission (training data)</div>
@@ -449,13 +502,15 @@ function buildModalHtml(r) {
         <div class="lf-field">
           <label>Job status</label>
           <select id="lf-status">
-            <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
-            <option value="quoted"  ${status==='quoted'?'selected':''}>Quoted</option>
-            <option value="done"    ${status==='done'?'selected':''}>Completed</option>
+            <option value="pending"               ${status==='pending'?'selected':''}>Pending</option>
+            <option value="sent_to_technician"    ${status==='sent_to_technician'?'selected':''}>Sent to technician</option>
+            <option value="technician_confirmed"  ${status==='technician_confirmed'?'selected':''}>Tech confirmed</option>
+            <option value="quoted"                ${status==='quoted'?'selected':''}>Quoted</option>
+            <option value="done"                  ${status==='done'?'selected':''}>Completed</option>
           </select>
         </div>
         <div class="lf-field">
-          <label>Technician notes</label>
+          <label>Admin notes</label>
           <input type="text" id="lf-notes" placeholder="e.g. needed respray" value="${esc(r.technician_notes||'')}">
         </div>
       </div>
@@ -480,6 +535,7 @@ async function saveLabel(id) {
     final_quote_given: document.getElementById('lf-quote').value.trim() || null,
     actual_job_cost:   document.getElementById('lf-cost').value.trim()  || null,
     job_completed:     statusVal === 'done',
+    status:            statusVal,
     technician_notes:  document.getElementById('lf-notes').value.trim() || null,
   };
 
@@ -488,7 +544,6 @@ async function saveLabel(id) {
       `quote_submissions?id=eq.${id}`,
       { method: 'PATCH', body: JSON.stringify(payload) }
     );
-    // Update local cache
     const idx = allRows.findIndex(r => r.id === id);
     if (idx !== -1) allRows[idx] = { ...allRows[idx], ...payload };
     updateStats(allRows);
@@ -512,7 +567,8 @@ function exportCSV() {
     'ai_assessment_2','ai_price_2','ai_confidence_2',
     'ai_assessment_3','ai_price_3','ai_confidence_3',
     'image_url_1','image_url_2','image_url_3',
-    'final_quote_given','actual_job_cost','job_completed','technician_notes'
+    'technician_name','technician_price','technician_availability','technician_notes',
+    'final_quote_given','actual_job_cost','job_completed','status'
   ];
   const header = cols.join(',');
   const rows = allRows.map(r =>
@@ -528,8 +584,7 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
-
-// ── Technician Assignment ────────────────────────────────────────────────────
+// ── Technician Assignment ─────────────────────────────────────────────────────
 async function openAssignModal(quoteId) {
   document.getElementById('assignQuoteId').value = quoteId;
   document.getElementById('technicianSelect').innerHTML = '<option>Loading technicians…</option>';
@@ -565,28 +620,28 @@ function closeAssignModal() {
 
 async function sendToTechnician() {
   const quoteId = document.getElementById('assignQuoteId').value;
-  const select = document.getElementById('technicianSelect');
+  const select  = document.getElementById('technicianSelect');
 
   if (!select.value) {
     alert('Please select a technician first.');
     return;
   }
 
-  const selected = select.options[select.selectedIndex];
-  const token = crypto.randomUUID();
+  const selected   = select.options[select.selectedIndex];
+  const token      = crypto.randomUUID();
   const reviewLink = `https://scuffiq.com/technician/quote.html?token=${token}`;
 
   const payload = {
-    assigned_technician_id: select.value,
-    technician_name: selected.dataset.name,
-    technician_email: selected.dataset.email,
-    technician_status: 'sent',
+    assigned_technician_id:  select.value,
+    technician_name:         selected.dataset.name,
+    technician_email:        selected.dataset.email,
+    technician_status:       'sent',
     technician_review_token: token,
-    status: 'sent_to_technician'
+    status:                  'sent_to_technician'
   };
 
   const btn = document.getElementById('sendTechBtn');
-  btn.disabled = true;
+  btn.disabled    = true;
   btn.textContent = 'Sending…';
 
   try {
@@ -602,7 +657,7 @@ async function sendToTechnician() {
     console.error(e);
     alert('Failed to assign technician. Check console for details.');
   } finally {
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = 'Send job to technician';
   }
 }
