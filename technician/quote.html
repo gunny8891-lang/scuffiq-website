@@ -1,1 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScuffIQ Technician Review</title>
+  <link rel="stylesheet" href="technician.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="topbar">
+      <div class="brand">Scuff<span>IQ</span></div>
+      <div class="portal-badge">Technician Portal</div>
+    </header>
 
+    <section id="loadingState" class="state-card">
+      <div class="loader"></div>
+      <h1>Loading job...</h1>
+      <p>Checking the secure ScuffIQ review link.</p>
+    </section>
+
+    <section id="errorState" class="state-card hidden">
+      <h1>Review link unavailable</h1>
+      <p id="errorMessage">This job could not be loaded. Please contact ScuffIQ.</p>
+    </section>
+
+    <section id="successState" class="state-card hidden">
+      <h1>Quote submitted</h1>
+      <p>Your technician quote has been sent to ScuffIQ.</p>
+      <p class="muted">You can now close this page.</p>
+    </section>
+
+    <section id="jobContent" class="hidden">
+      <div class="hero-card">
+        <div>
+          <p class="eyebrow">Repair review</p>
+          <h1 id="jobTitle">ScuffIQ job</h1>
+          <p class="muted">Review the customer details, uploaded photos and AI estimate before confirming your price and availability.</p>
+        </div>
+        <div class="status-pill" id="jobStatus">Awaiting review</div>
+      </div>
+
+      <div class="grid two-col">
+        <article class="card">
+          <h2>Customer & vehicle</h2>
+          <div class="detail-grid">
+            <div><span>Customer</span><strong id="customerName">—</strong></div>
+            <div><span>Email</span><strong id="customerEmail">—</strong></div>
+            <div><span>Phone</span><strong id="customerPhone">—</strong></div>
+            <div><span>Postcode</span><strong id="postcode">—</strong></div>
+            <div><span>Vehicle</span><strong id="vehicle">—</strong></div>
+            <div><span>Service</span><strong id="serviceType">—</strong></div>
+          </div>
+        </article>
+
+        <article class="card price-card">
+          <h2>AI estimate</h2>
+          <div class="ai-price" id="aiPrice">Review required</div>
+          <p id="aiAssessment" class="muted">AI assessment will appear here where available.</p>
+          <div class="confidence" id="aiConfidence">Confidence: —</div>
+        </article>
+      </div>
+
+      <article class="card">
+        <div class="section-head">
+          <h2>Damage photos</h2>
+          <p id="photoCount" class="muted">0 photos</p>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </article>
+
+      <article class="card">
+        <h2>Your review</h2>
+        <form id="reviewForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="technicianPrice">Confirmed price *</label>
+              <input id="technicianPrice" type="text" placeholder="e.g. £245" required>
+            </div>
+            <div class="field">
+              <label for="availability">Availability *</label>
+              <select id="availability" required>
+                <option value="">Select availability</option>
+                <option>Today AM</option>
+                <option>Today PM</option>
+                <option>Tomorrow AM</option>
+                <option>Tomorrow PM</option>
+                <option>This week</option>
+                <option>Next week</option>
+                <option>Other - see notes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="repairTime">Estimated repair time</label>
+              <select id="repairTime">
+                <option value="">Select time</option>
+                <option>Under 1 hour</option>
+                <option>1-2 hours</option>
+                <option>2-3 hours</option>
+                <option>Half day</option>
+                <option>Full day</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="decision">Decision</label>
+              <select id="decision">
+                <option value="accepted">Accept job</option>
+                <option value="declined">Decline job</option>
+                <option value="more_info">Need more photos/info</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label for="notes">Technician notes</label>
+            <textarea id="notes" rows="5" placeholder="e.g. Can repair on driveway. Allow 2 hours. Needs bumper corner blend."></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit" id="submitBtn">Submit review</button>
+            <button type="button" class="secondary" onclick="window.location.href='dashboard.html'">Back to dashboard</button>
+          </div>
+
+          <p id="formMessage" class="form-message"></p>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <script src="technician.js"></script>
+</body>
+</html>
