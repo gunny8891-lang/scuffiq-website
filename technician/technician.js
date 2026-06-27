@@ -2,9 +2,7 @@
 // Handles technician quote review links and quote confirmation
 
 const SUPABASE_URL = "https://scohjgsjjxbkpfuhlmrz.supabase.co";
-
-// Replace this with the same anon key used in admin.html
-const SUPABASE_KEY = "sb_publishable_ja-1cvEG-6iOG8IO54UfeA_p5ngEFUe";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjb2hqZ3Nqanhia3BmdWhsbXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODgwNjYsImV4cCI6MjA5ODA2NDA2Nn0.V-VCy_R7MRFs9o1Ybr2Uvpis13XR45d6HE-hk6gHBpY";
 
 let currentQuote = null;
 
@@ -64,16 +62,18 @@ function getAiPrice(quote) {
     quote.final_quote_given ||
     "Technician review required"
   );
-}async function loadTechnicianQuote() {
+}
+
+async function loadTechnicianQuote() {
   const token = getTokenFromUrl();
 
   const loadingEl = document.getElementById("loadingState");
-  const errorEl = document.getElementById("errorState");
-  const appEl = document.getElementById("quoteApp");
+  const errorEl   = document.getElementById("errorState");
+  const appEl     = document.getElementById("jobContent"); // FIXED
 
   if (loadingEl) loadingEl.style.display = "block";
-  if (errorEl) errorEl.style.display = "none";
-  if (appEl) appEl.style.display = "none";
+  if (errorEl)   errorEl.classList.add("hidden");
+  if (appEl)     appEl.classList.add("hidden");
 
   if (!token) {
     showError("Invalid review link. No token was found.");
@@ -94,7 +94,7 @@ function getAiPrice(quote) {
     renderQuote(currentQuote);
 
     if (loadingEl) loadingEl.style.display = "none";
-    if (appEl) appEl.style.display = "block";
+    if (appEl)     appEl.classList.remove("hidden");
   } catch (error) {
     console.error("Load quote error:", error);
     showError("Unable to load this job. Please contact ScuffIQ.");
@@ -102,70 +102,61 @@ function getAiPrice(quote) {
 }
 
 function showError(message) {
-  const loadingEl = document.getElementById("loadingState");
-  const errorEl = document.getElementById("errorState");
-  const errorTextEl = document.getElementById("errorText");
-  const appEl = document.getElementById("quoteApp");
+  const loadingEl  = document.getElementById("loadingState");
+  const errorEl    = document.getElementById("errorState");
+  const errorMsgEl = document.getElementById("errorMessage"); // FIXED
+  const appEl      = document.getElementById("jobContent");   // FIXED
 
   if (loadingEl) loadingEl.style.display = "none";
-  if (appEl) appEl.style.display = "none";
-
-  if (errorEl) {
-    errorEl.style.display = "block";
-  }
-
-  if (errorTextEl) {
-    errorTextEl.textContent = message;
-  }
+  if (appEl)     appEl.classList.add("hidden");
+  if (errorEl)   errorEl.classList.remove("hidden");
+  if (errorMsgEl) errorMsgEl.textContent = message;
 }
 
 function renderQuote(quote) {
-  setText("customerName", quote.customer_name);
+  setText("customerName",  quote.customer_name);
   setText("customerEmail", quote.customer_email);
   setText("customerPhone", quote.customer_phone);
-  setText("postcode", quote.postcode);
+  setText("postcode",      quote.postcode);
   setText("vehicle", `${formatValue(quote.vehicle_make, "")} ${formatValue(quote.vehicle_model, "")}`.trim());
-  setText("serviceType", quote.service_type);
-  setText("aiPrice", getAiPrice(quote));
+  setText("serviceType",   quote.service_type);
+  setText("aiPrice",       getAiPrice(quote));
+
+  // Photo count
+  const photoUrls  = getPhotoUrls(quote);
+  const countEl    = document.getElementById("photoCount");
+  if (countEl) countEl.textContent = `${photoUrls.length} photo${photoUrls.length !== 1 ? "s" : ""}`;
 
   renderPhotos(quote);
   renderAiAssessments(quote);
 
   const statusEl = document.getElementById("jobStatus");
-  if (statusEl) {
-    statusEl.textContent = quote.status || "sent_to_technician";
-  }
+  if (statusEl) statusEl.textContent = quote.status || "sent_to_technician";
 }
 
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (el) {
-    el.textContent = formatValue(value);
-  }
-}function renderPhotos(quote) {
+  if (el) el.textContent = formatValue(value);
+}
+
+function renderPhotos(quote) {
   const photoGrid = document.getElementById("photoGrid");
   if (!photoGrid) return;
 
   const photoUrls = getPhotoUrls(quote);
 
   if (!photoUrls.length) {
-    photoGrid.innerHTML = `
-      <div class="empty-card">
-        No damage photos found for this job.
-      </div>
-    `;
+    photoGrid.innerHTML = `<div class="empty-card">No damage photos found for this job.</div>`;
     return;
   }
 
   photoGrid.innerHTML = photoUrls
-    .map((url, index) => {
-      return `
-        <button class="photo-card" type="button" onclick="openPhoto('${esc(url)}')">
-          <img src="${esc(url)}" alt="Damage photo ${index + 1}">
-          <span>Photo ${index + 1}</span>
-        </button>
-      `;
-    })
+    .map((url, index) => `
+      <button class="photo-card" type="button" onclick="openPhoto('${esc(url)}')">
+        <img src="${esc(url)}" alt="Damage photo ${index + 1}">
+        <span>Photo ${index + 1}</span>
+      </button>
+    `)
     .join("");
 }
 
@@ -180,48 +171,60 @@ function renderAiAssessments(quote) {
   const items = [1, 2, 3, 4, 5, 6]
     .map((i) => ({
       assessment: quote[`ai_assessment_${i}`],
-      price: quote[`ai_price_${i}`],
+      price:      quote[`ai_price_${i}`],
       confidence: quote[`ai_confidence_${i}`],
-      service: quote[`ai_service_${i}`],
+      service:    quote[`ai_service_${i}`],
     }))
     .filter((item) => item.assessment || item.price || item.confidence || item.service);
 
   if (!items.length) {
-    aiWrap.innerHTML = `
-      <div class="empty-card">
-        No AI assessment data found. Review photos manually.
-      </div>
-    `;
+    aiWrap.innerHTML = `<div class="empty-card">No AI assessment data found. Review photos manually.</div>`;
     return;
   }
 
   aiWrap.innerHTML = items
-    .map((item, index) => {
-      return `
-        <div class="ai-card">
-          <div class="ai-card-header">
-            <strong>Photo ${index + 1}</strong>
-            <span>${esc(item.confidence || "pending")}</span>
-          </div>
-          <p>${esc(item.assessment || "No assessment available")}</p>
-          <div class="ai-card-footer">
-            <span>${esc(item.service || "Service pending")}</span>
-            <strong>${esc(item.price || "Price pending")}</strong>
-          </div>
+    .map((item, index) => `
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <strong>Photo ${index + 1}</strong>
+          <span>${esc(item.confidence || "pending")}</span>
         </div>
-      `;
-    })
+        <p>${esc(item.assessment || "No assessment available")}</p>
+        <div class="ai-card-footer">
+          <span>${esc(item.service || "Service pending")}</span>
+          <strong>${esc(item.price || "Price pending")}</strong>
+        </div>
+      </div>
+    `)
     .join("");
-}async function submitTechnicianQuote() {
+}
+
+function getInputValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
+function showSuccess(message) {
+  const appEl        = document.getElementById("jobContent");    // FIXED
+  const successEl    = document.getElementById("successState");
+  const successMsgEl = document.getElementById("successText");
+
+  if (appEl)        appEl.classList.add("hidden");
+  if (successEl)    successEl.classList.remove("hidden");
+  if (successMsgEl) successMsgEl.textContent = message;
+}
+
+async function submitTechnicianQuote() {
   if (!currentQuote) {
     alert("No job loaded.");
     return;
   }
 
-  const price = getInputValue("technicianPrice");
-  const availability = getInputValue("technicianAvailability");
-  const repairTime = getInputValue("repairTime");
-  const notes = getInputValue("technicianNotes");
+  const price        = getInputValue("technicianPrice");
+  const availability = getInputValue("availability");   // FIXED
+  const repairTime   = getInputValue("repairTime");
+  const notes        = getInputValue("notes");          // FIXED
+  const decision     = getInputValue("decision");       // NEW — reads the decision dropdown
 
   if (!price) {
     alert("Please enter your confirmed price.");
@@ -233,25 +236,29 @@ function renderAiAssessments(quote) {
     return;
   }
 
-  const submitBtn = document.getElementById("submitQuoteBtn");
+  // If technician chose to decline, route to declineJob instead
+  if (decision === "declined") {
+    declineJob();
+    return;
+  }
+
+  const submitBtn = document.getElementById("submitBtn"); // FIXED
   if (submitBtn) {
-    submitBtn.disabled = true;
+    submitBtn.disabled    = true;
     submitBtn.textContent = "Submitting...";
   }
 
   const payload = {
-    technician_price: price,
+    technician_price:        price,
     technician_availability: availability,
-    technician_notes: notes,
-    technician_status: "confirmed",
-    status: "technician_confirmed",
-    final_quote_given: price,
-    actual_job_cost: price,
+    technician_notes:        notes,
+    technician_status:       decision === "more_info" ? "more_info_requested" : "confirmed",
+    status:                  decision === "more_info" ? "technician_more_info" : "technician_confirmed",
+    final_quote_given:       decision === "more_info" ? null : price,
+    actual_job_cost:         decision === "more_info" ? null : price,
   };
 
-  if (repairTime) {
-    payload.estimated_repair_time = repairTime;
-  }
+  if (repairTime) payload.estimated_repair_time = repairTime;
 
   try {
     await supaFetch(`quote_submissions?id=eq.${currentQuote.id}`, {
@@ -259,16 +266,18 @@ function renderAiAssessments(quote) {
       body: JSON.stringify(payload),
     });
 
-    showSuccess(
-      "Quote confirmed successfully. ScuffIQ will now review and contact the customer."
-    );
+    const message = decision === "more_info"
+      ? "Request sent. ScuffIQ will follow up with more photos or information."
+      : "Quote confirmed. ScuffIQ will review and contact the customer.";
+
+    showSuccess(message);
   } catch (error) {
     console.error("Submit quote error:", error);
     alert("Could not submit quote. Please contact ScuffIQ.");
   } finally {
     if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Submit Quote";
+      submitBtn.disabled    = false;
+      submitBtn.textContent = "Submit review";
     }
   }
 }
@@ -282,18 +291,17 @@ async function declineJob() {
   const confirmed = confirm(
     "Are you sure you want to decline this job? ScuffIQ will need to assign it to another technician."
   );
-
   if (!confirmed) return;
 
-  const notes = getInputValue("technicianNotes");
+  const notes = getInputValue("notes"); // FIXED
 
   try {
     await supaFetch(`quote_submissions?id=eq.${currentQuote.id}`, {
       method: "PATCH",
       body: JSON.stringify({
         technician_status: "declined",
-        status: "technician_declined",
-        technician_notes: notes || "Technician declined job",
+        status:            "technician_declined",
+        technician_notes:  notes || "Technician declined job",
       }),
     });
 
@@ -302,37 +310,17 @@ async function declineJob() {
     console.error("Decline job error:", error);
     alert("Could not decline job. Please contact ScuffIQ.");
   }
-}function getInputValue(id) {
-  const el = document.getElementById(id);
-  return el ? el.value.trim() : "";
-}
-
-function showSuccess(message) {
-  const appEl = document.getElementById("quoteApp");
-  const successEl = document.getElementById("successState");
-  const successTextEl = document.getElementById("successText");
-
-  if (appEl) appEl.style.display = "none";
-
-  if (successEl) {
-    successEl.style.display = "block";
-  }
-
-  if (successTextEl) {
-    successTextEl.textContent = message;
-  }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
   loadTechnicianQuote();
 
-  const submitBtn = document.getElementById("submitQuoteBtn");
-  if (submitBtn) {
-    submitBtn.addEventListener("click", submitTechnicianQuote);
-  }
-
-  const declineBtn = document.getElementById("declineJobBtn");
-  if (declineBtn) {
-    declineBtn.addEventListener("click", declineJob);
+  // FIXED — intercept the form submit event instead of a missing button click
+  const reviewForm = document.getElementById("reviewForm");
+  if (reviewForm) {
+    reviewForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      submitTechnicianQuote();
+    });
   }
 });
