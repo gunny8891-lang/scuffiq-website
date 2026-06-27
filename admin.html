@@ -652,12 +652,42 @@ async function sendToTechnician() {
   btn.textContent = 'Sending…';
 
   try {
+    // 1. Update Supabase
     await supaFetch(
       `quote_submissions?id=eq.${quoteId}`,
       { method: 'PATCH', body: JSON.stringify(payload) }
     );
 
-    alert('Technician assigned successfully.\n\nReview link:\n' + reviewLink);
+    // 2. Find the quote row for job details
+    const row = allRows.find(r => r.id === quoteId) || {};
+
+    // 3. Email the technician via worker
+    try {
+      await fetch(
+        'https://plain-math-71e8scuffiq-api.gunny8891.workers.dev/send-technician-job',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            technician_name:  selected.dataset.name,
+            technician_email: selected.dataset.email,
+            customer_name:    row.customer_name  || '',
+            vehicle_make:     row.vehicle_make   || '',
+            vehicle_model:    row.vehicle_model  || '',
+            service_type:     row.service_type   || '',
+            postcode:         row.postcode       || '',
+            photo_count:      row.photo_count    || 0,
+            ai_price:         row.ai_price_1     || '',
+            review_link:      reviewLink,
+          }),
+        }
+      );
+      alert('Technician assigned and email sent to ' + selected.dataset.name + '.\n\nReview link:\n' + reviewLink);
+    } catch (emailErr) {
+      console.error('Technician email error:', emailErr);
+      alert('Technician assigned successfully.\n\nEmail could not be sent automatically — review link:\n' + reviewLink);
+    }
+
     closeAssignModal();
     loadSubmissions();
   } catch (e) {
