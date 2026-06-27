@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Your Repair — ScuffIQ</title>
+<meta name="description" content="Book your ScuffIQ smart repair appointment. Mobile repair service covering North London, Hertfordshire and Essex.">
+<link rel="canonical" href="https://www.scuffiq.com/book.html">
+
+<style>
+:root{
+  --black:#000;--carbon:#080808;--panel:#111;--border:#1e1e1e;
+  --grey:#555;--light:#999;--neon:#00D4FF;--neon-dk:#00A3C4;
+  --white:#fff;--green:#00d48a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+
+/* NAV */
+nav{background:rgba(0,0,0,0.96);border-bottom:1px solid var(--border);padding:0 24px;backdrop-filter:blur(10px);}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;max-width:1060px;margin:0 auto;}
+.nav-logo{font-size:21px;font-weight:700;letter-spacing:-0.5px;}
+.nav-logo span{color:var(--neon);}
+.nav-back{font-size:13px;color:var(--grey);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.nav-back:hover{color:var(--neon);}
+
+/* HERO */
+.hero{background:var(--black);border-bottom:1px solid var(--border);padding:48px 24px 40px;}
+.hero-inner{max-width:700px;margin:0 auto;text-align:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.25);color:var(--neon);font-size:11px;font-weight:700;letter-spacing:.07em;padding:5px 14px;border-radius:20px;margin-bottom:20px;text-transform:uppercase;}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--neon);border-radius:50%;}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px;}
+.hero h1 em{color:var(--neon);font-style:normal;}
+.hero-sub{font-size:15px;color:var(--grey);line-height:1.7;max-width:500px;margin:0 auto 28px;}
+
+/* TRUST ROW */
+.trust-row{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:0;}
+.trust-item{display:flex;align-items:center;gap:7px;font-size:13px;color:#aaa;}
+.trust-item svg{color:var(--neon);}
+
+/* QUOTE SUMMARY */
+.summary-bar{background:var(--carbon);border-bottom:1px solid var(--border);padding:16px 24px;}
+.summary-inner{max-width:700px;margin:0 auto;}
+.summary-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--grey);margin-bottom:10px;}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.summary-field{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.summary-field .sf-label{font-size:10px;color:var(--grey);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.summary-field .sf-value{font-size:13px;color:var(--white);font-weight:600;}
+.summary-field .sf-value.price{color:var(--neon);font-size:16px;}
+.summary-hidden{display:none;}
+
+/* CALENDLY SECTION */
+.cal-section{padding:32px 24px 48px;}
+.cal-inner{max-width:900px;margin:0 auto;}
+.cal-heading{font-size:15px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.cal-sub{font-size:13px;color:var(--grey);margin-bottom:20px;}
+.cal-wrap{background:var(--white);border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+
+/* WHAT TO EXPECT */
+.expect{background:var(--carbon);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 24px;}
+.expect-inner{max-width:700px;margin:0 auto;}
+.expect h2{font-size:20px;font-weight:700;margin-bottom:24px;color:var(--white);}
+.expect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.expect-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.expect-num{font-size:11px;font-weight:700;color:var(--neon);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.expect-card h3{font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.expect-card p{font-size:12px;color:var(--grey);line-height:1.6;}
+
+/* FOOTER */
+footer{background:var(--carbon);border-top:1px solid var(--border);padding:24px;text-align:center;}
+footer p{font-size:12px;color:var(--grey);}
+footer a{color:var(--neon);}
+
+@media(max-width:600px){
+  .summary-grid{grid-template-columns:1fr 1fr;}
+  .expect-grid{grid-template-columns:1fr;}
+  .trust-row{gap:14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">Scuff<span>IQ</span></a>
+    <a href="/" class="nav-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to ScuffIQ
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Booking</div>
+    <h1>Book your<br><em>repair appointment</em></h1>
+    <p class="hero-sub">Choose a date and time that works for you. Our technician comes to your door — no bodyshop drop-off needed.</p>
+    <div class="trust-row">
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Mobile — we come to you
+      </div>
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Same-day &amp; weekend slots
+      </div>
+      <div class="trust-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Free cancellation
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE SUMMARY (populated from URL params) -->
+<div class="summary-bar" id="summaryBar">
+  <div class="summary-inner">
+    <div class="summary-label">Your confirmed quote</div>
+    <div class="summary-grid">
+      <div class="summary-field">
+        <div class="sf-label">Customer</div>
+        <div class="sf-value" id="sumName">—</div>
+      </div>
+      <div class="summary-field">
+        <div class="sf-label">Vehicle</div>
+        <div class="sf-value" id="sumVehicle">—</div>
+      </div>
+      <div class="summary-field">
+        <div class="sf-label">Service</div>
+        <div class="sf-value" id="sumService">—</div>
+      </div>
+      <div class="summary-field">
+        <div class="sf-label">Confirmed price</div>
+        <div class="sf-value price" id="sumPrice">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDLY EMBED -->
+<section class="cal-section">
+  <div class="cal-inner">
+    <div class="cal-heading">Select your appointment slot</div>
+    <p class="cal-sub">Pick a date and time below. You'll receive a confirmation email straight away.</p>
+    <div class="cal-wrap">
+      <div
+        class="calendly-inline-widget"
+        data-url="https://calendly.com/gunny8891/30min?hide_gdpr_banner=1&background_color=ffffff&text_color=111111&primary_color=00d4ff"
+        style="min-width:320px;height:700px;">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT TO EXPECT -->
+<section class="expect">
+  <div class="expect-inner">
+    <h2>What to expect</h2>
+    <div class="expect-grid">
+      <div class="expect-card">
+        <div class="expect-num">Before</div>
+        <h3>Confirmation email</h3>
+        <p>You'll get an instant booking confirmation with your appointment details and technician contact info.</p>
+      </div>
+      <div class="expect-card">
+        <div class="expect-num">On the day</div>
+        <h3>We come to you</h3>
+        <p>Our technician arrives at your chosen location with all equipment needed. Allow 2–3 hours for the repair.</p>
+      </div>
+      <div class="expect-card">
+        <div class="expect-num">After</div>
+        <h3>Flawless finish</h3>
+        <p>We carry out a satisfaction check with you before leaving. Payment is taken on completion of the repair.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>ScuffIQ Ltd &middot; North London, Hertfordshire &amp; Essex &middot; <a href="mailto:hello@scuffiq.com">hello@scuffiq.com</a> &middot; <a href="/">scuffiq.com</a></p>
+  <p style="margin-top:6px;"><a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms &amp; Conditions</a></p>
+</footer>
+
+<!-- Calendly widget script -->
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+
+<script>
+// Populate quote summary from URL params if present
+// e.g. /book.html?name=Barry+Humph&vehicle=MG+4&service=Scratch+repair&price=£247
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const name    = params.get('name');
+  const vehicle = params.get('vehicle');
+  const service = params.get('service');
+  const price   = params.get('price');
+
+  if (name || vehicle || service || price) {
+    if (name)    document.getElementById('sumName').textContent    = name;
+    if (vehicle) document.getElementById('sumVehicle').textContent = vehicle;
+    if (service) document.getElementById('sumService').textContent = service;
+    if (price)   document.getElementById('sumPrice').textContent   = price;
+  } else {
+    // Hide summary bar if no params
+    document.getElementById('summaryBar').style.display = 'none';
+  }
+})();
+</script>
+
+</body>
+</html>
