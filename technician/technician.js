@@ -258,7 +258,7 @@ async function submitTechnicianQuote() {
     actual_job_cost:         decision === "more_info" ? null : price,
   };
 
-  if (repairTime) payload.estimated_repair_time = repairTime;
+
 
   try {
     await supaFetch(`quote_submissions?id=eq.${currentQuote.id}`, {
