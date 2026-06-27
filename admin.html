@@ -108,6 +108,11 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 .btn-save{background:var(--neon);color:var(--black);border:none;border-radius:8px;padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
 .btn-save:hover{background:var(--neon-dk);}
 .btn-save:disabled{opacity:.5;cursor:not-allowed;}
+
+.assign-btn{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.35);color:var(--neon);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.assign-btn:hover{background:var(--neon);color:var(--black);}
+.assign-meta{font-size:11px;color:var(--grey);margin-top:8px;line-height:1.5;}
+
 .save-msg{font-size:12px;margin-top:8px;display:none;}
 .save-ok{color:var(--green);}
 .save-err{color:var(--red);}
@@ -190,10 +195,11 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Final quote</th>
             <th>Status</th>
             <th>Date</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="8">Loading submissions…</td></tr>
+          <tr class="loading-row"><td colspan="9">Loading submissions…</td></tr>
         </tbody>
       </table>
     </div>
@@ -208,6 +214,29 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       <button class="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ASSIGN TECHNICIAN MODAL -->
+<div class="modal-bg" id="assignModal" onclick="if(event.target===this)closeAssignModal()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <h2>Assign Technician</h2>
+      <button class="modal-close" onclick="closeAssignModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assignQuoteId">
+
+      <div class="lf-field">
+        <label>Technician</label>
+        <select id="technicianSelect"></select>
+      </div>
+
+      <div class="assign-meta" id="assignMeta">Select a technician to send this quote for review.</div>
+
+      <button class="btn-save" id="sendTechBtn" onclick="sendToTechnician()">Send job to technician</button>
+      <button class="btn-sm" onclick="closeAssignModal()" style="width:100%;margin-top:10px;padding:10px;">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -256,7 +285,7 @@ async function supaFetch(path, options = {}) {
 
 async function loadSubmissions() {
   document.getElementById('tableBody').innerHTML =
-    '<tr class="loading-row"><td colspan="8">Loading…</td></tr>';
+    '<tr class="loading-row"><td colspan="9">Loading…</td></tr>';
   try {
     const rows = await supaFetch(
       'quote_submissions?select=*&order=submitted_at.desc&limit=500'
@@ -266,7 +295,7 @@ async function loadSubmissions() {
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
-      `<tr class="loading-row"><td colspan="8" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+      `<tr class="loading-row"><td colspan="9" style="color:var(--red)">Error: ${e.message}</td></tr>`;
   }
 }
 
@@ -288,7 +317,7 @@ function renderTable(rows) {
     rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">No submissions found.</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="9">No submissions found.</td></tr>';
     return;
   }
 
@@ -321,6 +350,11 @@ function renderTable(rows) {
       <td style="color:var(--white);font-weight:600;">${esc(r.final_quote_given||'—')}</td>
       <td><span class="status-pill ${pillCls}">${pillLbl}</span></td>
       <td class="td-date">${date}</td>
+      <td>
+        <button class="assign-btn" onclick="event.stopPropagation(); openAssignModal('${r.id}')">
+          Assign
+        </button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -492,6 +526,87 @@ function exportCSV() {
   a.download = `scuffiq-submissions-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+
+// ── Technician Assignment ────────────────────────────────────────────────────
+async function openAssignModal(quoteId) {
+  document.getElementById('assignQuoteId').value = quoteId;
+  document.getElementById('technicianSelect').innerHTML = '<option>Loading technicians…</option>';
+  document.getElementById('assignMeta').textContent = 'Loading active technicians from Supabase…';
+  document.getElementById('assignModal').classList.add('open');
+
+  try {
+    const techs = await supaFetch('technicians?select=*&active=eq.true&order=name.asc');
+
+    if (!techs.length) {
+      document.getElementById('technicianSelect').innerHTML = '<option value="">No active technicians found</option>';
+      document.getElementById('assignMeta').textContent = 'Add a technician in Supabase first.';
+      return;
+    }
+
+    document.getElementById('technicianSelect').innerHTML = techs.map(t =>
+      `<option value="${t.id}" data-name="${esc(t.name)}" data-email="${esc(t.email)}" data-area="${esc(t.postcode_area || '')}">
+        ${esc(t.name)} — ${esc(t.postcode_area || 'No area')}
+      </option>`
+    ).join('');
+
+    document.getElementById('assignMeta').textContent = 'This will update the quote status to sent_to_technician and create a secure review token.';
+  } catch (e) {
+    console.error(e);
+    document.getElementById('technicianSelect').innerHTML = '<option value="">Could not load technicians</option>';
+    document.getElementById('assignMeta').textContent = 'Error loading technicians. Check Supabase table permissions.';
+  }
+}
+
+function closeAssignModal() {
+  document.getElementById('assignModal').classList.remove('open');
+}
+
+async function sendToTechnician() {
+  const quoteId = document.getElementById('assignQuoteId').value;
+  const select = document.getElementById('technicianSelect');
+
+  if (!select.value) {
+    alert('Please select a technician first.');
+    return;
+  }
+
+  const selected = select.options[select.selectedIndex];
+  const token = crypto.randomUUID();
+  const reviewLink = `https://scuffiq.com/technician/quote.html?token=${token}`;
+
+  const payload = {
+    assigned_technician_id: select.value,
+    technician_name: selected.dataset.name,
+    technician_email: selected.dataset.email,
+    technician_status: 'sent',
+    technician_review_token: token,
+    status: 'sent_to_technician'
+  };
+
+  const btn = document.getElementById('sendTechBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    await supaFetch(
+      `quote_submissions?id=eq.${quoteId}`,
+      { method: 'PATCH', body: JSON.stringify(payload) }
+    );
+
+    alert('Technician assigned successfully. Review link created:
+
+' + reviewLink);
+    closeAssignModal();
+    loadSubmissions();
+  } catch (e) {
+    console.error(e);
+    alert('Failed to assign technician. Check console for details.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send job to technician';
+  }
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
