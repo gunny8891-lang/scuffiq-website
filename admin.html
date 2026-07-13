@@ -779,6 +779,7 @@ async function sendConfirmedQuoteEmail(id, techPrice) {
           technician_price:        priceStr,
           technician_availability: row.technician_availability,
           technician_notes:        row.technician_notes,
+          assigned_technician_id:  row.assigned_technician_id,
         }),
       }
     );
