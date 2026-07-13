@@ -191,13 +191,13 @@ footer a{color:var(--neon);}
 
 <script>
 // Populate quote summary from URL params if present
-// e.g. /book.html?name=Barry+Humph&vehicle=MG+4&service=Scratch+repair&price=£247
 (function() {
   const params = new URLSearchParams(window.location.search);
-  const name    = params.get('name');
-  const vehicle = params.get('vehicle');
-  const service = params.get('service');
-  const price   = params.get('price');
+  const name     = params.get('name');
+  const vehicle  = params.get('vehicle');
+  const service  = params.get('service');
+  const price    = params.get('price');
+  const calendly = params.get('calendly');
 
   if (name || vehicle || service || price) {
     if (name)    document.getElementById('sumName').textContent    = name;
@@ -205,8 +205,19 @@ footer a{color:var(--neon);}
     if (service) document.getElementById('sumService').textContent = service;
     if (price)   document.getElementById('sumPrice').textContent   = price;
   } else {
-    // Hide summary bar if no params
     document.getElementById('summaryBar').style.display = 'none';
+  }
+
+  // Use technician-specific Calendly link if provided
+  if (calendly) {
+    const widget = document.querySelector('.calendly-inline-widget');
+    if (widget) {
+      const baseUrl = decodeURIComponent(calendly);
+      widget.setAttribute(
+        'data-url',
+        baseUrl + '?hide_gdpr_banner=1&background_color=ffffff&text_color=111111&primary_color=00d4ff'
+      );
+    }
   }
 })();
 </script>
