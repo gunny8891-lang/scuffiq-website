@@ -203,14 +203,15 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Photos</th>
             <th>AI price</th>
             <th>Tech price</th>
-            <th>Final quote</th>
+            <th>Margin</th>
+            <th>Customer price</th>
             <th>Status</th>
             <th>Date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="10">Loading submissions…</td></tr>
+          <tr class="loading-row"><td colspan="11">Loading submissions…</td></tr>
         </tbody>
       </table>
     </div>
@@ -294,7 +295,7 @@ async function supaFetch(path, options = {}) {
 
 async function loadSubmissions() {
   document.getElementById('tableBody').innerHTML =
-    '<tr class="loading-row"><td colspan="10">Loading…</td></tr>';
+    '<tr class="loading-row"><td colspan="11">Loading…</td></tr>';
   try {
     const rows = await supaFetch(
       'quote_submissions?select=*&order=submitted_at.desc&limit=500'
@@ -304,7 +305,7 @@ async function loadSubmissions() {
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
-      `<tr class="loading-row"><td colspan="10" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+      `<tr class="loading-row"><td colspan="11" style="color:var(--red)">Error: ${e.message}</td></tr>`;
   }
 }
 
@@ -338,7 +339,7 @@ function renderTable(rows) {
     rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="10">No submissions found.</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="11">No submissions found.</td></tr>';
     return;
   }
 
@@ -371,6 +372,19 @@ function renderTable(rows) {
     const firstPrice  = r.ai_price_1 || '—';
     const techPrice   = r.technician_price ? `<span style="color:var(--orange);font-weight:600;">${esc(r.technician_price)}</span>` : '—';
 
+    // Calculate margin and customer price if we have both tech price and final quote
+    let marginDisplay = '—';
+    let customerPriceDisplay = r.final_quote_given ? `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>` : '—';
+
+    if (r.technician_price && r.final_quote_given) {
+      const tech     = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
+      const customer = parseFloat(r.final_quote_given.toString().replace(/[^0-9.]/g, '')) || 0;
+      if (tech > 0 && customer > 0) {
+        const marginPct = ((customer - tech) / tech * 100).toFixed(0);
+        marginDisplay = `<span style="color:var(--green);font-weight:600;">${marginPct}%</span>`;
+      }
+    }
+
     const date = r.submitted_at
       ? new Date(r.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'})
       : '—';
@@ -382,7 +396,8 @@ function renderTable(rows) {
       <td><div class="thumb-row">${thumbs || '<span style="color:var(--grey);font-size:12px;">No images</span>'}</div><div style="font-size:11px;color:var(--grey);margin-top:3px;">${r.photo_count||0} photo${r.photo_count!==1?'s':''}</div></td>
       <td style="color:var(--neon);font-weight:600;">${esc(firstPrice)}</td>
       <td>${techPrice}</td>
-      <td style="color:var(--white);font-weight:600;">${esc(r.final_quote_given||'—')}</td>
+      <td>${marginDisplay}</td>
+      <td>${customerPriceDisplay}</td>
       <td><span class="status-pill ${pillCls}">${pillLbl}</span></td>
       <td class="td-date">${date}</td>
       <td>
