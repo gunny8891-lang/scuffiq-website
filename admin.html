@@ -443,20 +443,46 @@ function buildModalHtml(r) {
 
   // Technician confirmed panel
   if (r.status === 'technician_confirmed' || r.technician_price) {
+    const techPrice = parseFloat((r.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
     html += `
     <div class="m-section">
       <div class="m-section-title">Technician response</div>
       <div class="tech-confirmed-panel">
         <h4>✓ Quote confirmed by ${esc(r.technician_name || 'technician')}</h4>
         <div class="m-grid">
-          <div class="m-field"><label>Confirmed price</label><p style="color:var(--orange);font-size:18px;font-weight:700;">${esc(r.technician_price||'—')}</p></div>
+          <div class="m-field"><label>Technician price</label><p style="color:var(--orange);font-size:18px;font-weight:700;">${esc(r.technician_price||'—')}</p></div>
           <div class="m-field"><label>Availability</label><p>${esc(r.technician_availability||'—')}</p></div>
           <div class="m-field"><label>Technician</label><p>${esc(r.technician_name||'—')}</p></div>
           <div class="m-field"><label>Technician email</label><p>${esc(r.technician_email||'—')}</p></div>
           ${r.technician_notes ? `<div class="m-field" style="grid-column:span 2"><label>Technician notes</label><p>${esc(r.technician_notes)}</p></div>` : ''}
         </div>
+
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,170,0,0.2);">
-          <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}')" style="background:var(--green);width:100%;">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);display:block;margin-bottom:8px;">Commission margin</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;margin-bottom:16px;">
+            <div>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Margin %</label>
+              <input
+                type="number"
+                id="marginPercent"
+                placeholder="e.g. 20"
+                min="0"
+                max="100"
+                value="20"
+                oninput="updateCustomerPrice(${techPrice})"
+                style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;color:var(--white);outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Tech price</label>
+              <p style="font-size:16px;font-weight:700;color:var(--orange);padding:9px 0;">£${techPrice.toFixed(2)}</p>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Customer price</label>
+              <p id="customerPriceDisplay" style="font-size:20px;font-weight:700;color:var(--neon);padding:9px 0;">£${(techPrice * 1.2).toFixed(2)}</p>
+            </div>
+          </div>
+
+          <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}', ${techPrice})" style="background:var(--green);width:100%;">
             ✉ Send confirmed quote to ${esc(r.customer_name||'customer')}
           </button>
           <p class="save-msg save-ok" id="emailSentOk" style="text-align:center;margin-top:8px;">✓ Quote email sent to customer</p>
@@ -700,9 +726,22 @@ async function sendToTechnician() {
 }
 
 // ── Send confirmed quote email to customer ────────────────────────────────────
-async function sendConfirmedQuoteEmail(id) {
+// ── Margin calculator ─────────────────────────────────────────────────────────
+function updateCustomerPrice(techPrice) {
+  const margin   = parseFloat(document.getElementById('marginPercent').value) || 0;
+  const customer = techPrice * (1 + margin / 100);
+  document.getElementById('customerPriceDisplay').textContent = '£' + customer.toFixed(2);
+}
+
+async function sendConfirmedQuoteEmail(id, techPrice) {
   const row = allRows.find(r => r.id === id);
   if (!row) { alert('Job not found.'); return; }
+
+  // Calculate customer price with margin
+  const margin        = parseFloat(document.getElementById('marginPercent')?.value) || 0;
+  const baseTechPrice = techPrice || parseFloat((row.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
+  const customerPrice = baseTechPrice * (1 + margin / 100);
+  const priceStr      = '£' + customerPrice.toFixed(2);
 
   const btn = document.getElementById('sendQuoteEmailBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
@@ -722,7 +761,7 @@ async function sendConfirmedQuoteEmail(id) {
           vehicle_model:           row.vehicle_model,
           service_type:            row.service_type,
           postcode:                row.postcode,
-          technician_price:        row.technician_price,
+          technician_price:        priceStr,
           technician_availability: row.technician_availability,
           technician_notes:        row.technician_notes,
         }),
@@ -733,19 +772,19 @@ async function sendConfirmedQuoteEmail(id) {
 
     document.getElementById('emailSentOk').style.display = 'block';
 
-    // Update local status to quoted so dashboard reflects it
+    // Update Supabase with customer price and margin
     await supaFetch(`quote_submissions?id=eq.${id}`, {
       method: 'PATCH',
       body: JSON.stringify({
-        status: 'quoted',
-        final_quote_given: row.technician_price,
+        status:            'quoted',
+        final_quote_given: priceStr,
       }),
     });
 
     const idx = allRows.findIndex(r => r.id === id);
     if (idx !== -1) {
       allRows[idx].status = 'quoted';
-      allRows[idx].final_quote_given = row.technician_price;
+      allRows[idx].final_quote_given = priceStr;
     }
     updateStats(allRows);
     renderTable(allRows);
