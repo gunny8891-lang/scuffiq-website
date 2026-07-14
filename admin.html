@@ -38,7 +38,7 @@ header{background:var(--carbon);border-bottom:1px solid var(--border);padding:14
 .main{padding:24px;max-width:1400px;margin:0 auto;}
 
 /* STATS */
-.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px;}
 .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
 .stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);margin-bottom:6px;}
 .stat-value{font-size:26px;font-weight:700;color:var(--neon);}
@@ -69,6 +69,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 .pill-done{background:rgba(0,212,138,0.1);color:var(--green);border:1px solid rgba(0,212,138,0.25);}
 .pill-tech{background:rgba(255,170,0,0.12);color:var(--orange);border:1px solid rgba(255,170,0,0.3);}
 .pill-sent{background:rgba(0,212,255,0.06);color:#7ecfdf;border:1px solid rgba(0,212,255,0.15);}
+.pill-booked{background:rgba(0,212,138,0.15);color:var(--green);border:1px solid rgba(0,212,138,0.4);}
 .thumb-row{display:flex;gap:4px;}
 .thumb-row img{width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);}
 .loading-row td{text-align:center;padding:40px;color:var(--grey);}
@@ -169,6 +170,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="statPending" style="color:var(--red)">—</div></div>
       <div class="stat-card"><div class="stat-label">Sent to technician</div><div class="stat-value" id="statSent" style="color:#7ecfdf">—</div></div>
       <div class="stat-card"><div class="stat-label">Tech confirmed</div><div class="stat-value" id="statTechConfirmed" style="color:var(--orange)">—</div></div>
+      <div class="stat-card"><div class="stat-label">Booked</div><div class="stat-value" id="statBooked" style="color:var(--green)">—</div></div>
       <div class="stat-card"><div class="stat-label">Jobs completed</div><div class="stat-value" id="statDone" style="color:var(--green)">—</div></div>
     </div>
 
@@ -180,6 +182,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
         <option value="pending">Pending</option>
         <option value="sent_to_technician">Sent to technician</option>
         <option value="technician_confirmed">Tech confirmed</option>
+        <option value="booked">Booked</option>
         <option value="quoted">Quoted</option>
         <option value="done">Completed</option>
       </select>
@@ -206,12 +209,13 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Margin</th>
             <th>Customer price</th>
             <th>Status</th>
+            <th>Booked</th>
             <th>Date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="11">Loading submissions…</td></tr>
+          <tr class="loading-row"><td colspan="12">Loading submissions…</td></tr>
         </tbody>
       </table>
     </div>
@@ -295,7 +299,7 @@ async function supaFetch(path, options = {}) {
 
 async function loadSubmissions() {
   document.getElementById('tableBody').innerHTML =
-    '<tr class="loading-row"><td colspan="11">Loading…</td></tr>';
+    '<tr class="loading-row"><td colspan="12">Loading…</td></tr>';
   try {
     const rows = await supaFetch(
       'quote_submissions?select=*&order=submitted_at.desc&limit=500'
@@ -305,12 +309,13 @@ async function loadSubmissions() {
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
-      `<tr class="loading-row"><td colspan="11" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+      `<tr class="loading-row"><td colspan="12" style="color:var(--red)">Error: ${e.message}</td></tr>`;
   }
 }
 
 function getRowStatus(r) {
   if (r.job_completed) return 'done';
+  if (r.status === 'booked') return 'booked';
   if (r.status === 'technician_confirmed') return 'technician_confirmed';
   if (r.status === 'technician_declined') return 'pending';
   if (r.status === 'sent_to_technician') return 'sent_to_technician';
@@ -322,12 +327,14 @@ function updateStats(rows) {
   const pending          = rows.filter(r => getRowStatus(r) === 'pending').length;
   const sent             = rows.filter(r => getRowStatus(r) === 'sent_to_technician').length;
   const techConfirmed    = rows.filter(r => getRowStatus(r) === 'technician_confirmed').length;
+  const booked           = rows.filter(r => getRowStatus(r) === 'booked').length;
   const done             = rows.filter(r => r.job_completed).length;
 
   document.getElementById('statTotal').textContent        = rows.length;
   document.getElementById('statPending').textContent      = pending;
   document.getElementById('statSent').textContent         = sent;
   document.getElementById('statTechConfirmed').textContent = techConfirmed;
+  document.getElementById('statBooked').textContent       = booked;
   document.getElementById('statDone').textContent         = done;
   document.getElementById('headerBadge').textContent      = `${rows.length} submissions`;
 }
@@ -339,7 +346,7 @@ function renderTable(rows) {
     rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="11">No submissions found.</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="12">No submissions found.</td></tr>';
     return;
   }
 
@@ -352,6 +359,7 @@ function renderTable(rows) {
       pending:                'pill-pending',
       sent_to_technician:     'pill-sent',
       technician_confirmed:   'pill-tech',
+      booked:                 'pill-booked',
     }[status] || 'pill-pending';
 
     const pillLbl = {
@@ -360,6 +368,7 @@ function renderTable(rows) {
       pending:                'Pending',
       sent_to_technician:     'Sent to tech',
       technician_confirmed:   'Tech confirmed',
+      booked:                 'Booked',
     }[status] || 'Pending';
 
     const thumbs = [1,2,3,4,5,6]
@@ -399,6 +408,14 @@ function renderTable(rows) {
       <td>${marginDisplay}</td>
       <td>${customerPriceDisplay}</td>
       <td><span class="status-pill ${pillCls}">${pillLbl}</span></td>
+      <td>
+        ${r.status === 'booked' || r.job_completed
+          ? `<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Booked</span>`
+          : (r.status === 'quoted' || r.status === 'technician_confirmed')
+            ? `<button class="assign-btn" style="background:rgba(0,212,138,0.1);border-color:rgba(0,212,138,0.35);color:var(--green);" onclick="event.stopPropagation();markAsBooked('${r.id}')">Mark booked</button>`
+            : '<span style="color:var(--grey);font-size:12px;">—</span>'
+        }
+      </td>
       <td class="td-date">${date}</td>
       <td>
         <button class="assign-btn" onclick="event.stopPropagation(); openAssignModal('${r.id}')">
@@ -741,6 +758,36 @@ async function sendToTechnician() {
 }
 
 // ── Send confirmed quote email to customer ────────────────────────────────────
+// ── Mark as booked ────────────────────────────────────────────────────────────
+async function markAsBooked(id) {
+  const row = allRows.find(r => r.id === id);
+  if (!row) return;
+
+  const confirmed = confirm(`Mark ${row.customer_name} as booked?`);
+  if (!confirmed) return;
+
+  try {
+    await supaFetch(`quote_submissions?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status:    'booked',
+        booked_at: new Date().toISOString(),
+      }),
+    });
+
+    const idx = allRows.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      allRows[idx].status    = 'booked';
+      allRows[idx].booked_at = new Date().toISOString();
+    }
+    updateStats(allRows);
+    renderTable(allRows);
+  } catch (e) {
+    console.error('Mark as booked error:', e);
+    alert('Could not update booking status. Please try again.');
+  }
+}
+
 // ── Margin calculator ─────────────────────────────────────────────────────────
 function updateCustomerPrice(techPrice) {
   const margin   = parseFloat(document.getElementById('marginPercent').value) || 0;
