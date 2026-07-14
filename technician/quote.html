@@ -42,7 +42,7 @@
 
       <div class="grid two-col">
         <article class="card">
-          <h2>Customer & vehicle</h2>
+          <h2>Customer &amp; vehicle</h2>
           <div class="detail-grid">
             <div><span>Customer</span><strong id="customerName">—</strong></div>
             <div><span>Email</span><strong id="customerEmail">—</strong></div>
@@ -81,13 +81,6 @@
               <label for="availability">Availability *</label>
               <select id="availability" required>
                 <option value="">Select availability</option>
-                <option>Today AM</option>
-                <option>Today PM</option>
-                <option>Tomorrow AM</option>
-                <option>Tomorrow PM</option>
-                <option>This week</option>
-                <option>Next week</option>
-                <option>Other - see notes</option>
               </select>
             </div>
             <div class="field">
@@ -126,6 +119,42 @@
       </article>
     </section>
   </main>
+
+  <!-- Dynamic availability dates -->
+  <script>
+  (function() {
+    const select = document.getElementById('availability');
+    if (!select) return;
+
+    const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const today  = new Date();
+
+    for (let i = 0; i < 14; i++) {
+      const date    = new Date(today);
+      date.setDate(today.getDate() + i);
+
+      const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : days[date.getDay()];
+      const dateStr = date.getDate() + ' ' + months[date.getMonth()];
+      const label   = dayName + ' ' + dateStr;
+
+      const amOpt       = document.createElement('option');
+      amOpt.value       = label + ' AM';
+      amOpt.textContent = label + ' — Morning (AM)';
+      select.appendChild(amOpt);
+
+      const pmOpt       = document.createElement('option');
+      pmOpt.value       = label + ' PM';
+      pmOpt.textContent = label + ' — Afternoon (PM)';
+      select.appendChild(pmOpt);
+    }
+
+    const otherOpt       = document.createElement('option');
+    otherOpt.value       = 'Other - see notes';
+    otherOpt.textContent = 'Other — see notes';
+    select.appendChild(otherOpt);
+  })();
+  </script>
 
   <script src="technician.js"></script>
 </body>
