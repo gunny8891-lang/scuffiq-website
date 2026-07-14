@@ -145,9 +145,10 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
   <div class="login-box">
     <h1>Scuff<span style="color:var(--neon)">IQ</span></h1>
     <p>Admin — Quote Submissions</p>
-    <input type="password" id="passwordInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()">
+    <input type="email" id="emailInput" placeholder="Email address" autocomplete="email" onkeydown="if(event.key==='Enter')login()">
+    <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
     <button class="btn-neon" onclick="login()">Sign in</button>
-    <p class="login-err" id="loginErr">Incorrect password</p>
+    <p class="login-err" id="loginErr">Incorrect email or password</p>
   </div>
 </div>
 
@@ -259,22 +260,55 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 <script>
 const SUPABASE_URL  = 'https://scohjgsjjxbkpfuhlmrz.supabase.co';
 const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjb2hqZ3Nqanhia3BmdWhsbXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODgwNjYsImV4cCI6MjA5ODA2NDA2Nn0.V-VCy_R7MRFs9o1Ybr2Uvpis13XR45d6HE-hk6gHBpY';
-const ADMIN_PASSWORD = 'ScuffIQ2026!';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-function login() {
-  const pw = document.getElementById('passwordInput').value;
-  if (pw === ADMIN_PASSWORD) {
+let authToken = null;
+
+async function login() {
+  const email = document.getElementById('emailInput').value.trim();
+  const pw    = document.getElementById('passwordInput').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+
+  if (!email || !pw) {
+    errEl.textContent = 'Please enter your email and password';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+      },
+      body: JSON.stringify({ email, password: pw }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.access_token) {
+      errEl.textContent = data.error_description || 'Incorrect email or password';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    authToken = data.access_token;
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadSubmissions();
-  } else {
-    document.getElementById('loginErr').style.display = 'block';
+  } catch (e) {
+    errEl.textContent = 'Login failed — please try again';
+    errEl.style.display = 'block';
   }
 }
+
 function logout() {
+  authToken = null;
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  document.getElementById('emailInput').value = '';
   document.getElementById('passwordInput').value = '';
 }
 
@@ -286,7 +320,7 @@ async function supaFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
-      Authorization: `Bearer ${SUPABASE_KEY}`,
+      Authorization: `Bearer ${authToken || SUPABASE_KEY}`,
       apikey: SUPABASE_KEY,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
