@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work With ScuffIQ — Mobile Smart Repair Technicians Wanted</title>
+<meta name="description" content="Join ScuffIQ as a mobile smart repair technician. Earn £400–£800 per day working independently across London, Hertfordshire and Essex. We bring you the jobs — you do the work.">
+<link rel="canonical" href="https://www.scuffiq.com/join.html">
+
+<style>
+:root{
+  --black:#000;--carbon:#080808;--panel:#111;--border:#1e1e1e;
+  --grey:#555;--light:#999;--neon:#00D4FF;--neon-dk:#00A3C4;
+  --white:#fff;--green:#00d48a;--orange:#ffaa00;--red:#ff6b6b;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+.container{max-width:1060px;margin:0 auto;padding:0 24px;}
+
+/* NAV */
+nav{background:rgba(0,0,0,0.96);border-bottom:1px solid var(--border);padding:0 24px;backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;max-width:1060px;margin:0 auto;}
+.nav-logo{font-size:21px;font-weight:700;letter-spacing:-0.5px;}
+.nav-logo span{color:var(--neon);}
+.nav-back{font-size:13px;color:var(--grey);display:flex;align-items:center;gap:6px;transition:color .2s;}
+.nav-back:hover{color:var(--neon);}
+
+/* HERO */
+.hero{padding:72px 0 64px;border-bottom:1px solid var(--border);background:var(--black);}
+.hero-inner{max-width:780px;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,138,0.08);border:1px solid rgba(0,212,138,0.25);color:var(--green);font-size:11px;font-weight:700;letter-spacing:.07em;padding:5px 14px;border-radius:20px;margin-bottom:24px;text-transform:uppercase;}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;}
+.hero h1{font-size:clamp(36px,5vw,58px);font-weight:700;letter-spacing:-2px;line-height:1.06;margin-bottom:20px;}
+.hero h1 em{color:var(--neon);font-style:normal;}
+.hero-sub{font-size:17px;color:var(--grey);line-height:1.7;max-width:560px;margin-bottom:36px;}
+.hero-earn{display:flex;gap:32px;margin-bottom:40px;}
+.earn-stat .num{font-size:32px;font-weight:700;color:var(--neon);letter-spacing:-1px;}
+.earn-stat .lbl{font-size:12px;color:var(--grey);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+.hero-cta{display:inline-block;background:var(--neon);color:var(--black);font-size:15px;font-weight:700;padding:14px 32px;border-radius:10px;transition:background .2s;}
+.hero-cta:hover{background:var(--neon-dk);}
+
+/* HOW IT WORKS */
+.how{padding:72px 0;border-bottom:1px solid var(--border);background:var(--carbon);}
+.section-eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--neon);margin-bottom:10px;}
+.section-title{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-1px;margin-bottom:8px;}
+.section-sub{font-size:14px;color:var(--grey);max-width:480px;line-height:1.7;margin-bottom:48px;}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.step-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px 20px;}
+.step-num{font-size:11px;font-weight:700;color:var(--neon);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+.step-card h3{font-size:15px;font-weight:700;color:var(--white);margin-bottom:8px;}
+.step-card p{font-size:13px;color:var(--grey);line-height:1.6;}
+
+/* EARNINGS */
+.earnings{padding:72px 0;border-bottom:1px solid var(--border);background:var(--black);}
+.earn-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:0;}
+.earn-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px 24px;}
+.earn-card.featured{border-color:var(--neon);background:rgba(0,212,255,0.04);}
+.earn-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--neon);margin-bottom:10px;}
+.earn-card h3{font-size:18px;font-weight:700;color:var(--white);margin-bottom:18px;}
+.earn-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.earn-row:last-of-type{border-bottom:none;}
+.earn-row .job{color:#aaa;}
+.earn-row .price{color:var(--neon);font-weight:700;}
+.earn-note{font-size:12px;color:var(--grey);margin-top:16px;line-height:1.6;}
+
+/* REQUIREMENTS */
+.requirements{padding:72px 0;border-bottom:1px solid var(--border);background:var(--carbon);}
+.req-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+.req-list{display:flex;flex-direction:column;gap:14px;}
+.req-item{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:#ccc;line-height:1.6;}
+.req-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.req-icon.yes{background:rgba(0,212,138,0.12);border:1px solid rgba(0,212,138,0.3);}
+.req-icon.yes svg{color:var(--green);}
+.req-icon.no{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);}
+.req-icon.no svg{color:var(--red);}
+
+/* APPLY FORM */
+.apply{padding:72px 0;background:var(--black);}
+.apply-inner{max-width:620px;}
+.apply-form{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:36px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--white);font-family:inherit;outline:none;transition:border-color .2s;appearance:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--neon);}
+.fg textarea{resize:vertical;min-height:100px;}
+.btn-apply{width:100%;background:var(--neon);color:var(--black);border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;margin-top:4px;}
+.btn-apply:hover{background:var(--neon-dk);}
+.btn-apply:disabled{opacity:.5;cursor:not-allowed;}
+.apply-note{font-size:12px;color:var(--grey);text-align:center;margin-top:12px;}
+.success-msg{display:none;text-align:center;padding:24px;}
+.success-msg h3{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;}
+.success-msg p{font-size:14px;color:var(--grey);}
+
+/* FOOTER */
+footer{background:var(--carbon);border-top:1px solid var(--border);padding:32px 0;text-align:center;}
+footer p{font-size:12px;color:var(--grey);}
+footer a{color:var(--neon);}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  .steps{grid-template-columns:1fr 1fr;}
+  .earn-grid{grid-template-columns:1fr;}
+  .req-grid{grid-template-columns:1fr;}
+  .req-highlights{grid-template-columns:1fr!important;}
+}
+@media(max-width:580px){
+  .steps{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .hero-earn{gap:20px;}
+}
+select option{background:#1a1a1a;color:#fff;}
+::placeholder{color:#2e2e2e;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">Scuff<span>IQ</span></a>
+    <a href="/" class="nav-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to ScuffIQ
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-badge">Now recruiting</div>
+      <h1>Turn your skills<br>into <em>steady income.</em></h1>
+      <p class="hero-sub">ScuffIQ connects certified smart repair technicians with customers across London, Hertfordshire and Essex. We handle the leads, admin and quoting — you just show up and do great work.</p>
+      <div class="hero-earn">
+        <div class="earn-stat"><div class="num">£400+</div><div class="lbl">Per day potential</div></div>
+        <div class="earn-stat"><div class="num">100%</div><div class="lbl">Self-employed</div></div>
+        <div class="earn-stat"><div class="num">0</div><div class="lbl">Upfront costs</div></div>
+      </div>
+      <a href="#apply" class="hero-cta">Apply to join ScuffIQ →</a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Jobs come to you.</h2>
+    <p class="section-sub">No cold calling, no marketing, no chasing leads. ScuffIQ handles everything before and after the repair.</p>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">Step 1</div>
+        <h3>Customer submits a quote</h3>
+        <p>A customer uploads damage photos on scuffiq.com. Our AI assesses the damage and generates an estimate instantly.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 2</div>
+        <h3>You receive the job</h3>
+        <p>We send you a secure review link by email with the customer details, photos, AI estimate and location — everything you need to decide.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 3</div>
+        <h3>You confirm your price</h3>
+        <p>Review the job and confirm your price and availability. Takes under 2 minutes. We handle the customer communication from there.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 4</div>
+        <h3>Show up and get paid</h3>
+        <p>The customer books a slot in your calendar. You carry out the repair, collect payment and move on to the next job.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EARNINGS -->
+<section class="earnings" id="earnings">
+  <div class="container">
+    <div class="section-eyebrow">Earnings</div>
+    <h2 class="section-title">What you can earn.</h2>
+    <p class="section-sub">Prices are set competitively for the London market. You keep the majority of every job — we take a small platform commission.</p>
+    <div class="earn-grid">
+      <div class="earn-card">
+        <div class="earn-label">Scratch &amp; scuff</div>
+        <h3>Paintwork repairs</h3>
+        <div class="earn-row"><span class="job">Light surface scuff</span><span class="price">£100–£120</span></div>
+        <div class="earn-row"><span class="job">Single panel scratch</span><span class="price">£150–£190</span></div>
+        <div class="earn-row"><span class="job">Deep or long scratch</span><span class="price">£190–£240</span></div>
+        <div class="earn-row"><span class="job">Keyed / vandal scratch</span><span class="price">£240–£350</span></div>
+        <p class="earn-note">Premium vehicles (BMW, Mercedes, Audi, Range Rover) carry a surcharge — higher earnings per job.</p>
+      </div>
+      <div class="earn-card featured">
+        <div class="earn-label">Most popular</div>
+        <h3>Alloy wheel repairs</h3>
+        <div class="earn-row"><span class="job">Single wheel — light</span><span class="price">£75–£95</span></div>
+        <div class="earn-row"><span class="job">Single wheel — deep</span><span class="price">£100–£130</span></div>
+        <div class="earn-row"><span class="job">19"–20" wheel</span><span class="price">£120–£150</span></div>
+        <div class="earn-row"><span class="job">Two wheels</span><span class="price">£170–£210</span></div>
+        <div class="earn-row"><span class="job">Full set (4 wheels)</span><span class="price">£300–£380</span></div>
+        <p class="earn-note">A technician completing 3 alloy jobs per day earns £225–£570 before commission. High demand, fast turnaround.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REQUIREMENTS -->
+<section class="requirements" id="requirements">
+  <div class="container">
+    <div class="section-eyebrow">Requirements</div>
+    <h2 class="section-title">What we need from you.</h2>
+    <p class="section-sub">ScuffIQ technicians operate as independent sole traders. Here's exactly what you need before you can start taking jobs.</p>
+
+    <!-- Key requirements highlighted -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;">
+      <div style="background:#0a0a0a;border:2px solid rgba(0,212,255,0.3);border-radius:12px;padding:22px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">🚐</div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px;">Your own van</h3>
+        <p style="font-size:12px;color:var(--grey);line-height:1.6;">You must have your own vehicle to travel to customer locations. A van is preferred to carry equipment.</p>
+      </div>
+      <div style="background:#0a0a0a;border:2px solid rgba(0,212,255,0.3);border-radius:12px;padding:22px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">📋</div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px;">Sole trader / self-employed</h3>
+        <p style="font-size:12px;color:var(--grey);line-height:1.6;">You must be registered as self-employed or a sole trader with HMRC. ScuffIQ does not employ technicians directly.</p>
+      </div>
+      <div style="background:#0a0a0a;border:2px solid rgba(0,212,255,0.3);border-radius:12px;padding:22px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">🛡️</div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px;">Public liability insurance</h3>
+        <p style="font-size:12px;color:var(--grey);line-height:1.6;">You must hold a minimum of £1 million public liability insurance. We will ask for proof before your first job.</p>
+      </div>
+    </div>
+
+    <div class="req-grid">
+      <div>
+        <h3 style="font-size:15px;font-weight:700;color:var(--white);margin-bottom:20px;">You also need</h3>
+        <div class="req-list">
+          <div class="req-item">
+            <div class="req-icon yes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            Proven SMART repair experience (scratch, scuff, alloy or bumper)
+          </div>
+          <div class="req-item">
+            <div class="req-icon yes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            Your own professional tools and equipment
+          </div>
+          <div class="req-item">
+            <div class="req-icon yes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            A smartphone to receive and respond to job notifications
+          </div>
+          <div class="req-item">
+            <div class="req-icon yes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            The ability to respond to jobs promptly — same day preferred
+          </div>
+          <div class="req-item">
+            <div class="req-icon yes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            A professional attitude and high standard of finish
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:15px;font-weight:700;color:var(--white);margin-bottom:20px;">You don't need</h3>
+        <div class="req-list">
+          <div class="req-item">
+            <div class="req-icon no"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            Formal qualifications or certificates — experience counts
+          </div>
+          <div class="req-item">
+            <div class="req-icon no"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            To find your own customers — we bring the jobs to you
+          </div>
+          <div class="req-item">
+            <div class="req-icon no"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            To handle invoicing, admin or chasing payment
+          </div>
+          <div class="req-item">
+            <div class="req-icon no"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            To commit to fixed hours — work when you choose
+          </div>
+          <div class="req-item">
+            <div class="req-icon no"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            To pay any joining fee or upfront costs — ever
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Important notice -->
+    <div style="margin-top:32px;background:rgba(255,170,0,0.06);border:1px solid rgba(255,170,0,0.25);border-radius:10px;padding:20px 24px;display:flex;gap:14px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">⚠️</span>
+      <p style="font-size:13px;color:#ccc;line-height:1.7;margin:0;">
+        <strong style="color:var(--orange);">Important:</strong> ScuffIQ technicians are self-employed independent contractors, not employees. You are responsible for your own tax, National Insurance, insurance and equipment. By applying you confirm you understand and accept these terms.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- APPLY FORM -->
+<section class="apply" id="apply">
+  <div class="container">
+    <div class="apply-inner">
+      <div class="section-eyebrow">Apply now</div>
+      <h2 class="section-title" style="margin-bottom:8px;">Join the ScuffIQ network.</h2>
+      <p style="font-size:14px;color:var(--grey);margin-bottom:32px;line-height:1.7;">Fill in your details below and we'll be in touch within 24 hours. No commitment required — just a conversation.</p>
+
+      <div class="apply-form">
+        <div id="applyFormContent">
+          <div class="form-row">
+            <div class="fg">
+              <label>First name *</label>
+              <input type="text" id="appFname" placeholder="John">
+            </div>
+            <div class="fg">
+              <label>Last name *</label>
+              <input type="text" id="appLname" placeholder="Smith">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Email address *</label>
+            <input type="email" id="appEmail" placeholder="john@email.com">
+          </div>
+          <div class="fg">
+            <label>Phone number *</label>
+            <input type="tel" id="appPhone" placeholder="07700 900000">
+          </div>
+          <div class="fg">
+            <label>Your postcode / area *</label>
+            <input type="text" id="appPostcode" placeholder="e.g. EN5 or North London">
+          </div>
+          <div class="fg">
+            <label>Services you offer *</label>
+            <select id="appServices">
+              <option value="" disabled selected>Select your main service</option>
+              <option>Scratch &amp; scuff repair</option>
+              <option>Alloy wheel repair</option>
+              <option>Bumper repair</option>
+              <option>All of the above</option>
+              <option>Other smart repair</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Years of experience *</label>
+            <select id="appExperience">
+              <option value="" disabled selected>Select experience</option>
+              <option>Less than 1 year</option>
+              <option>1–3 years</option>
+              <option>3–5 years</option>
+              <option>5–10 years</option>
+              <option>10+ years</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Tell us about yourself</label>
+            <textarea id="appNotes" placeholder="e.g. I've been doing mobile alloy repairs for 4 years, have my own van and equipment, and currently work independently across North London..."></textarea>
+          </div>
+          <button class="btn-apply" id="applyBtn" onclick="submitApplication()">Send application →</button>
+          <p class="apply-note">We'll be in touch within 24 hours. No commitment required.</p>
+        </div>
+
+        <div class="success-msg" id="applySuccess">
+          <div style="width:56px;height:56px;background:rgba(0,212,138,0.1);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d48a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h3>Application received!</h3>
+          <p>Thanks for applying to join ScuffIQ. We'll review your details and be in touch within 24 hours.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p>ScuffIQ Ltd &middot; North &amp; South London, Hertfordshire &amp; Essex &middot; <a href="mailto:hello@scuffiq.com">hello@scuffiq.com</a></p>
+    <p style="margin-top:6px;"><a href="/">scuffiq.com</a> &middot; <a href="/privacy.html">Privacy policy</a> &middot; <a href="/terms.html">Terms</a></p>
+  </div>
+</footer>
+
+<script>
+async function submitApplication() {
+  const fname      = document.getElementById('appFname').value.trim();
+  const lname      = document.getElementById('appLname').value.trim();
+  const email      = document.getElementById('appEmail').value.trim();
+  const phone      = document.getElementById('appPhone').value.trim();
+  const postcode   = document.getElementById('appPostcode').value.trim();
+  const services   = document.getElementById('appServices').value;
+  const experience = document.getElementById('appExperience').value;
+  const notes      = document.getElementById('appNotes').value.trim();
+
+  if (!fname || !lname || !email || !phone || !postcode || !services || !experience) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  const btn = document.getElementById('applyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev/technician-application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:       fname + ' ' + lname,
+        email,
+        phone,
+        postcode,
+        services,
+        experience,
+        notes,
+      }),
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    document.getElementById('applyFormContent').style.display = 'none';
+    document.getElementById('applySuccess').style.display = 'block';
+
+  } catch (e) {
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'Send application →';
+    alert('Something went wrong. Please email us directly at hello@scuffiq.com');
+  }
+}
+</script>
+
+</body>
+</html>
