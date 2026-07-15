@@ -228,6 +228,17 @@ footer{background:var(--carbon);border-top:1px solid var(--border);padding:40px 
   .footer-bottom{flex-direction:column;text-align:center;}
   .lease-banner{flex-direction:column;text-align:center;}
 }
+/* COOKIE CONSENT */
+.cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:999;background:#0a0a0a;border-top:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.cookie-banner.hidden{display:none;}
+.cookie-text{font-size:12px;color:var(--grey);line-height:1.6;flex:1;min-width:200px;}
+.cookie-text a{color:var(--neon);text-decoration:underline;}
+.cookie-btns{display:flex;gap:10px;flex-shrink:0;}
+.btn-cookie-accept{background:var(--neon);color:var(--black);border:none;border-radius:7px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-cookie-accept:hover{background:var(--neon-dk);}
+.btn-cookie-decline{background:transparent;color:var(--grey);border:1px solid var(--border);border-radius:7px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-cookie-decline:hover{border-color:var(--grey);color:var(--white);}
+
 select option{background:#1a1a1a;color:#fff;}
 ::placeholder{color:#2e2e2e;}
 ::-webkit-scrollbar{width:5px;}
@@ -235,6 +246,10 @@ select option{background:#1a1a1a;color:#fff;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
 
+<script>
+  // Disable GA by default until consent given
+  window['ga-disable-G-RTWNL5LC4Z'] = true;
+</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RTWNL5LC4Z"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -955,5 +970,54 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+<!-- COOKIE CONSENT BANNER -->
+<div class="cookie-banner" id="cookieBanner">
+  <p class="cookie-text">
+    🍪 We use cookies to analyse site traffic and improve your experience. This includes Google Analytics and Microsoft Clarity.
+    By clicking <strong>Accept</strong> you consent to our use of cookies.
+    <a href="/privacy.html">Privacy policy</a>
+  </p>
+  <div class="cookie-btns">
+    <button class="btn-cookie-decline" onclick="declineCookies()">Decline</button>
+    <button class="btn-cookie-accept" onclick="acceptCookies()">Accept cookies</button>
+  </div>
+</div>
+
+<script>
+// ── Cookie consent ─────────────────────────────────────────────
+function acceptCookies() {
+  localStorage.setItem('scuffiq_cookie_consent', 'accepted');
+  document.getElementById('cookieBanner').classList.add('hidden');
+  enableTracking();
+}
+
+function declineCookies() {
+  localStorage.setItem('scuffiq_cookie_consent', 'declined');
+  document.getElementById('cookieBanner').classList.add('hidden');
+  disableTracking();
+}
+
+function enableTracking() {
+  window['ga-disable-G-RTWNL5LC4Z'] = false;
+}
+
+function disableTracking() {
+  window['ga-disable-G-RTWNL5LC4Z'] = true;
+}
+
+// Check consent on load
+(function() {
+  const consent = localStorage.getItem('scuffiq_cookie_consent');
+  if (consent === 'accepted') {
+    document.getElementById('cookieBanner').classList.add('hidden');
+    enableTracking();
+  } else if (consent === 'declined') {
+    document.getElementById('cookieBanner').classList.add('hidden');
+    disableTracking();
+  }
+  // No consent stored — show banner
+})();
+</script>
+
 </body>
 </html>
