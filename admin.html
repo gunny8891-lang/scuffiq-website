@@ -209,6 +209,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Tech price</th>
             <th>Margin</th>
             <th>Customer price</th>
+            <th>Technician</th>
             <th>Status</th>
             <th>Booked</th>
             <th>Date</th>
@@ -216,7 +217,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="12">Loading submissions…</td></tr>
+          <tr class="loading-row"><td colspan="13">Loading submissions…</td></tr>
         </tbody>
       </table>
     </div>
@@ -333,7 +334,7 @@ async function supaFetch(path, options = {}) {
 
 async function loadSubmissions() {
   document.getElementById('tableBody').innerHTML =
-    '<tr class="loading-row"><td colspan="12">Loading…</td></tr>';
+    '<tr class="loading-row"><td colspan="13">Loading…</td></tr>';
   try {
     const rows = await supaFetch(
       'quote_submissions?select=*&order=submitted_at.desc&limit=500'
@@ -343,7 +344,7 @@ async function loadSubmissions() {
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
-      `<tr class="loading-row"><td colspan="12" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+      `<tr class="loading-row"><td colspan="13" style="color:var(--red)">Error: ${e.message}</td></tr>`;
   }
 }
 
@@ -380,7 +381,7 @@ function renderTable(rows) {
     rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="12">No submissions found.</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="13">No submissions found.</td></tr>';
     return;
   }
 
@@ -441,6 +442,12 @@ function renderTable(rows) {
       <td>${techPrice}</td>
       <td>${marginDisplay}</td>
       <td>${customerPriceDisplay}</td>
+      <td style="font-size:12px;">
+        ${r.technician_name
+          ? `<span style="color:var(--neon);font-weight:600;">${esc(r.technician_name)}</span>`
+          : '<span style="color:var(--grey);">—</span>'
+        }
+      </td>
       <td><span class="status-pill ${pillCls}">${pillLbl}</span></td>
       <td>
         ${r.status === 'booked' || r.job_completed
