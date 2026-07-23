@@ -52,8 +52,8 @@ header{background:var(--carbon);border-bottom:1px solid var(--border);padding:14
 .filter-count{font-size:12px;color:var(--grey);margin-left:auto;}
 
 /* TABLE */
-.table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-table{width:100%;border-collapse:collapse;}
+.table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:1200px;}
 thead tr{background:#0a0a0a;border-bottom:1px solid var(--border);}
 th{padding:11px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);text-align:left;white-space:nowrap;}
 tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
@@ -134,8 +134,6 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
   .stats-row{grid-template-columns:1fr 1fr;}
   .m-grid{grid-template-columns:1fr;}
   .lf-row{grid-template-columns:1fr;}
-  th:nth-child(4),td:nth-child(4),
-  th:nth-child(5),td:nth-child(5){display:none;}
 }
 </style>
 </head>
@@ -467,9 +465,12 @@ function renderTable(rows) {
         }
       </td>
       <td class="td-date">${date}</td>
-      <td>
+      <td style="white-space:nowrap;">
         <button class="assign-btn" onclick="event.stopPropagation(); openAssignModal('${r.id}')">
           Assign
+        </button>
+        <button class="assign-btn" onclick="event.stopPropagation(); deleteRow('${r.id}', '${esc(r.customer_name||'this submission')}')" style="background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.3);color:var(--red);margin-left:6px;">
+          Delete
         </button>
       </td>
     </tr>`;
@@ -814,6 +815,22 @@ async function sendToTechnician() {
 }
 
 // ── Send confirmed quote email to customer ────────────────────────────────────
+// ── Delete row ────────────────────────────────────────────────────────────────
+async function deleteRow(id, name) {
+  const confirmed = confirm(`Delete submission for "${name}"?\n\nThis cannot be undone.`);
+  if (!confirmed) return;
+
+  try {
+    await supaFetch(`quote_submissions?id=eq.${id}`, { method: 'DELETE' });
+    allRows = allRows.filter(r => r.id !== id);
+    updateStats(allRows);
+    renderTable(allRows);
+  } catch (e) {
+    console.error('Delete error:', e);
+    alert('Could not delete submission. Please try again.');
+  }
+}
+
 // ── Mark as booked ────────────────────────────────────────────────────────────
 async function markAsBooked(id) {
   const row = allRows.find(r => r.id === id);
