@@ -78,10 +78,11 @@
               <input id="technicianPrice" type="text" placeholder="e.g. £245" required>
             </div>
             <div class="field">
-              <label for="availability">Availability *</label>
-              <select id="availability" required>
-                <option value="">Select availability</option>
-              </select>
+              <label>Availability * <span style="font-size:11px;font-weight:400;color:var(--grey);">(select all that apply)</span></label>
+              <div id="availabilityOptions" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding:10px;background:#0a0a0a;border:1px solid var(--border);border-radius:8px;">
+                <!-- Populated by script -->
+              </div>
+              <input type="hidden" id="availability">
             </div>
             <div class="field">
               <label for="repairTime">Estimated repair time</label>
@@ -120,15 +121,22 @@
     </section>
   </main>
 
-  <!-- Dynamic availability dates -->
+  <!-- Dynamic availability dates — multi-select checkboxes -->
   <script>
   (function() {
-    const select = document.getElementById('availability');
-    if (!select) return;
+    const container = document.getElementById('availabilityOptions');
+    const hidden    = document.getElementById('availability');
+    if (!container) return;
 
     const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const today  = new Date();
+
+    function updateHidden() {
+      const checked = Array.from(container.querySelectorAll('input[type=checkbox]:checked'))
+        .map(cb => cb.value);
+      hidden.value = checked.join(', ');
+    }
 
     for (let i = 0; i < 14; i++) {
       const date    = new Date(today);
@@ -138,21 +146,56 @@
       const dateStr = date.getDate() + ' ' + months[date.getMonth()];
       const label   = dayName + ' ' + dateStr;
 
-      const amOpt       = document.createElement('option');
-      amOpt.value       = label + ' AM';
-      amOpt.textContent = label + ' — Morning (AM)';
-      select.appendChild(amOpt);
+      ['AM', 'PM'].forEach(function(period) {
+        const val = label + ' ' + period;
+        const id  = 'avail_' + i + '_' + period;
 
-      const pmOpt       = document.createElement('option');
-      pmOpt.value       = label + ' PM';
-      pmOpt.textContent = label + ' — Afternoon (PM)';
-      select.appendChild(pmOpt);
+        const row = document.createElement('label');
+        row.htmlFor = id;
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;color:#ccc;cursor:pointer;padding:4px 2px;';
+
+        const cb = document.createElement('input');
+        cb.type    = 'checkbox';
+        cb.id      = id;
+        cb.value   = val;
+        cb.style.cssText = 'width:16px;height:16px;accent-color:#00D4FF;cursor:pointer;flex-shrink:0;';
+        cb.addEventListener('change', updateHidden);
+
+        const span = document.createElement('span');
+        span.textContent = label + ' — ' + (period === 'AM' ? 'Morning (AM)' : 'Afternoon (PM)');
+
+        row.appendChild(cb);
+        row.appendChild(span);
+        container.appendChild(row);
+      });
+
+      // Add a subtle divider between days
+      if (i < 13) {
+        const div = document.createElement('div');
+        div.style.cssText = 'height:1px;background:#1e1e1e;margin:2px 0;';
+        container.appendChild(div);
+      }
     }
 
-    const otherOpt       = document.createElement('option');
-    otherOpt.value       = 'Other - see notes';
-    otherOpt.textContent = 'Other — see notes';
-    select.appendChild(otherOpt);
+    // Other option
+    const otherId  = 'avail_other';
+    const otherRow = document.createElement('label');
+    otherRow.htmlFor = otherId;
+    otherRow.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;color:#ccc;cursor:pointer;padding:4px 2px;margin-top:4px;';
+
+    const otherCb = document.createElement('input');
+    otherCb.type  = 'checkbox';
+    otherCb.id    = otherId;
+    otherCb.value = 'Other — see notes';
+    otherCb.style.cssText = 'width:16px;height:16px;accent-color:#00D4FF;cursor:pointer;flex-shrink:0;';
+    otherCb.addEventListener('change', updateHidden);
+
+    const otherSpan = document.createElement('span');
+    otherSpan.textContent = 'Other — see notes';
+
+    otherRow.appendChild(otherCb);
+    otherRow.appendChild(otherSpan);
+    container.appendChild(otherRow);
   })();
   </script>
 
