@@ -70,6 +70,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 .pill-tech{background:rgba(255,170,0,0.12);color:var(--orange);border:1px solid rgba(255,170,0,0.3);}
 .pill-sent{background:rgba(0,212,255,0.06);color:#7ecfdf;border:1px solid rgba(0,212,255,0.15);}
 .pill-booked{background:rgba(0,212,138,0.15);color:var(--green);border:1px solid rgba(0,212,138,0.4);}
+.pill-rejected{background:rgba(255,107,107,0.08);color:#ff8888;border:1px solid rgba(255,107,107,0.2);}
 .thumb-row{display:flex;gap:4px;}
 .thumb-row img{width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);}
 .loading-row td{text-align:center;padding:40px;color:var(--grey);}
@@ -186,6 +187,9 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
         <option value="booked">Booked</option>
         <option value="quoted">Quoted</option>
         <option value="done">Completed</option>
+        <option value="rejected">Rejected</option>
+        <option value="out_of_area">Out of area</option>
+        <option value="no_response">No response</option>
       </select>
       <select id="serviceFilter" onchange="filterTable()">
         <option value="">All services</option>
@@ -354,6 +358,9 @@ function getRowStatus(r) {
   if (r.status === 'technician_confirmed') return 'technician_confirmed';
   if (r.status === 'technician_declined') return 'pending';
   if (r.status === 'sent_to_technician') return 'sent_to_technician';
+  if (r.status === 'rejected') return 'rejected';
+  if (r.status === 'out_of_area') return 'rejected';
+  if (r.status === 'no_response') return 'rejected';
   if (r.final_quote_given) return 'quoted';
   return 'pending';
 }
@@ -395,6 +402,7 @@ function renderTable(rows) {
       sent_to_technician:     'pill-sent',
       technician_confirmed:   'pill-tech',
       booked:                 'pill-booked',
+      rejected:               'pill-rejected',
     }[status] || 'pill-pending';
 
     const pillLbl = {
@@ -404,6 +412,7 @@ function renderTable(rows) {
       sent_to_technician:     'Sent to tech',
       technician_confirmed:   'Tech confirmed',
       booked:                 'Booked',
+      rejected:               r.status === 'out_of_area' ? 'Out of area' : r.status === 'no_response' ? 'No response' : 'Rejected',
     }[status] || 'Pending';
 
     const thumbs = [1,2,3,4,5,6]
@@ -476,7 +485,8 @@ function filterTable() {
     const matchQ = !q || [r.customer_name,r.customer_email,r.vehicle_make,r.vehicle_model,r.postcode]
       .some(v => (v||'').toLowerCase().includes(q));
     const rowStatus    = getRowStatus(r);
-    const matchStatus  = !status  || rowStatus === status;
+    const matchStatus  = !status || rowStatus === status ||
+      (status === 'rejected' && ['rejected','out_of_area','no_response'].includes(r.status));
     const matchService = !service || (r.service_type||'').includes(service);
     return matchQ && matchStatus && matchService;
   });
@@ -613,6 +623,9 @@ function buildModalHtml(r) {
             <option value="technician_confirmed"  ${status==='technician_confirmed'?'selected':''}>Tech confirmed</option>
             <option value="quoted"                ${status==='quoted'?'selected':''}>Quoted</option>
             <option value="done"                  ${status==='done'?'selected':''}>Completed</option>
+            <option value="rejected"              ${status==='rejected'?'selected':''}>Rejected — not taking on</option>
+            <option value="out_of_area"           ${status==='out_of_area'?'selected':''}>Out of area</option>
+            <option value="no_response"           ${status==='no_response'?'selected':''}>No customer response</option>
           </select>
         </div>
         <div class="lf-field">
