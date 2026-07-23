@@ -195,6 +195,24 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
         <option value="Bumper">Bumper</option>
         <option value="Alloy">Alloy wheel</option>
       </select>
+      <select id="technicianFilter" onchange="filterTable()">
+        <option value="">All technicians</option>
+        <option value="unassigned">Unassigned</option>
+      </select>
+      <select id="dateFilter" onchange="filterTable()">
+        <option value="">All dates</option>
+        <option value="today">Today</option>
+        <option value="week">This week</option>
+        <option value="month">This month</option>
+      </select>
+      <select id="aiPriceFilter" onchange="filterTable()">
+        <option value="">All AI prices</option>
+        <option value="0-150">Under £150</option>
+        <option value="150-300">£150–£300</option>
+        <option value="300-500">£300–£500</option>
+        <option value="500+">£500+</option>
+      </select>
+      <button class="btn-sm" onclick="clearFilters()" style="white-space:nowrap;">✕ Clear filters</button>
       <span class="filter-count" id="filterCount"></span>
     </div>
 
@@ -343,6 +361,7 @@ async function loadSubmissions() {
     );
     allRows = rows;
     updateStats(rows);
+    populateTechnicianFilter();
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
@@ -479,20 +498,87 @@ function renderTable(rows) {
   }).join('');
 }
 
+function populateTechnicianFilter() {
+  const select = document.getElementById('technicianFilter');
+  if (!select) return;
+  const current = select.value;
+  while (select.options.length > 2) select.remove(2);
+  const techs = [...new Set(allRows.map(r => r.technician_name).filter(Boolean))].sort();
+  techs.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    select.appendChild(opt);
+  });
+  select.value = current;
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value    = '';
+  document.getElementById('statusFilter').value   = '';
+  document.getElementById('serviceFilter').value  = '';
+  document.getElementById('technicianFilter').value = '';
+  document.getElementById('dateFilter').value     = '';
+  document.getElementById('aiPriceFilter').value  = '';
+  renderTable(allRows);
+  document.getElementById('filterCount').textContent = allRows.length + ' result' + (allRows.length !== 1 ? 's' : '');
+}
+
 function filterTable() {
-  const q       = document.getElementById('searchInput').value.toLowerCase();
-  const status  = document.getElementById('statusFilter').value;
-  const service = document.getElementById('serviceFilter').value;
+  const q          = document.getElementById('searchInput').value.toLowerCase();
+  const status     = document.getElementById('statusFilter').value;
+  const service    = document.getElementById('serviceFilter').value;
+  const technician = document.getElementById('technicianFilter').value;
+  const dateRange  = document.getElementById('dateFilter').value;
+  const priceRange = document.getElementById('aiPriceFilter').value;
+
+  const now        = new Date();
+  const today      = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart  = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const filtered = allRows.filter(r => {
-    const matchQ = !q || [r.customer_name,r.customer_email,r.vehicle_make,r.vehicle_model,r.postcode]
-      .some(v => (v||'').toLowerCase().includes(q));
-    const rowStatus    = getRowStatus(r);
-    const matchStatus  = !status || rowStatus === status ||
+    // Text search
+    const matchQ = !q || [r.customer_name, r.customer_email, r.vehicle_make, r.vehicle_model, r.postcode]
+      .some(v => (v || '').toLowerCase().includes(q));
+
+    // Status
+    const rowStatus   = getRowStatus(r);
+    const matchStatus = !status || rowStatus === status ||
       (status === 'rejected' && ['rejected','out_of_area','no_response'].includes(r.status));
-    const matchService = !service || (r.service_type||'').includes(service);
-    return matchQ && matchStatus && matchService;
+
+    // Service
+    const matchService = !service || (r.service_type || '').includes(service);
+
+    // Technician
+    const matchTech = !technician
+      || (technician === 'unassigned' && !r.technician_name)
+      || r.technician_name === technician;
+
+    // Date range
+    let matchDate = true;
+    if (dateRange && r.submitted_at) {
+      const sub = new Date(r.submitted_at);
+      if (dateRange === 'today') matchDate = sub >= today;
+      if (dateRange === 'week')  matchDate = sub >= weekStart;
+      if (dateRange === 'month') matchDate = sub >= monthStart;
+    }
+
+    // AI price range
+    let matchPrice = true;
+    if (priceRange) {
+      const raw   = (r.ai_price_1 || '').replace(/[£,\s]/g, '');
+      const nums  = raw.match(/\d+/g);
+      const price = nums ? parseInt(nums[0]) : 0;
+      if (priceRange === '0-150')   matchPrice = price > 0 && price < 150;
+      if (priceRange === '150-300') matchPrice = price >= 150 && price < 300;
+      if (priceRange === '300-500') matchPrice = price >= 300 && price < 500;
+      if (priceRange === '500+')    matchPrice = price >= 500;
+    }
+
+    return matchQ && matchStatus && matchService && matchTech && matchDate && matchPrice;
   });
+
   renderTable(filtered);
 }
 
