@@ -683,7 +683,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <li><a href="#areas">Areas covered</a></li>
           <li><a href="mailto:hello@scuffiq.com">hello@scuffiq.com</a></li>
           <li><a href="/privacy.html">Privacy policy</a></li>
-          <li><a href="/join.html">Work with us</a></li>
           <li><a href="/terms.html">Terms &amp; conditions</a></li>
         </ul>
       </div>
@@ -974,8 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- COOKIE CONSENT BANNER -->
 <div class="cookie-banner" id="cookieBanner">
   <p class="cookie-text">
-    🍪 We use cookies to analyse site traffic and improve your experience. This includes Google Analytics and Microsoft Clarity.
-    By clicking <strong>Accept</strong> you consent to our use of cookies.
+    🍪 We use cookies to analyse site traffic and improve your experience (Google Analytics, Microsoft Clarity). Basic conversion measurement runs regardless of your choice.
     <a href="/privacy.html">Privacy policy</a>
   </p>
   <div class="cookie-btns">
@@ -989,20 +987,22 @@ document.addEventListener('DOMContentLoaded', function() {
 function acceptCookies() {
   localStorage.setItem('scuffiq_cookie_consent', 'accepted');
   document.getElementById('cookieBanner').classList.add('hidden');
-  enableTracking();
+  enableAnalytics();
 }
 
 function declineCookies() {
   localStorage.setItem('scuffiq_cookie_consent', 'declined');
   document.getElementById('cookieBanner').classList.add('hidden');
-  disableTracking();
+  disableAnalytics();
 }
 
-function enableTracking() {
+function enableAnalytics() {
+  // Enable Google Analytics
   window['ga-disable-G-RTWNL5LC4Z'] = false;
 }
 
-function disableTracking() {
+function disableAnalytics() {
+  // Disable Google Analytics only — Google Ads conversion tracking always runs
   window['ga-disable-G-RTWNL5LC4Z'] = true;
 }
 
@@ -1011,12 +1011,12 @@ function disableTracking() {
   const consent = localStorage.getItem('scuffiq_cookie_consent');
   if (consent === 'accepted') {
     document.getElementById('cookieBanner').classList.add('hidden');
-    enableTracking();
+    enableAnalytics();
   } else if (consent === 'declined') {
     document.getElementById('cookieBanner').classList.add('hidden');
-    disableTracking();
+    disableAnalytics();
   }
-  // No consent stored — show banner
+  // No consent stored — show banner, but Google Ads still runs
 })();
 </script>
 
