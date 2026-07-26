@@ -213,6 +213,12 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
         <option value="500+">£500+</option>
       </select>
       <button class="btn-sm" onclick="clearFilters()" style="white-space:nowrap;">✕ Clear filters</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <label style="font-size:12px;color:var(--grey);white-space:nowrap;">Default margin %</label>
+        <input type="number" id="defaultMargin" value="20" min="0" max="100"
+          oninput="renderTable(allRows)"
+          style="width:64px;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--neon);font-weight:700;outline:none;text-align:center;">
+      </div>
       <span class="filter-count" id="filterCount"></span>
     </div>
 
@@ -442,17 +448,27 @@ function renderTable(rows) {
     const firstPrice  = r.ai_price_1 || '—';
     const techPrice   = r.technician_price ? `<span style="color:var(--orange);font-weight:600;">${esc(r.technician_price)}</span>` : '—';
 
-    // Calculate margin and customer price if we have both tech price and final quote
+    // Calculate margin and customer price
+    const defaultMargin = parseFloat(document.getElementById('defaultMargin')?.value) || 20;
     let marginDisplay = '—';
-    let customerPriceDisplay = r.final_quote_given ? `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>` : '—';
+    let customerPriceDisplay = '—';
 
-    if (r.technician_price && r.final_quote_given) {
+    if (r.final_quote_given && r.technician_price) {
+      // Quote already sent — show actual margin
       const tech     = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
       const customer = parseFloat(r.final_quote_given.toString().replace(/[^0-9.]/g, '')) || 0;
       if (tech > 0 && customer > 0) {
         const marginPct = ((customer - tech) / tech * 100).toFixed(0);
-        marginDisplay = `<span style="color:var(--green);font-weight:600;">${marginPct}%</span>`;
+        marginDisplay        = `<span style="color:var(--green);font-weight:600;">${marginPct}%</span>`;
+        customerPriceDisplay = `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>`;
       }
+    } else if (r.technician_price) {
+      // Tech confirmed but quote not sent yet — show projected price with default margin
+      const tech        = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
+      const projected   = tech * (1 + defaultMargin / 100);
+      marginDisplay        = `<span style="color:var(--orange);font-weight:600;">${defaultMargin}%</span>`;
+      customerPriceDisplay = `<span style="color:var(--orange);font-weight:600;">£${projected.toFixed(2)}</span>
+                              <span style="font-size:10px;color:var(--grey);display:block;">projected</span>`;
     }
 
     const date = r.submitted_at
@@ -640,7 +656,7 @@ function buildModalHtml(r) {
                 placeholder="e.g. 20"
                 min="0"
                 max="100"
-                value="20"
+                value="${parseFloat(document.getElementById('defaultMargin')?.value) || 20}"
                 oninput="updateCustomerPrice(${techPrice})"
                 style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;color:var(--white);outline:none;">
             </div>
