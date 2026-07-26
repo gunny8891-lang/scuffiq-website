@@ -448,27 +448,32 @@ function renderTable(rows) {
     const firstPrice  = r.ai_price_1 || '—';
     const techPrice   = r.technician_price ? `<span style="color:var(--orange);font-weight:600;">${esc(r.technician_price)}</span>` : '—';
 
-    // Calculate margin and customer price
     const defaultMargin = parseFloat(document.getElementById('defaultMargin')?.value) || 20;
     let marginDisplay = '—';
     let customerPriceDisplay = '—';
 
-    if (r.final_quote_given && r.technician_price) {
-      // Quote already sent — show actual margin
-      const tech     = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
-      const customer = parseFloat(r.final_quote_given.toString().replace(/[^0-9.]/g, '')) || 0;
-      if (tech > 0 && customer > 0) {
-        const marginPct = ((customer - tech) / tech * 100).toFixed(0);
-        marginDisplay        = `<span style="color:var(--green);font-weight:600;">${marginPct}%</span>`;
-        customerPriceDisplay = `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>`;
+    if (r.technician_price) {
+      const tech = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
+
+      if (r.final_quote_given) {
+        const customer = parseFloat(r.final_quote_given.toString().replace(/[^0-9.]/g, '')) || 0;
+        if (customer > tech) {
+          // Margin has been properly applied
+          const marginPct = ((customer - tech) / tech * 100).toFixed(0);
+          marginDisplay        = `<span style="color:var(--green);font-weight:600;">${marginPct}%</span>`;
+          customerPriceDisplay = `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>`;
+        } else {
+          // final_quote_given equals tech price — no margin applied yet, show projected
+          const projected = tech * (1 + defaultMargin / 100);
+          marginDisplay        = `<span style="color:var(--orange);font-weight:600;">${defaultMargin}%*</span>`;
+          customerPriceDisplay = `<span style="color:var(--orange);font-weight:600;">£${projected.toFixed(2)}</span><span style="font-size:10px;color:var(--grey);display:block;">projected</span>`;
+        }
+      } else if (tech > 0) {
+        // No quote sent yet — show projected
+        const projected = tech * (1 + defaultMargin / 100);
+        marginDisplay        = `<span style="color:var(--orange);font-weight:600;">${defaultMargin}%*</span>`;
+        customerPriceDisplay = `<span style="color:var(--orange);font-weight:600;">£${projected.toFixed(2)}</span><span style="font-size:10px;color:var(--grey);display:block;">projected</span>`;
       }
-    } else if (r.technician_price) {
-      // Tech confirmed but quote not sent yet — show projected price with default margin
-      const tech        = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
-      const projected   = tech * (1 + defaultMargin / 100);
-      marginDisplay        = `<span style="color:var(--orange);font-weight:600;">${defaultMargin}%</span>`;
-      customerPriceDisplay = `<span style="color:var(--orange);font-weight:600;">£${projected.toFixed(2)}</span>
-                              <span style="font-size:10px;color:var(--grey);display:block;">projected</span>`;
     }
 
     const date = r.submitted_at
