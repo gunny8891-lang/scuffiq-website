@@ -233,6 +233,8 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Photos</th>
             <th>AI price</th>
             <th>Tech price</th>
+            <th>VAT (20%)</th>
+            <th>Tech+VAT</th>
             <th>Margin</th>
             <th>Customer price</th>
             <th>Technician</th>
@@ -243,7 +245,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="13">Loading submissions…</td></tr>
+          <tr class="loading-row"><td colspan="15">Loading submissions…</td></tr>
         </tbody>
       </table>
     </div>
@@ -360,7 +362,7 @@ async function supaFetch(path, options = {}) {
 
 async function loadSubmissions() {
   document.getElementById('tableBody').innerHTML =
-    '<tr class="loading-row"><td colspan="13">Loading…</td></tr>';
+    '<tr class="loading-row"><td colspan="15">Loading…</td></tr>';
   try {
     const rows = await supaFetch(
       'quote_submissions?select=*&order=submitted_at.desc&limit=500'
@@ -371,7 +373,7 @@ async function loadSubmissions() {
     renderTable(rows);
   } catch (e) {
     document.getElementById('tableBody').innerHTML =
-      `<tr class="loading-row"><td colspan="13" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+      `<tr class="loading-row"><td colspan="15" style="color:var(--red)">Error: ${e.message}</td></tr>`;
   }
 }
 
@@ -411,7 +413,7 @@ function renderTable(rows) {
     rows.length + ' result' + (rows.length !== 1 ? 's' : '');
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="13">No submissions found.</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="15">No submissions found.</td></tr>';
     return;
   }
 
@@ -449,28 +451,35 @@ function renderTable(rows) {
     const techPrice   = r.technician_price ? `<span style="color:var(--orange);font-weight:600;">${esc(r.technician_price)}</span>` : '—';
 
     const defaultMargin = parseFloat(document.getElementById('defaultMargin')?.value) || 20;
+    let vatDisplay = '—';
+    let combinedDisplay = '—';
     let marginDisplay = '—';
     let customerPriceDisplay = '—';
 
     if (r.technician_price) {
-      const tech = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
+      const tech     = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
+      const vat      = tech * 0.20;
+      const combined = tech + vat;
+
+      vatDisplay      = `<span style="color:#ccc;">£${vat.toFixed(2)}</span>`;
+      combinedDisplay = `<span style="color:#ccc;font-weight:600;">£${combined.toFixed(2)}</span>`;
 
       if (r.final_quote_given) {
         const customer = parseFloat(r.final_quote_given.toString().replace(/[^0-9.]/g, '')) || 0;
-        if (customer > tech) {
-          // Margin has been properly applied
-          const marginPct = ((customer - tech) / tech * 100).toFixed(0);
+        if (customer > combined) {
+          // Margin has been properly applied on top of tech+VAT
+          const marginPct = ((customer - combined) / combined * 100).toFixed(0);
           marginDisplay        = `<span style="color:var(--green);font-weight:600;">${marginPct}%</span>`;
           customerPriceDisplay = `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>`;
         } else {
           // final_quote_given equals tech price — no margin applied yet, show projected
-          const projected = tech * (1 + defaultMargin / 100);
+          const projected = combined * (1 + defaultMargin / 100);
           marginDisplay        = `<span style="color:var(--orange);font-weight:600;">${defaultMargin}%*</span>`;
           customerPriceDisplay = `<span style="color:var(--orange);font-weight:600;">£${projected.toFixed(2)}</span><span style="font-size:10px;color:var(--grey);display:block;">projected</span>`;
         }
       } else if (tech > 0) {
         // No quote sent yet — show projected
-        const projected = tech * (1 + defaultMargin / 100);
+        const projected = combined * (1 + defaultMargin / 100);
         marginDisplay        = `<span style="color:var(--orange);font-weight:600;">${defaultMargin}%*</span>`;
         customerPriceDisplay = `<span style="color:var(--orange);font-weight:600;">£${projected.toFixed(2)}</span><span style="font-size:10px;color:var(--grey);display:block;">projected</span>`;
       }
@@ -487,6 +496,8 @@ function renderTable(rows) {
       <td><div class="thumb-row">${thumbs || '<span style="color:var(--grey);font-size:12px;">No images</span>'}</div><div style="font-size:11px;color:var(--grey);margin-top:3px;">${r.photo_count||0} photo${r.photo_count!==1?'s':''}</div></td>
       <td style="color:var(--neon);font-weight:600;">${esc(firstPrice)}</td>
       <td>${techPrice}</td>
+      <td>${vatDisplay}</td>
+      <td>${combinedDisplay}</td>
       <td>${marginDisplay}</td>
       <td>${customerPriceDisplay}</td>
       <td style="font-size:12px;">
@@ -637,6 +648,11 @@ function buildModalHtml(r) {
   // Technician confirmed panel
   if (r.status === 'technician_confirmed' || r.technician_price) {
     const techPrice = parseFloat((r.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
+    const vat       = techPrice * 0.20;
+    const combined  = techPrice + vat;
+    const initMargin   = parseFloat(document.getElementById('defaultMargin')?.value) || 20;
+    const initCustomer = combined * (1 + initMargin / 100);
+
     html += `
     <div class="m-section">
       <div class="m-section-title">Technician response</div>
@@ -651,8 +667,23 @@ function buildModalHtml(r) {
         </div>
 
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,170,0,0.2);">
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);display:block;margin-bottom:8px;">Commission margin</label>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;margin-bottom:16px;">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);display:block;margin-bottom:8px;">Pricing breakdown</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;margin-bottom:14px;">
+            <div>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Tech price</label>
+              <p style="font-size:15px;font-weight:700;color:var(--orange);padding:9px 0;">£${techPrice.toFixed(2)}</p>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">VAT (20%)</label>
+              <p id="vatDisplay" style="font-size:15px;font-weight:700;color:#ccc;padding:9px 0;">£${vat.toFixed(2)}</p>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Tech + VAT</label>
+              <p id="combinedDisplay" style="font-size:15px;font-weight:700;color:#ccc;padding:9px 0;">£${combined.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end;margin-bottom:16px;">
             <div>
               <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Margin %</label>
               <input
@@ -661,21 +692,17 @@ function buildModalHtml(r) {
                 placeholder="e.g. 20"
                 min="0"
                 max="100"
-                value="${parseFloat(document.getElementById('defaultMargin')?.value) || 20}"
-                oninput="updateCustomerPrice(${techPrice})"
+                value="${initMargin}"
+                oninput="updateCustomerPrice(${combined})"
                 style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;color:var(--white);outline:none;">
             </div>
             <div>
-              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Tech price</label>
-              <p style="font-size:16px;font-weight:700;color:var(--orange);padding:9px 0;">£${techPrice.toFixed(2)}</p>
-            </div>
-            <div>
               <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Customer price</label>
-              <p id="customerPriceDisplay" style="font-size:20px;font-weight:700;color:var(--neon);padding:9px 0;">£${(techPrice * 1.2).toFixed(2)}</p>
+              <p id="customerPriceDisplay" style="font-size:20px;font-weight:700;color:var(--neon);padding:9px 0;">£${initCustomer.toFixed(2)}</p>
             </div>
           </div>
 
-          <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}', ${techPrice})" style="background:var(--green);width:100%;">
+          <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}', ${combined})" style="background:var(--green);width:100%;">
             ✉ Send confirmed quote to ${esc(r.customer_name||'customer')}
           </button>
           <p class="save-msg save-ok" id="emailSentOk" style="text-align:center;margin-top:8px;">✓ Quote email sent to customer</p>
@@ -971,21 +998,26 @@ async function markAsBooked(id) {
 }
 
 // ── Margin calculator ─────────────────────────────────────────────────────────
-function updateCustomerPrice(techPrice) {
+// combinedPrice = tech price + 20% VAT (tech price * 1.2)
+function updateCustomerPrice(combinedPrice) {
   const margin   = parseFloat(document.getElementById('marginPercent').value) || 0;
-  const customer = techPrice * (1 + margin / 100);
+  const customer = combinedPrice * (1 + margin / 100);
   document.getElementById('customerPriceDisplay').textContent = '£' + customer.toFixed(2);
 }
 
-async function sendConfirmedQuoteEmail(id, techPrice) {
+async function sendConfirmedQuoteEmail(id, combinedPrice) {
   const row = allRows.find(r => r.id === id);
   if (!row) { alert('Job not found.'); return; }
 
-  // Calculate customer price with margin
-  const margin        = parseFloat(document.getElementById('marginPercent')?.value) || 0;
-  const baseTechPrice = techPrice || parseFloat((row.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
-  const customerPrice = baseTechPrice * (1 + margin / 100);
-  const priceStr      = '£' + customerPrice.toFixed(2);
+  // Calculate customer price: (tech price + VAT) with margin applied on top
+  const margin = parseFloat(document.getElementById('marginPercent')?.value) || 0;
+  let baseCombined = combinedPrice;
+  if (!baseCombined) {
+    const tech = parseFloat((row.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
+    baseCombined = tech * 1.20; // tech price + 20% VAT
+  }
+  const customerPrice = baseCombined * (1 + margin / 100);
+  const priceStr       = '£' + customerPrice.toFixed(2);
 
   const btn = document.getElementById('sendQuoteEmailBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
