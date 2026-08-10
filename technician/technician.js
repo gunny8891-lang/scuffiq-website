@@ -6,7 +6,7 @@
 const SUPABASE_URL = "https://scohjgsjjxbkpfuhlmrz.supabase.co";
 
 // Paste your Supabase ANON / PUBLISHABLE key between the quotes
-"sb_publishable_ja-1cvEG-6iOG8IO54UfeA_p5ngEFUe";
+const SUPABASE_KEY = "sb_publishable_ja-1cvEG-6iOG8IO54UfeA_p5ngEFUe";
 
 let currentQuote = null;
 
