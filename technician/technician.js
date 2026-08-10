@@ -5,7 +5,7 @@
 
 const SUPABASE_URL = "https://scohjgsjjxbkpfuhlmrz.supabase.co";
 
-// Paste your Supabase ANON / PUBLISHABLE key between the quotes
+// Supabase publishable / anon key
 const SUPABASE_KEY = "sb_publishable_ja-1cvEG-6iOG8IO54UfeA_p5ngEFUe";
 
 let currentQuote = null;
@@ -29,13 +29,27 @@ async function supaFetch(path, options = {}) {
       apikey: SUPABASE_KEY,
       "Content-Type": "application/json",
       Prefer: "return=representation",
-      ...(options.headers || {})
-    }
+      ...(options.headers || {}),
+    },
   });
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || "Supabase request failed");
+
+    console.error(
+      "Supabase error:",
+      response.status,
+      response.statusText,
+      text
+    );
+
+    throw new Error(
+      text || `Supabase request failed (${response.status})`
+    );
+  }
+
+  if (response.status === 204) {
+    return [];
   }
 
   const text = await response.text();
@@ -44,16 +58,12 @@ async function supaFetch(path, options = {}) {
     return [];
   }
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    return [];
-  }
+  return JSON.parse(text);
 }
 
 
-function esc(value) {
-  return String(value || "")
+function escapeHtml(value) {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -63,21 +73,23 @@ function esc(value) {
 
 
 function formatValue(value, fallback = "—") {
-  if (value === null || value === undefined) {
+  if (
+    value === null ||
+    value === undefined ||
+    String(value).trim() === ""
+  ) {
     return fallback;
   }
 
-  const text = String(value).trim();
-
-  return text || fallback;
+  return String(value).trim();
 }
 
 
-function setText(id, value) {
+function setText(id, value, fallback = "—") {
   const element = document.getElementById(id);
 
   if (element) {
-    element.textContent = formatValue(value);
+    element.textContent = formatValue(value, fallback);
   }
 }
 
@@ -85,26 +97,104 @@ function setText(id, value) {
 function getInputValue(id) {
   const element = document.getElementById(id);
 
-  return element ? element.value.trim() : "";
+  if (!element) {
+    return "";
+  }
+
+  return String(element.value || "").trim();
 }
 
 
+// ============================================================
+// PHOTOS
+// ============================================================
+
 function getPhotoUrls(quote) {
-  return [
+  const possibleFields = [
     quote.image_url_1,
     quote.image_url_2,
     quote.image_url_3,
     quote.image_url_4,
     quote.image_url_5,
-    quote.image_url_6
-  ].filter(Boolean);
+    quote.image_url_6,
+
+    quote.photo_url_1,
+    quote.photo_url_2,
+    quote.photo_url_3,
+    quote.photo_url_4,
+    quote.photo_url_5,
+    quote.photo_url_6,
+  ];
+
+  return possibleFields.filter(Boolean);
 }
 
+
+function renderPhotos(quote) {
+  const photoGrid = document.getElementById("photoGrid");
+
+  if (!photoGrid) {
+    return;
+  }
+
+  const photoUrls = getPhotoUrls(quote);
+
+  const photoCount = document.getElementById("photoCount");
+
+  if (photoCount) {
+    photoCount.textContent =
+      `${photoUrls.length} photo${photoUrls.length === 1 ? "" : "s"}`;
+  }
+
+  if (!photoUrls.length) {
+    photoGrid.innerHTML =
+      `<div class="empty-card">
+        No damage photos found for this job.
+      </div>`;
+
+    return;
+  }
+
+  photoGrid.innerHTML = "";
+
+  photoUrls.forEach((url, index) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "photo-card";
+
+    const image = document.createElement("img");
+
+    image.src = url;
+    image.alt = `Damage photo ${index + 1}`;
+    image.loading = "lazy";
+
+    const label = document.createElement("span");
+
+    label.textContent = `Photo ${index + 1}`;
+
+    button.appendChild(image);
+    button.appendChild(label);
+
+    button.addEventListener("click", function () {
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    photoGrid.appendChild(button);
+  });
+}
+
+
+// ============================================================
+// AI ESTIMATE
+// ============================================================
 
 function getAiPrice(quote) {
   return (
     quote.ai_price_1 ||
     quote.ai_price ||
+    quote.ai_estimate ||
+    quote.estimated_price ||
     quote.final_quote_given ||
     "Technician review required"
   );
@@ -112,14 +202,26 @@ function getAiPrice(quote) {
 
 
 // ============================================================
-// AVAILABILITY — NEXT 14 DAYS WITH AM / PM
+// TECHNICIAN AVAILABILITY
 // ============================================================
 
-function populateAvailabilityOptions() {
+function formatAvailabilityDate(date) {
+  return date.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+
+function renderAvailabilityOptions() {
   const container = document.getElementById("availabilityOptions");
 
   if (!container) {
-    console.warn("availabilityOptions not found");
+    console.warn(
+      "availabilityOptions element not found in quote.html"
+    );
+
     return;
   }
 
@@ -127,137 +229,197 @@ function populateAvailabilityOptions() {
 
   const today = new Date();
 
-  for (let i = 0; i < 14; i++) {
+  today.setHours(12, 0, 0, 0);
 
+  // Generate 14 days
+  for (let i = 0; i < 14; i++) {
     const date = new Date(today);
 
-    date.setHours(12, 0, 0, 0);
     date.setDate(today.getDate() + i);
 
-    const dayName = date.toLocaleDateString("en-GB", {
-      weekday: "short"
-    });
+    const displayDate = formatAvailabilityDate(date);
 
-    const dateText = date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short"
-    });
-
-    const fullDate = `${dayName} ${dateText}`;
-
-    const row = document.createElement("div");
-
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "minmax(100px, 1fr) auto auto";
-    row.style.alignItems = "center";
-    row.style.gap = "14px";
-    row.style.padding = "10px 8px";
-    row.style.borderBottom =
-      "1px solid rgba(255,255,255,0.08)";
-
-    const dateLabel = document.createElement("strong");
-
-    dateLabel.textContent = fullDate;
-    dateLabel.style.fontSize = "13px";
-
-    const amLabel = createAvailabilityCheckbox(
-      `${fullDate} AM`,
+    // AM
+    createAvailabilityOption(
+      container,
+      `${displayDate} AM`,
+      i,
       "AM"
     );
 
-    const pmLabel = createAvailabilityCheckbox(
-      `${fullDate} PM`,
+    // PM
+    createAvailabilityOption(
+      container,
+      `${displayDate} PM`,
+      i,
       "PM"
     );
-
-    row.appendChild(dateLabel);
-    row.appendChild(amLabel);
-    row.appendChild(pmLabel);
-
-    container.appendChild(row);
   }
 
-
-  // Other availability option
-
-  const otherRow = document.createElement("div");
-
-  otherRow.style.padding = "12px 8px 4px";
-
-  const otherLabel = createAvailabilityCheckbox(
-    "Other - see notes",
-    "Other — see notes"
+  // Other option
+  createAvailabilityOption(
+    container,
+    "Other — see notes",
+    "other",
+    "OTHER"
   );
-
-  otherRow.appendChild(otherLabel);
-
-  container.appendChild(otherRow);
 }
 
 
-function createAvailabilityCheckbox(value, labelText) {
-
+function createAvailabilityOption(
+  container,
+  labelText,
+  dayIndex,
+  period
+) {
   const label = document.createElement("label");
 
   label.style.display = "flex";
   label.style.alignItems = "center";
-  label.style.gap = "7px";
+  label.style.gap = "10px";
   label.style.cursor = "pointer";
-  label.style.fontSize = "13px";
-  label.style.whiteSpace = "nowrap";
-
+  label.style.padding = "8px 10px";
+  label.style.borderRadius = "6px";
+  label.style.background = "#111";
 
   const checkbox = document.createElement("input");
 
   checkbox.type = "checkbox";
-  checkbox.value = value;
+  checkbox.name = "technicianAvailability";
+  checkbox.value = labelText;
 
-  checkbox.style.width = "17px";
-  checkbox.style.height = "17px";
-  checkbox.style.cursor = "pointer";
-
+  checkbox.dataset.day = String(dayIndex);
+  checkbox.dataset.period = period;
 
   const text = document.createElement("span");
 
   text.textContent = labelText;
 
-
   label.appendChild(checkbox);
   label.appendChild(text);
 
-  return label;
+  container.appendChild(label);
 }
 
 
 function getAvailability() {
-
   const selected = document.querySelectorAll(
     '#availabilityOptions input[type="checkbox"]:checked'
   );
 
-  if (selected.length > 0) {
+  const values = Array.from(selected).map(
+    checkbox => checkbox.value
+  );
 
-    return Array.from(selected)
-      .map(item => item.value)
-      .join(", ");
+  const availability = values.join(", ");
+
+  // Keep hidden input synced if present
+  const hidden = document.getElementById("availability");
+
+  if (hidden) {
+    hidden.value = availability;
   }
 
-
-  const hidden =
-    document.getElementById("availability");
-
-  return hidden
-    ? hidden.value.trim()
-    : "";
+  return availability;
 }
 
 
 // ============================================================
-// LOAD TECHNICIAN JOB
+// PAGE STATES
+// ============================================================
+
+function showError(message) {
+  const loadingEl =
+    document.getElementById("loadingState");
+
+  const errorEl =
+    document.getElementById("errorState");
+
+  const errorMessage =
+    document.getElementById("errorMessage");
+
+  const jobContent =
+    document.getElementById("jobContent");
+
+  const successState =
+    document.getElementById("successState");
+
+
+  if (loadingEl) {
+    loadingEl.style.display = "none";
+  }
+
+  if (jobContent) {
+    jobContent.classList.add("hidden");
+  }
+
+  if (successState) {
+    successState.classList.add("hidden");
+  }
+
+  if (errorEl) {
+    errorEl.classList.remove("hidden");
+  }
+
+  if (errorMessage) {
+    errorMessage.textContent = message;
+  }
+}
+
+
+function showSuccess(message) {
+  const loadingEl =
+    document.getElementById("loadingState");
+
+  const errorEl =
+    document.getElementById("errorState");
+
+  const jobContent =
+    document.getElementById("jobContent");
+
+  const successState =
+    document.getElementById("successState");
+
+
+  if (loadingEl) {
+    loadingEl.style.display = "none";
+  }
+
+  if (errorEl) {
+    errorEl.classList.add("hidden");
+  }
+
+  if (jobContent) {
+    jobContent.classList.add("hidden");
+  }
+
+  if (successState) {
+    successState.classList.remove("hidden");
+  }
+
+
+  // Update success message if element exists
+  const successText =
+    document.getElementById("successText");
+
+  if (successText) {
+    successText.textContent = message;
+  } else if (successState) {
+    const paragraphs =
+      successState.querySelectorAll("p");
+
+    if (paragraphs.length) {
+      paragraphs[0].textContent = message;
+    }
+  }
+}
+
+
+// ============================================================
+// LOAD JOB
 // ============================================================
 
 async function loadTechnicianQuote() {
-
   const token = getTokenFromUrl();
 
   const loadingEl =
@@ -266,7 +428,7 @@ async function loadTechnicianQuote() {
   const errorEl =
     document.getElementById("errorState");
 
-  const appEl =
+  const jobContent =
     document.getElementById("jobContent");
 
 
@@ -278,15 +440,14 @@ async function loadTechnicianQuote() {
     errorEl.classList.add("hidden");
   }
 
-  if (appEl) {
-    appEl.classList.add("hidden");
+  if (jobContent) {
+    jobContent.classList.add("hidden");
   }
 
 
   if (!token) {
-
     showError(
-      "Invalid review link. No token was found."
+      "Invalid review link. No technician review token was found."
     );
 
     return;
@@ -294,16 +455,18 @@ async function loadTechnicianQuote() {
 
 
   try {
+    console.log(
+      "Loading ScuffIQ technician job..."
+    );
 
     const rows = await supaFetch(
       `quote_submissions?select=*&technician_review_token=eq.${encodeURIComponent(token)}&limit=1`
     );
 
 
-    if (!rows || !rows.length) {
-
+    if (!Array.isArray(rows) || rows.length === 0) {
       showError(
-        "This job could not be found. The link may be invalid or expired."
+        "This job could not be found. The review link may be invalid or expired."
       );
 
       return;
@@ -312,6 +475,12 @@ async function loadTechnicianQuote() {
 
     currentQuote = rows[0];
 
+    console.log(
+      "Technician job loaded:",
+      currentQuote.id
+    );
+
+
     renderQuote(currentQuote);
 
 
@@ -319,10 +488,9 @@ async function loadTechnicianQuote() {
       loadingEl.style.display = "none";
     }
 
-    if (appEl) {
-      appEl.classList.remove("hidden");
+    if (jobContent) {
+      jobContent.classList.remove("hidden");
     }
-
 
   } catch (error) {
 
@@ -339,47 +507,15 @@ async function loadTechnicianQuote() {
 
 
 // ============================================================
-// ERROR
-// ============================================================
-
-function showError(message) {
-
-  const loadingEl =
-    document.getElementById("loadingState");
-
-  const errorEl =
-    document.getElementById("errorState");
-
-  const errorMessage =
-    document.getElementById("errorMessage");
-
-  const appEl =
-    document.getElementById("jobContent");
-
-
-  if (loadingEl) {
-    loadingEl.style.display = "none";
-  }
-
-  if (appEl) {
-    appEl.classList.add("hidden");
-  }
-
-  if (errorEl) {
-    errorEl.classList.remove("hidden");
-  }
-
-  if (errorMessage) {
-    errorMessage.textContent = message;
-  }
-}
-
-
-// ============================================================
-// RENDER QUOTE
+// RENDER JOB
 // ============================================================
 
 function renderQuote(quote) {
+
+  // ----------------------------------------------------------
+  // IMPORTANT:
+  // Do NOT display customer name/email/phone to technician.
+  // ----------------------------------------------------------
 
   setText(
     "postcode",
@@ -387,41 +523,53 @@ function renderQuote(quote) {
   );
 
 
-  const vehicle = [
-    quote.vehicle_make,
-    quote.vehicle_model
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const vehicle =
+    [
+      quote.vehicle_make,
+      quote.vehicle_model
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
 
 
   setText(
     "vehicle",
-    vehicle
+    vehicle || "Vehicle details unavailable"
   );
 
 
   setText(
     "serviceType",
-    quote.service_type
+    quote.service_type ||
+    quote.service ||
+    "Repair"
   );
 
 
+  // ----------------------------------------------------------
   // Job title
+  // ----------------------------------------------------------
 
-  const title =
+  const jobTitle =
     document.getElementById("jobTitle");
 
-  if (title) {
+  if (jobTitle) {
 
-    title.textContent =
-      vehicle
-        ? `${vehicle} repair`
-        : "ScuffIQ job";
+    const vehicleTitle =
+      vehicle || "Vehicle repair";
+
+    jobTitle.textContent =
+      `${vehicleTitle} — ${formatValue(
+        quote.postcode,
+        "ScuffIQ job"
+      )}`;
   }
 
 
-  // AI estimate
+  // ----------------------------------------------------------
+  // AI PRICE
+  // ----------------------------------------------------------
 
   const aiPrice =
     document.getElementById("aiPrice");
@@ -432,242 +580,121 @@ function renderQuote(quote) {
   }
 
 
-  // AI assessment
+  // ----------------------------------------------------------
+  // AI ASSESSMENT
+  // ----------------------------------------------------------
 
-  const assessment =
+  const aiAssessment =
     document.getElementById("aiAssessment");
 
-  if (assessment) {
+  if (aiAssessment) {
 
-    assessment.textContent =
+    const assessment =
       quote.ai_assessment_1 ||
-      "Review the uploaded damage photos to confirm the repair.";
+      quote.ai_assessment ||
+      quote.damage_assessment;
+
+    aiAssessment.textContent =
+      assessment ||
+      "Please review the damage photos and confirm your repair price.";
   }
 
 
-  // AI confidence
+  // ----------------------------------------------------------
+  // AI CONFIDENCE
+  // ----------------------------------------------------------
 
-  const confidence =
+  const aiConfidence =
     document.getElementById("aiConfidence");
 
-  if (confidence) {
+  if (aiConfidence) {
 
-    confidence.textContent =
-      quote.ai_confidence_1
-        ? `Confidence: ${quote.ai_confidence_1}`
+    const confidence =
+      quote.ai_confidence_1 ||
+      quote.ai_confidence;
+
+    aiConfidence.textContent =
+      confidence
+        ? `Confidence: ${confidence}`
         : "Confidence: —";
   }
 
 
-  // Photos
-
-  const photos =
-    getPhotoUrls(quote);
-
-  const count =
-    document.getElementById("photoCount");
-
-  if (count) {
-
-    count.textContent =
-      `${photos.length} photo${photos.length === 1 ? "" : "s"}`;
-  }
-
-
-  renderPhotos(quote);
-
-
-  // Status
+  // ----------------------------------------------------------
+  // STATUS
+  // ----------------------------------------------------------
 
   const status =
     document.getElementById("jobStatus");
 
   if (status) {
 
+    const statusValue =
+      quote.status ||
+      "sent_to_technician";
+
     status.textContent =
-      formatStatus(
-        quote.status ||
-        "sent_to_technician"
-      );
+      statusValue
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, char =>
+          char.toUpperCase()
+        );
   }
 
 
-  // AI price as example placeholder
+  // ----------------------------------------------------------
+  // PHOTOS
+  // ----------------------------------------------------------
+
+  renderPhotos(quote);
+
+
+  // ----------------------------------------------------------
+  // AVAILABILITY
+  // ----------------------------------------------------------
+
+  renderAvailabilityOptions();
+
+
+  // ----------------------------------------------------------
+  // PRICE PLACEHOLDER
+  // ----------------------------------------------------------
 
   const priceInput =
     document.getElementById("technicianPrice");
 
-  if (priceInput && !priceInput.value) {
+  if (priceInput) {
 
-    const price =
+    const estimatedPrice =
       getAiPrice(quote);
 
     if (
-      price &&
-      price !== "Technician review required"
+      estimatedPrice &&
+      estimatedPrice !==
+        "Technician review required"
     ) {
 
       priceInput.placeholder =
-        `e.g. ${price}`;
+        `e.g. ${estimatedPrice}`;
     }
   }
 }
 
 
-function formatStatus(status) {
-
-  return String(status || "")
-    .replace(/_/g, " ")
-    .replace(
-      /\b\w/g,
-      char => char.toUpperCase()
-    );
-}
-
-
 // ============================================================
-// DAMAGE PHOTOS
-// ============================================================
-
-function renderPhotos(quote) {
-
-  const photoGrid =
-    document.getElementById("photoGrid");
-
-  if (!photoGrid) {
-    return;
-  }
-
-
-  const photos =
-    getPhotoUrls(quote);
-
-
-  if (!photos.length) {
-
-    photoGrid.innerHTML = `
-      <div class="empty-card">
-        No damage photos found for this job.
-      </div>
-    `;
-
-    return;
-  }
-
-
-  photoGrid.innerHTML =
-    photos
-      .map((url, index) => {
-
-        const safeUrl =
-          esc(url);
-
-        return `
-          <button
-            class="photo-card"
-            type="button"
-            data-photo-url="${safeUrl}"
-          >
-
-            <img
-              src="${safeUrl}"
-              alt="Damage photo ${index + 1}"
-            >
-
-            <span>
-              Photo ${index + 1}
-            </span>
-
-          </button>
-        `;
-      })
-      .join("");
-
-
-  photoGrid
-    .querySelectorAll(".photo-card")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        function () {
-
-          const url =
-            this.getAttribute(
-              "data-photo-url"
-            );
-
-          if (url) {
-
-            window.open(
-              url,
-              "_blank",
-              "noopener,noreferrer"
-            );
-          }
-        }
-      );
-    });
-}
-
-
-// ============================================================
-// SUCCESS MESSAGE
-// ============================================================
-
-function showSuccess(message) {
-
-  const app =
-    document.getElementById("jobContent");
-
-  const success =
-    document.getElementById("successState");
-
-
-  if (app) {
-    app.classList.add("hidden");
-  }
-
-
-  if (success) {
-
-    success.classList.remove("hidden");
-
-    const messageElement =
-      success.querySelector("p");
-
-    if (messageElement) {
-      messageElement.textContent =
-        message;
-    }
-  }
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-
-// ============================================================
-// SUBMIT REVIEW
+// SUBMIT TECHNICIAN REVIEW
 // ============================================================
 
 async function submitTechnicianQuote() {
 
   if (!currentQuote) {
-
     alert(
-      "No job loaded."
+      "No job is currently loaded."
     );
 
     return;
   }
 
-
-  const decision =
-    getInputValue("decision");
 
   const price =
     getInputValue("technicianPrice");
@@ -681,8 +708,14 @@ async function submitTechnicianQuote() {
   const notes =
     getInputValue("notes");
 
+  const decision =
+    getInputValue("decision") ||
+    "accepted";
 
+
+  // ----------------------------------------------------------
   // DECLINE
+  // ----------------------------------------------------------
 
   if (decision === "declined") {
 
@@ -692,17 +725,31 @@ async function submitTechnicianQuote() {
   }
 
 
-  // MORE INFORMATION
+  // ----------------------------------------------------------
+  // MORE INFO
+  // ----------------------------------------------------------
 
   if (decision === "more_info") {
 
-    await requestMoreInfo();
+    if (!notes) {
+      alert(
+        "Please explain what additional photos or information you need."
+      );
+
+      return;
+    }
+
+    await requestMoreInformation(
+      notes
+    );
 
     return;
   }
 
 
-  // ACCEPTED JOB MUST HAVE PRICE
+  // ----------------------------------------------------------
+  // ACCEPT
+  // ----------------------------------------------------------
 
   if (!price) {
 
@@ -710,20 +757,9 @@ async function submitTechnicianQuote() {
       "Please enter your confirmed price."
     );
 
-    const input =
-      document.getElementById(
-        "technicianPrice"
-      );
-
-    if (input) {
-      input.focus();
-    }
-
     return;
   }
 
-
-  // ACCEPTED JOB MUST HAVE AVAILABILITY
 
   if (!availability) {
 
@@ -731,40 +767,26 @@ async function submitTechnicianQuote() {
       "Please select at least one AM or PM availability slot."
     );
 
-    const availabilityBox =
-      document.getElementById(
-        "availabilityOptions"
-      );
-
-    if (availabilityBox) {
-
-      availabilityBox.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-      });
-    }
-
     return;
   }
 
 
-  const button =
+  const submitButton =
     document.getElementById("submitBtn");
 
 
-  if (button) {
+  if (submitButton) {
 
-    button.disabled = true;
+    submitButton.disabled = true;
 
-    button.textContent =
+    submitButton.textContent =
       "Submitting...";
   }
 
 
   const payload = {
 
-    technician_price:
-      price,
+    technician_price: price,
 
     technician_availability:
       availability,
@@ -786,23 +808,31 @@ async function submitTechnicianQuote() {
   };
 
 
-  // Save repair time if column exists
+  /*
+    Only include technician_repair_time if your Supabase
+    table actually has this column.
 
-  if (repairTime) {
-
-    payload.estimated_repair_time =
-      repairTime;
-  }
+    We intentionally don't send it automatically because
+    an unknown column would cause the entire PATCH to fail.
+  */
 
 
   try {
 
-    await supaFetch(
-      `quote_submissions?id=eq.${currentQuote.id}`,
+    const result = await supaFetch(
+      `quote_submissions?id=eq.${encodeURIComponent(
+        currentQuote.id
+      )}`,
       {
         method: "PATCH",
         body: JSON.stringify(payload)
       }
+    );
+
+
+    console.log(
+      "Technician quote submitted:",
+      result
     );
 
 
@@ -819,64 +849,97 @@ async function submitTechnicianQuote() {
     );
 
 
-    // If estimated_repair_time
-    // hasn't been added to Supabase yet,
-    // retry without it.
-
-    if (
-      repairTime &&
-      String(error.message)
-        .toLowerCase()
-        .includes(
-          "estimated_repair_time"
-        )
-    ) {
-
-      try {
-
-        delete payload
-          .estimated_repair_time;
-
-
-        await supaFetch(
-          `quote_submissions?id=eq.${currentQuote.id}`,
-          {
-            method: "PATCH",
-            body: JSON.stringify(payload)
-          }
-        );
-
-
-        showSuccess(
-          "Quote confirmed. ScuffIQ will review your price and availability before contacting the customer."
-        );
-
-
-        return;
-
-
-      } catch (retryError) {
-
-        console.error(
-          "Retry error:",
-          retryError
-        );
-      }
-    }
-
-
     alert(
-      "Could not submit your review. Please contact ScuffIQ."
+      "Your quote could not be submitted. Please contact ScuffIQ."
     );
 
 
   } finally {
 
-    if (button) {
+    if (submitButton) {
 
-      button.disabled = false;
+      submitButton.disabled = false;
 
-      button.textContent =
+      submitButton.textContent =
+        "Submit review";
+    }
+  }
+}
+
+
+// ============================================================
+// REQUEST MORE INFORMATION
+// ============================================================
+
+async function requestMoreInformation(notes) {
+
+  if (!currentQuote) {
+    return;
+  }
+
+
+  const submitButton =
+    document.getElementById("submitBtn");
+
+
+  if (submitButton) {
+
+    submitButton.disabled = true;
+
+    submitButton.textContent =
+      "Submitting...";
+  }
+
+
+  try {
+
+    await supaFetch(
+      `quote_submissions?id=eq.${encodeURIComponent(
+        currentQuote.id
+      )}`,
+      {
+        method: "PATCH",
+
+        body: JSON.stringify({
+
+          technician_status:
+            "more_info_requested",
+
+          status:
+            "technician_more_info",
+
+          technician_notes:
+            notes
+        })
+      }
+    );
+
+
+    showSuccess(
+      "Your request has been sent. ScuffIQ will obtain the additional information or photos."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "More information request error:",
+      error
+    );
+
+
+    alert(
+      "Could not send your request. Please contact ScuffIQ."
+    );
+
+
+  } finally {
+
+    if (submitButton) {
+
+      submitButton.disabled = false;
+
+      submitButton.textContent =
         "Submit review";
     }
   }
@@ -890,14 +953,18 @@ async function submitTechnicianQuote() {
 async function declineJob() {
 
   if (!currentQuote) {
+
+    alert(
+      "No job is currently loaded."
+    );
+
     return;
   }
 
 
-  const confirmed =
-    confirm(
-      "Are you sure you want to decline this job? ScuffIQ will assign it to another technician."
-    );
+  const confirmed = window.confirm(
+    "Are you sure you want to decline this job? ScuffIQ will need to assign it to another technician."
+  );
 
 
   if (!confirmed) {
@@ -909,10 +976,25 @@ async function declineJob() {
     getInputValue("notes");
 
 
+  const submitButton =
+    document.getElementById("submitBtn");
+
+
+  if (submitButton) {
+
+    submitButton.disabled = true;
+
+    submitButton.textContent =
+      "Submitting...";
+  }
+
+
   try {
 
     await supaFetch(
-      `quote_submissions?id=eq.${currentQuote.id}`,
+      `quote_submissions?id=eq.${encodeURIComponent(
+        currentQuote.id
+      )}`,
       {
         method: "PATCH",
 
@@ -933,14 +1015,14 @@ async function declineJob() {
 
 
     showSuccess(
-      "Job declined. ScuffIQ will assign this repair to another technician."
+      "Job declined. ScuffIQ will assign the repair to another technician."
     );
 
 
   } catch (error) {
 
     console.error(
-      "Decline error:",
+      "Decline job error:",
       error
     );
 
@@ -948,111 +1030,107 @@ async function declineJob() {
     alert(
       "Could not decline the job. Please contact ScuffIQ."
     );
+
+
+  } finally {
+
+    if (submitButton) {
+
+      submitButton.disabled = false;
+
+      submitButton.textContent =
+        "Submit review";
+    }
   }
 }
 
 
 // ============================================================
-// REQUEST MORE INFORMATION
+// DECISION FIELD BEHAVIOUR
 // ============================================================
 
-async function requestMoreInfo() {
+function setupDecisionField() {
 
-  if (!currentQuote) {
+  const decision =
+    document.getElementById("decision");
+
+  const price =
+    document.getElementById("technicianPrice");
+
+  const availability =
+    document.getElementById("availabilityOptions");
+
+
+  if (!decision) {
     return;
   }
 
 
-  const notes =
-    getInputValue("notes");
+  function updateForm() {
+
+    const value =
+      decision.value;
 
 
-  if (!notes) {
+    if (value === "declined") {
 
-    alert(
-      "Please explain what additional photos or information you need in Technician notes."
-    );
+      if (price) {
+        price.required = false;
+      }
 
-    const notesBox =
-      document.getElementById("notes");
-
-    if (notesBox) {
-      notesBox.focus();
+      return;
     }
 
-    return;
-  }
 
+    if (value === "more_info") {
 
-  try {
-
-    await supaFetch(
-      `quote_submissions?id=eq.${currentQuote.id}`,
-      {
-        method: "PATCH",
-
-        body: JSON.stringify({
-
-          technician_status:
-            "more_info_requested",
-
-          status:
-            "technician_more_info",
-
-          technician_notes:
-            notes
-        })
+      if (price) {
+        price.required = false;
       }
-    );
+
+      return;
+    }
 
 
-    showSuccess(
-      "Request sent. ScuffIQ will obtain the additional information."
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "More information error:",
-      error
-    );
-
-
-    alert(
-      "Could not submit the request. Please contact ScuffIQ."
-    );
+    if (price) {
+      price.required = true;
+    }
   }
+
+
+  decision.addEventListener(
+    "change",
+    updateForm
+  );
+
+
+  updateForm();
 }
 
 
 // ============================================================
-// INITIALISE PAGE
+// START
 // ============================================================
 
 document.addEventListener(
   "DOMContentLoaded",
   function () {
 
-    // Creates next 14 days
-    // with AM + PM options
-    populateAvailabilityOptions();
+    console.log(
+      "ScuffIQ Technician Portal loaded"
+    );
 
 
-    // Loads job from token
-    loadTechnicianQuote();
+    setupDecisionField();
 
 
-    // Handles submission
-    const form =
-      document.getElementById(
-        "reviewForm"
-      );
+    const reviewForm =
+      document.getElementById("reviewForm");
 
 
-    if (form) {
+    if (reviewForm) {
 
-      form.addEventListener(
+      reviewForm.addEventListener(
         "submit",
         function (event) {
 
@@ -1062,5 +1140,8 @@ document.addEventListener(
         }
       );
     }
+
+
+    loadTechnicianQuote();
   }
 );
