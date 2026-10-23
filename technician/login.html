@@ -1,1 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Technician sign-in | ScuffIQ</title>
+<link rel="stylesheet" href="technician.css">
+</head>
+<body>
+<div class="page-shell" style="max-width:460px;">
+  <div class="topbar">
+    <div class="brand">ScuffIQ</div>
+    <span class="portal-badge">Technician</span>
+  </div>
 
+  <div class="card" id="requestCard">
+    <div class="eyebrow">Sign in</div>
+    <h1 style="font-size:24px;margin-bottom:8px;">Get a sign-in link</h1>
+    <p class="muted" style="margin-bottom:18px;">Enter the email ScuffIQ has on file. We'll send you a link to sign in.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required>
+      </div>
+      <div class="actions">
+        <button type="submit" id="sendBtn">Send sign-in link</button>
+      </div>
+      <p class="form-message" id="loginMessage" role="status"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://scohjgsjjxbkpfuhlmrz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ja-1cvEG-6iOG8IO54UfeA_p5ngEFUe";
+
+const form = document.getElementById("loginForm");
+const message = document.getElementById("loginMessage");
+const sendBtn = document.getElementById("sendBtn");
+
+// Send the magic link. The link brings the technician back to hours.html.
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  if (!email) return;
+
+  sendBtn.disabled = true;
+  message.className = "form-message";
+  message.textContent = "Sending…";
+
+  const redirectTo = new URL("hours.html", window.location.href).href;
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`,
+      {
+        method: "POST",
+        headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+        // create_user false: only accounts ScuffIQ has set up can sign in.
+        body: JSON.stringify({ email, create_user: false }),
+      }
+    );
+
+    if (!response.ok) throw new Error(await response.text());
+
+    message.className = "form-message ok";
+    message.textContent = "If this email is set up with ScuffIQ, a sign-in link is on its way. Check your inbox.";
+  } catch (error) {
+    console.error("Sign-in link error:", error);
+    message.className = "form-message err";
+    message.textContent = "We couldn't send the link. Check the email and try again.";
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>My hours | ScuffIQ Technician</title>
+<link rel="stylesheet" href="technician.css">
+<style>
+  .day-row{display:grid;grid-template-columns:110px 1fr 1fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .day-row:last-child{border-bottom:0;}
+  .day-name{font-weight:800;}
+  .day-row input[type="time"]{padding:9px 10px;}
+  .day-row input[disabled]{opacity:.4;}
+  .block-list{list-style:none;padding:0;margin:14px 0 0;}
+  .block-list li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .block-list button{padding:6px 12px;font-size:12px;}
+  .block-add{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-top:14px;}
+  .inline-check{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--white);font-weight:600;margin:0;}
+  .inline-check input{width:auto;}
+  @media(max-width:760px){.day-row{grid-template-columns:1fr 1fr;}.day-row .day-name{grid-column:1 / -1;}.block-add{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="page-shell">
+  <div class="topbar">
+    <div class="brand">ScuffIQ</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span class="portal-badge">Technician</span>
+      <button class="secondary" id="signOutBtn" type="button">Sign out</button>
+    </div>
+  </div>
+
+  <div class="state-card" id="loadingState">
+    <div class="loader"></div>
+    <p class="muted" style="margin-top:16px;">Loading your hours…</p>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="hero-card">
+      <div>
+        <div class="eyebrow">Availability</div>
+        <h1 style="font-size:28px;margin-bottom:8px;">My hours</h1>
+        <p class="muted">Set the hours you can take bookings. Customers only see free times inside these hours. Block out any days you're not available.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="section-head"><h2 style="font-size:18px;">Weekly hours</h2></div>
+      <div id="weekdayRows"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="section-head"><h2 style="font-size:18px;">Days off</h2></div>
+      <p class="muted">Days you can't take bookings, even if they fall in your weekly hours.</p>
+      <div class="block-add">
+        <div class="field" style="margin:0;">
+          <label for="blockDate">Date</label>
+          <input id="blockDate" type="date">
+        </div>
+        <button class="secondary" id="addBlockBtn" type="button">Add day off</button>
+      </div>
+      <ul class="block-list" id="blockList"></ul>
+    </div>
+
+    <div class="actions">
+      <button id="saveBtn" type="button">Save hours</button>
+      <p class="form-message" id="saveMessage" role="status"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://scohjgsjjxbkpfuhlmrz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ja-1cvEG-6iOG8IO54UfeA_p5ngEFUe";
+const SESSION_KEY = "scuffiq-technician-session";
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+let session = null;   // { access_token, refresh_token, expires_at }
+let userId = null;
+let weekly = {};      // weekday -> { start, end } or null when not working
+let blockOuts = [];   // [{ date, id }]
+
+// ── Session ───────────────────────────────────────────────────────────────────
+// Read the session from the magic link's #hash, or from the last visit.
+function readSessionFromHash() {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = params.get("access_token");
+  if (!accessToken) return null;
+
+  const expiresIn = Number(params.get("expires_in")) || 3600;
+  history.replaceState(null, "", window.location.pathname);
+  return {
+    access_token: accessToken,
+    refresh_token: params.get("refresh_token"),
+    expires_at: Date.now() + expiresIn * 1000,
+  };
+}
+
+function loadSavedSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY)) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveSession(value) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(value));
+  } catch (e) {
+    // Storage blocked: the page still works until it's closed.
+  }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch (e) {}
+}
+
+async function refreshSession() {
+  if (!session || !session.refresh_token) return false;
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: session.refresh_token }),
+  });
+  if (!response.ok) return false;
+  const data = await response.json();
+  session = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: Date.now() + data.expires_in * 1000,
+  };
+  saveSession(session);
+  return true;
+}
+
+async function ensureFreshSession() {
+  if (session && session.expires_at - Date.now() > 60 * 1000) return true;
+  return refreshSession();
+}
+
+function signOut() {
+  clearSession();
+  window.location.href = "login.html";
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+async function api(path, options = {}) {
+  await ensureFreshSession();
+  const response = await fetch(`${SUPABASE_URL}/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+  if (!response.ok) throw new Error(await response.text());
+  const text = await response.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function loadCurrentUser() {
+  const user = await api("auth/v1/user");
+  return user.id;
+}
+
+async function loadAvailability() {
+  const hours = await api(
+    `rest/v1/technician_availability?technician_id=eq.${userId}&select=weekday,start_time,end_time`
+  );
+  weekly = {};
+  for (const row of hours) {
+    weekly[row.weekday] = { start: row.start_time.slice(0, 5), end: row.end_time.slice(0, 5) };
+  }
+
+  const blocks = await api(
+    `rest/v1/technician_block_outs?technician_id=eq.${userId}&select=id,block_date&order=block_date.asc`
+  );
+  blockOuts = blocks.map((row) => ({ id: row.id, date: row.block_date }));
+}
+
+async function saveWeekly() {
+  await api(`rest/v1/technician_availability?technician_id=eq.${userId}`, { method: "DELETE" });
+
+  const rows = [];
+  for (let day = 0; day < 7; day++) {
+    const slot = weekly[day];
+    if (slot) {
+      rows.push({
+        technician_id: userId,
+        weekday: day,
+        start_time: slot.start,
+        end_time: slot.end,
+      });
+    }
+  }
+  if (rows.length) {
+    await api("rest/v1/technician_availability", {
+      method: "POST",
+      body: JSON.stringify(rows),
+    });
+  }
+}
+
+async function addBlockOut(date) {
+  const [row] = await api("rest/v1/technician_block_outs", {
+    method: "POST",
+    body: JSON.stringify({ technician_id: userId, block_date: date }),
+  });
+  blockOuts.push({ id: row.id, date: row.block_date });
+  blockOuts.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+async function removeBlockOut(id) {
+  await api(`rest/v1/technician_block_outs?id=eq.${id}`, { method: "DELETE" });
+  blockOuts = blockOuts.filter((b) => b.id !== id);
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function renderWeekly() {
+  const container = document.getElementById("weekdayRows");
+  container.innerHTML = "";
+
+  // Monday first, Sunday last
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  for (const day of order) {
+    const slot = weekly[day];
+    const row = document.createElement("div");
+    row.className = "day-row";
+    row.innerHTML = `
+      <label class="inline-check day-name">
+        <input type="checkbox" data-day="${day}" ${slot ? "checked" : ""}>
+        ${DAYS[day]}
+      </label>
+      <div class="field" style="margin:0;">
+        <label>From</label>
+        <input type="time" data-day="${day}" data-edge="start" value="${slot ? slot.start : "09:00"}" ${slot ? "" : "disabled"}>
+      </div>
+      <div class="field" style="margin:0;">
+        <label>To</label>
+        <input type="time" data-day="${day}" data-edge="end" value="${slot ? slot.end : "17:00"}" ${slot ? "" : "disabled"}>
+      </div>`;
+    container.appendChild(row);
+  }
+}
+
+function renderBlockOuts() {
+  const list = document.getElementById("blockList");
+  list.innerHTML = "";
+  if (!blockOuts.length) {
+    list.innerHTML = `<li class="muted">No days off set.</li>`;
+    return;
+  }
+  for (const block of blockOuts) {
+    const item = document.createElement("li");
+    item.innerHTML = `<span>${formatDate(block.date)}</span>
+      <button class="secondary" type="button" data-remove="${block.id}">Remove</button>`;
+    list.appendChild(item);
+  }
+}
+
+function formatDate(isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+    weekday: "short", day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+function setMessage(text, kind) {
+  const el = document.getElementById("saveMessage");
+  el.textContent = text;
+  el.className = `form-message ${kind || ""}`;
+}
+
+function readWeeklyFromForm() {
+  const next = {};
+  document.querySelectorAll('#weekdayRows input[type="checkbox"]').forEach((box) => {
+    const day = Number(box.dataset.day);
+    if (!box.checked) return;
+    const start = document.querySelector(`input[data-day="${day}"][data-edge="start"]`).value;
+    const end = document.querySelector(`input[data-day="${day}"][data-edge="end"]`).value;
+    next[day] = { start, end };
+  });
+  return next;
+}
+
+function validateWeekly(next) {
+  for (const day of Object.keys(next)) {
+    const { start, end } = next[day];
+    if (!start || !end || end <= start) {
+      return `${DAYS[day]}: the end time must be after the start time.`;
+    }
+  }
+  return null;
+}
+
+// ── Wiring ────────────────────────────────────────────────────────────────────
+document.getElementById("weekdayRows").addEventListener("change", (event) => {
+  const box = event.target;
+  if (box.matches('input[type="checkbox"]')) {
+    const day = box.dataset.day;
+    document.querySelectorAll(`input[data-day="${day}"][data-edge]`).forEach((input) => {
+      input.disabled = !box.checked;
+    });
+  }
+});
+
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const next = readWeeklyFromForm();
+  const problem = validateWeekly(next);
+  if (problem) {
+    setMessage(problem, "err");
+    return;
+  }
+
+  const button = document.getElementById("saveBtn");
+  button.disabled = true;
+  setMessage("Saving…");
+  try {
+    weekly = next;
+    await saveWeekly();
+    setMessage("Hours saved.", "ok");
+  } catch (error) {
+    console.error("Save hours error:", error);
+    setMessage("We couldn't save your hours. Please try again.", "err");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("addBlockBtn").addEventListener("click", async () => {
+  const input = document.getElementById("blockDate");
+  if (!input.value) return;
+  if (blockOuts.some((b) => b.date === input.value)) {
+    setMessage("That day is already blocked out.", "err");
+    return;
+  }
+  try {
+    await addBlockOut(input.value);
+    input.value = "";
+    renderBlockOuts();
+    setMessage("Day off added.", "ok");
+  } catch (error) {
+    console.error("Add day off error:", error);
+    setMessage("We couldn't add that day off. Please try again.", "err");
+  }
+});
+
+document.getElementById("blockList").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-remove]");
+  if (!button) return;
+  try {
+    await removeBlockOut(button.dataset.remove);
+    renderBlockOuts();
+  } catch (error) {
+    console.error("Remove day off error:", error);
+    setMessage("We couldn't remove that day off. Please try again.", "err");
+  }
+});
+
+document.getElementById("signOutBtn").addEventListener("click", signOut);
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+(async function start() {
+  session = readSessionFromHash() || loadSavedSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return;
+  }
+  saveSession(session);
+
+  try {
+    if (!(await ensureFreshSession())) throw new Error("Session expired");
+    userId = await loadCurrentUser();
+    await loadAvailability();
+    renderWeekly();
+    renderBlockOuts();
+    document.getElementById("loadingState").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+  } catch (error) {
+    console.error("Load hours error:", error);
+    clearSession();
+    window.location.href = "login.html";
+  }
+})();
+</script>
+</body>
+</html>
