@@ -63,6 +63,22 @@
       <ul class="block-list" id="blockList"></ul>
     </div>
 
+    <div class="card" style="margin-bottom:18px;">
+      <div class="section-head"><h2 style="font-size:18px;">Specific dates</h2></div>
+      <p class="muted">Add a date and tick the half-days you can take bookings. Customers see these slots on that date, even if it falls outside your weekly hours.</p>
+      <div class="block-add" style="grid-template-columns:1fr auto auto auto;">
+        <div class="field" style="margin:0;">
+          <label for="slotDate">Date</label>
+          <input id="slotDate" type="date">
+        </div>
+        <label class="inline-check"><input id="slotAm" type="checkbox"> Morning (AM)</label>
+        <label class="inline-check"><input id="slotPm" type="checkbox"> Afternoon (PM)</label>
+        <button class="secondary" id="addSlotBtn" type="button">Add date</button>
+      </div>
+      <ul class="block-list" id="slotList"></ul>
+      <p class="form-message" id="slotMessage" role="status"></p>
+    </div>
+
     <div class="actions">
       <button id="saveBtn" type="button">Save hours</button>
       <p class="form-message" id="saveMessage" role="status"></p>
@@ -80,6 +96,7 @@ let session = null;   // { access_token, refresh_token, expires_at }
 let userId = null;
 let weekly = {};      // weekday -> { start, end } or null when not working
 let blockOuts = [];   // [{ date, id }]
+let dateSlots = [];   // [{ id, date, period: "am" | "pm" }]
 
 // ── Session ───────────────────────────────────────────────────────────────────
 // Read the session from the magic link's #hash, or from the last visit.
@@ -183,6 +200,29 @@ async function loadAvailability() {
     `rest/v1/technician_block_outs?technician_id=eq.${userId}&select=id,block_date&order=block_date.asc`
   );
   blockOuts = blocks.map((row) => ({ id: row.id, date: row.block_date }));
+
+  const slots = await api(
+    `rest/v1/technician_date_slots?technician_id=eq.${userId}&select=id,slot_date,period&order=slot_date.asc`
+  );
+  dateSlots = slots.map((row) => ({ id: row.id, date: row.slot_date, period: row.period }));
+}
+
+// Each row is one half-day on one date. Saved as soon as it's added.
+async function addDateSlots(date, periods) {
+  const rows = periods.map((period) => ({ technician_id: userId, slot_date: date, period }));
+  const saved = await api("rest/v1/technician_date_slots", {
+    method: "POST",
+    body: JSON.stringify(rows),
+  });
+  for (const row of saved) {
+    dateSlots.push({ id: row.id, date: row.slot_date, period: row.period });
+  }
+  dateSlots.sort((a, b) => a.date.localeCompare(b.date) || a.period.localeCompare(b.period));
+}
+
+async function removeDateSlot(id) {
+  await api(`rest/v1/technician_date_slots?id=eq.${id}`, { method: "DELETE" });
+  dateSlots = dateSlots.filter((s) => s.id !== id);
 }
 
 async function saveWeekly() {
@@ -300,6 +340,38 @@ function validateWeekly(next) {
   return null;
 }
 
+function renderSlots() {
+  const list = document.getElementById("slotList");
+  list.innerHTML = "";
+  if (!dateSlots.length) {
+    list.innerHTML = `<li class="muted">No specific dates added.</li>`;
+    return;
+  }
+
+  // One line per date, with its AM and PM rows grouped together.
+  const byDate = new Map();
+  for (const slot of dateSlots) {
+    if (!byDate.has(slot.date)) byDate.set(slot.date, []);
+    byDate.get(slot.date).push(slot);
+  }
+
+  for (const [date, slots] of byDate) {
+    const item = document.createElement("li");
+    const labels = slots
+      .map((s) => `<span class="status-pill" style="margin-right:6px;">${s.period === "am" ? "AM" : "PM"}</span>
+        <button class="secondary" type="button" data-remove-slot="${s.id}">Remove ${s.period.toUpperCase()}</button>`)
+      .join(" ");
+    item.innerHTML = `<span>${formatDate(date)}</span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">${labels}</span>`;
+    list.appendChild(item);
+  }
+}
+
+function setSlotMessage(text, kind) {
+  const el = document.getElementById("slotMessage");
+  el.textContent = text;
+  el.className = `form-message ${kind || ""}`;
+}
+
 // ── Wiring ────────────────────────────────────────────────────────────────────
 document.getElementById("weekdayRows").addEventListener("change", (event) => {
   const box = event.target;
@@ -364,6 +436,58 @@ document.getElementById("blockList").addEventListener("click", async (event) => 
   }
 });
 
+document.getElementById("addSlotBtn").addEventListener("click", async () => {
+  const date = document.getElementById("slotDate").value;
+  const amBox = document.getElementById("slotAm");
+  const pmBox = document.getElementById("slotPm");
+
+  if (!date) {
+    setSlotMessage("Choose a date first.", "err");
+    return;
+  }
+  if (!amBox.checked && !pmBox.checked) {
+    setSlotMessage("Tick morning, afternoon or both.", "err");
+    return;
+  }
+
+  // Skip any half-day already added for this date.
+  const periods = [];
+  if (amBox.checked && !dateSlots.some((s) => s.date === date && s.period === "am")) periods.push("am");
+  if (pmBox.checked && !dateSlots.some((s) => s.date === date && s.period === "pm")) periods.push("pm");
+  if (!periods.length) {
+    setSlotMessage("Those half-days are already added for that date.", "err");
+    return;
+  }
+
+  const button = document.getElementById("addSlotBtn");
+  button.disabled = true;
+  try {
+    await addDateSlots(date, periods);
+    renderSlots();
+    amBox.checked = false;
+    pmBox.checked = false;
+    setSlotMessage("Date added.", "ok");
+  } catch (error) {
+    console.error("Add date slot error:", error);
+    setSlotMessage("We couldn't add that date. Please try again.", "err");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("slotList").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-remove-slot]");
+  if (!button) return;
+  try {
+    await removeDateSlot(button.dataset.removeSlot);
+    renderSlots();
+    setSlotMessage("Removed.", "ok");
+  } catch (error) {
+    console.error("Remove date slot error:", error);
+    setSlotMessage("We couldn't remove that slot. Please try again.", "err");
+  }
+});
+
 document.getElementById("signOutBtn").addEventListener("click", signOut);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
@@ -381,6 +505,7 @@ document.getElementById("signOutBtn").addEventListener("click", signOut);
     await loadAvailability();
     renderWeekly();
     renderBlockOuts();
+    renderSlots();
     document.getElementById("loadingState").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
   } catch (error) {
