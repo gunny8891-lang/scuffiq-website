@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Book your repair | ScuffIQ</title>
+<style>
+  :root { --bg:#0d0d0d; --panel:#111; --border:#262626; --neon:#00d4ff; --white:#fff; --grey:#8a9099; --red:#ff6b6b; --green:#2ecc71; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--white); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif; line-height:1.55; }
+  .wrap { max-width:640px; margin:0 auto; padding:24px 16px 56px; }
+  .brand { font-size:24px; font-weight:800; letter-spacing:-.5px; margin:8px 0 24px; }
+  .brand span { color:var(--neon); }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:18px; }
+  h1 { font-size:24px; margin:0 0 8px; }
+  h2 { font-size:17px; margin:0 0 12px; }
+  p { margin:0 0 12px; color:#c4c8cf; font-size:15px; }
+  .muted { color:var(--grey); font-size:13px; }
+  .summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0; font-size:14px; }
+  .summary div { background:#0a0a0a; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+  .summary strong { display:block; color:var(--grey); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; font-weight:700; }
+  .deposit { border:2px solid var(--neon); border-radius:12px; padding:16px; text-align:center; margin:16px 0; background:#001a20; }
+  .deposit .amount { font-size:34px; font-weight:800; color:var(--neon); }
+  .day { border-top:1px solid var(--border); padding:12px 0; }
+  .day:first-child { border-top:0; padding-top:0; }
+  .day-label { font-weight:700; margin-bottom:8px; }
+  .slot-btn { display:inline-block; margin:0 8px 8px 0; padding:10px 16px; border:1px solid var(--neon); border-radius:999px; background:transparent; color:var(--neon); font-size:14px; font-weight:700; cursor:pointer; }
+  .slot-btn.selected { background:var(--neon); color:#000; }
+  button.primary { width:100%; padding:14px; border:0; border-radius:10px; background:var(--neon); color:#000; font-size:16px; font-weight:800; cursor:pointer; margin-top:10px; }
+  button.primary:disabled { opacity:.5; cursor:not-allowed; }
+  label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--grey); margin:12px 0 6px; }
+  input, textarea, select { width:100%; background:#0a0a0a; border:1px solid var(--border); border-radius:9px; padding:11px 12px; color:var(--white); font-size:15px; font-family:inherit; }
+  textarea { min-height:80px; resize:vertical; }
+  .radio-row { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; }
+  .radio-row label { text-transform:none; letter-spacing:0; font-size:14px; color:var(--white); font-weight:600; margin:0; display:flex; gap:6px; align-items:center; }
+  .notice { border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:16px; }
+  .notice.ok { background:#0a2216; border:1px solid #1d5c36; color:#bff0d2; }
+  .notice.err { background:#2a1212; border:1px solid #5c2424; color:#ffc4c4; }
+  .notice.info { background:#001a20; border:1px solid #003d5c; color:#bfe9f5; }
+  .hidden { display:none !important; }
+  .loader { color:var(--grey); text-align:center; padding:40px 0; }
+  @media (max-width:520px) { .summary { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Scuff<span>IQ</span></div>
+
+  <div id="notice" class="notice hidden" role="status"></div>
+
+  <div id="loading" class="loader">Loading your booking…</div>
+
+  <div id="invalid" class="card hidden">
+    <h1>This link isn't valid</h1>
+    <p>Please check the link in your email, or reply to the email and we'll send you a new one.</p>
+  </div>
+
+  <div id="main" class="hidden">
+    <div class="card">
+      <h1>Book your repair</h1>
+      <p>Pick a time that suits you. We'll confirm your appointment by email.</p>
+      <div class="summary">
+        <div><strong>Vehicle</strong><span id="vehicle"></span></div>
+        <div><strong>Service</strong><span id="service"></span></div>
+      </div>
+      <div id="depositBox" class="deposit hidden">
+        <div class="muted">Deposit to secure your slot</div>
+        <div class="amount" id="depositAmount"></div>
+        <div class="muted">Paid now by card. Taken off your final bill. The balance is due when the repair is complete.</div>
+      </div>
+    </div>
+
+    <div class="card" id="slotsCard">
+      <h2>Available times</h2>
+      <div id="slotList"></div>
+      <div id="noSlots" class="muted hidden">No times are open right now. Use the request option below, or reply to our email.</div>
+
+      <div id="bookForm" class="hidden">
+        <label for="phone">Mobile number</label>
+        <input id="phone" type="tel" autocomplete="tel" placeholder="07700 900000">
+        <button id="payBtn" class="primary" type="button" disabled>Pay deposit and book</button>
+        <p class="muted" style="margin-top:10px;">You'll pay securely on Stripe. Cancel or reschedule free with 48 hours' notice. <a href="terms.html" style="color:var(--neon);">Read our terms</a>.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Need a different date?</h2>
+      <p class="muted">If none of the times above suit you, ask for a date. We'll check with your technician and confirm by email. No payment is taken for date requests.</p>
+      <label for="reqDate">Preferred date</label>
+      <input id="reqDate" type="date">
+      <label>Time of day</label>
+      <div class="radio-row">
+        <label><input type="radio" name="reqPeriod" value="am"> Morning</label>
+        <label><input type="radio" name="reqPeriod" value="pm"> Afternoon</label>
+        <label><input type="radio" name="reqPeriod" value="" checked> Any time</label>
+      </div>
+      <label for="reqNote">Anything we should know (optional)</label>
+      <textarea id="reqNote" maxlength="500"></textarea>
+      <button id="requestBtn" class="primary" type="button">Send date request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://plain-math-71e8scuffiq-api.gunny8891.workers.dev";
+const params = new URLSearchParams(window.location.search);
+const token = params.get("t") || "";
+
+let state = { slots: [], selectedSlot: null, depositPence: null };
+
+function $(id) { return document.getElementById(id); }
+
+function showNotice(text, kind) {
+  const el = $("notice");
+  el.textContent = text;
+  el.className = "notice " + kind;
+}
+
+async function post(path, body) {
+  const res = await fetch(API + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({ success: false, error: "Something went wrong." }));
+  return { ok: res.ok, data };
+}
+
+function formatDate(isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+}
+
+function formatMoney(pence) {
+  return "£" + (pence / 100).toFixed(2);
+}
+
+function renderSlots() {
+  const list = $("slotList");
+  list.innerHTML = "";
+  if (!state.slots.length) {
+    $("noSlots").classList.remove("hidden");
+    return;
+  }
+  $("noSlots").classList.add("hidden");
+
+  const byDate = new Map();
+  for (const s of state.slots) {
+    if (!byDate.has(s.slot_date)) byDate.set(s.slot_date, []);
+    byDate.get(s.slot_date).push(s);
+  }
+
+  for (const [date, daySlots] of byDate) {
+    const day = document.createElement("div");
+    day.className = "day";
+    const label = document.createElement("div");
+    label.className = "day-label";
+    label.textContent = formatDate(date);
+    day.appendChild(label);
+
+    for (const s of daySlots) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot-btn" + (state.selectedSlot === s.id ? " selected" : "");
+      btn.textContent = s.period === "am" ? "Morning" : "Afternoon";
+      btn.addEventListener("click", () => {
+        state.selectedSlot = s.id;
+        renderSlots();
+        $("payBtn").disabled = false;
+      });
+      day.appendChild(btn);
+    }
+    list.appendChild(day);
+  }
+}
+
+async function loadBooking() {
+  if (!token) {
+    $("loading").classList.add("hidden");
+    $("invalid").classList.remove("hidden");
+    return;
+  }
+
+  const { ok, data } = await post("/booking-slots", { token });
+  $("loading").classList.add("hidden");
+
+  if (!ok || !data.success) {
+    $("invalid").classList.remove("hidden");
+    return;
+  }
+
+  $("main").classList.remove("hidden");
+  $("vehicle").textContent = data.vehicle || "—";
+  $("service").textContent = data.service || "—";
+  state.slots = data.slots || [];
+  state.depositPence = data.deposit_pence;
+
+  if (state.depositPence === null) {
+    showNotice("The price for your repair isn't confirmed yet, so online booking isn't available. Please reply to our email.", "err");
+    $("slotsCard").classList.add("hidden");
+    return;
+  }
+
+  $("depositAmount").textContent = formatMoney(state.depositPence);
+  $("depositBox").classList.remove("hidden");
+  $("bookForm").classList.remove("hidden");
+  renderSlots();
+
+  if (params.get("paid") === "1") {
+    showNotice("Thanks. Your deposit has been received. We'll email you your confirmed appointment.", "ok");
+  } else if (params.get("cancelled") === "1") {
+    showNotice("Your payment was cancelled, so the time wasn't booked. You can pick a time again below.", "info");
+  }
+}
+
+$("payBtn").addEventListener("click", async () => {
+  if (!state.selectedSlot) return;
+  const btn = $("payBtn");
+  btn.disabled = true;
+  btn.textContent = "Taking you to payment…";
+  const { data } = await post("/booking-checkout", {
+    token,
+    slot_id: state.selectedSlot,
+    customer_phone: $("phone").value.trim(),
+  });
+  if (data.success && data.url) {
+    window.location.href = data.url;
+    return;
+  }
+  showNotice(data.error || "We couldn't start the payment. Please try again.", "err");
+  btn.disabled = false;
+  btn.textContent = "Pay deposit and book";
+  if (data.error && data.error.includes("taken")) {
+    state.selectedSlot = null;
+    const { data: fresh } = await post("/booking-slots", { token });
+    state.slots = fresh.slots || [];
+    renderSlots();
+  }
+});
+
+$("requestBtn").addEventListener("click", async () => {
+  const date = $("reqDate").value;
+  const period = document.querySelector('input[name="reqPeriod"]:checked').value;
+  if (!date) return showNotice("Please choose a date to request.", "err");
+
+  const btn = $("requestBtn");
+  btn.disabled = true;
+  const { data } = await post("/booking-request", {
+    token,
+    requested_date: date,
+    period,
+    note: $("reqNote").value.trim(),
+  });
+  btn.disabled = false;
+
+  if (data.success) {
+    showNotice("Thanks. We've received your date request and will confirm by email. No payment has been taken.", "ok");
+    $("reqDate").value = "";
+    $("reqNote").value = "";
+  } else {
+    showNotice(data.error || "We couldn't send your request. Please try again.", "err");
+  }
+});
+
+loadBooking();
+</script>
+</body>
+</html>
