@@ -158,14 +158,29 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
     <div class="header-right">
       <span class="badge" id="headerBadge">Loading…</span>
       <button class="btn-sm" onclick="loadSubmissions()">↺ Refresh</button>
+      <button class="btn-sm" id="slotsNavBtn" onclick="toggleSlots()">Booking slots</button>
       <button class="btn-sm" onclick="exportCSV()">↓ Export CSV</button>
       <button class="btn-sm" onclick="logout()">Sign out</button>
     </div>
   </header>
 
   <div class="main">
+    <!-- Booking slots panel (opened from the Booking slots button) -->
+    <div id="slotsPanel" style="display:none;">
+      <h2 style="font-size:20px;margin-bottom:6px;">Booking slots</h2>
+      <p style="color:var(--grey);font-size:14px;margin-bottom:16px;">Add the morning (AM) and afternoon (PM) slots you've confirmed with the technician. Customers can only book slots listed here.</p>
+      <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:end;margin-bottom:12px;">
+        <div><label for="slotDate" style="font-size:11px;text-transform:uppercase;color:var(--grey);">Date</label><input id="slotDate" type="date" style="width:100%;"></div>
+        <label style="display:flex;gap:6px;align-items:center;"><input id="slotAm" type="checkbox"> AM</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input id="slotPm" type="checkbox"> PM</label>
+        <button class="btn-sm" onclick="addSlots()">Add slots</button>
+      </div>
+      <p id="slotMsg" style="font-size:13px;min-height:18px;margin-bottom:10px;"></p>
+      <div id="slotList"></div>
+    </div>
+
     <!-- Stats -->
-    <div class="stats-row">
+    <div class="stats-row" id="submissionsView">
       <div class="stat-card"><div class="stat-label">Total submissions</div><div class="stat-value" id="statTotal">—</div></div>
       <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="statPending" style="color:var(--red)">—</div></div>
       <div class="stat-card"><div class="stat-label">Sent to technician</div><div class="stat-value" id="statSent" style="color:#7ecfdf">—</div></div>
@@ -949,6 +964,124 @@ async function sendToTechnician() {
     btn.textContent = 'Send job to technician';
   }
 }
+
+// ── Booking slots ─────────────────────────────────────────────────────────────
+let bookingSlots = [];
+
+function toggleSlots() {
+  const panel = document.getElementById('slotsPanel');
+  const opening = panel.style.display === 'none';
+  Array.from(document.querySelector('.main').children).forEach((child) => {
+    if (child !== panel) child.style.display = opening ? 'none' : '';
+  });
+  panel.style.display = opening ? 'block' : 'none';
+  document.getElementById('slotsNavBtn').textContent = opening ? 'Back to submissions' : 'Booking slots';
+  if (opening) loadSlots();
+}
+
+function setSlotMsg(text, ok) {
+  const el = document.getElementById('slotMsg');
+  el.textContent = text;
+  el.style.color = ok ? 'var(--green)' : 'var(--red)';
+}
+
+async function slotsApi(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${authToken || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function loadSlots() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    bookingSlots = await slotsApi(`booking_slots?slot_date=gte.${today}&select=id,slot_date,period,status&order=slot_date.asc`);
+    renderSlots();
+  } catch (e) {
+    console.error('Load slots error:', e);
+    setSlotMsg('Could not load slots. Please try again.', false);
+  }
+}
+
+function renderSlots() {
+  const list = document.getElementById('slotList');
+  if (!bookingSlots.length) {
+    list.innerHTML = '<p style="color:var(--grey);font-size:14px;">No upcoming slots.</p>';
+    return;
+  }
+  const byDate = new Map();
+  for (const s of bookingSlots) {
+    if (!byDate.has(s.slot_date)) byDate.set(s.slot_date, []);
+    byDate.get(s.slot_date).push(s);
+  }
+  list.innerHTML = '';
+  for (const [date, daySlots] of byDate) {
+    const [y, m, d] = date.split('-').map(Number);
+    const label = new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #222;font-size:14px;';
+    const tags = daySlots.map((s) => {
+      const booked = s.status !== 'open';
+      const name = s.period.toUpperCase() + (booked ? ` (${s.status})` : '');
+      return `<span style="font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid ${booked ? '#555' : 'var(--neon,#00d4ff)'};color:${booked ? '#888' : 'var(--neon,#00d4ff)'};">${name}</span>
+        <button class="btn-sm" data-remove-slot="${s.id}" ${booked ? 'disabled' : ''}>Remove ${s.period.toUpperCase()}</button>`;
+    }).join(' ');
+    row.innerHTML = `<strong>${label}</strong><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">${tags}</span>`;
+    list.appendChild(row);
+  }
+}
+
+async function addSlots() {
+  const date = document.getElementById('slotDate').value;
+  const am = document.getElementById('slotAm').checked;
+  const pm = document.getElementById('slotPm').checked;
+  if (!date) return setSlotMsg('Choose a date first.', false);
+  if (!am && !pm) return setSlotMsg('Tick AM, PM or both.', false);
+
+  const periods = [];
+  if (am && !bookingSlots.some((s) => s.slot_date === date && s.period === 'am')) periods.push('am');
+  if (pm && !bookingSlots.some((s) => s.slot_date === date && s.period === 'pm')) periods.push('pm');
+  if (!periods.length) return setSlotMsg('Those slots are already listed for that date.', false);
+
+  try {
+    await slotsApi('booking_slots', {
+      method: 'POST',
+      body: JSON.stringify(periods.map((period) => ({ slot_date: date, period, status: 'open' }))),
+    });
+    document.getElementById('slotAm').checked = false;
+    document.getElementById('slotPm').checked = false;
+    await loadSlots();
+    setSlotMsg('Slots added.', true);
+  } catch (e) {
+    console.error('Add slots error:', e);
+    setSlotMsg('Could not add those slots. Please try again.', false);
+  }
+}
+
+async function removeSlot(id) {
+  try {
+    await slotsApi(`booking_slots?id=eq.${id}`, { method: 'DELETE' });
+    await loadSlots();
+    setSlotMsg('Slot removed.', true);
+  } catch (e) {
+    console.error('Remove slot error:', e);
+    setSlotMsg('Could not remove that slot. Please try again.', false);
+  }
+}
+
+document.getElementById('slotList').addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-remove-slot]');
+  if (button) removeSlot(button.dataset.removeSlot);
+});
 
 // ── Send confirmed quote email to customer ────────────────────────────────────
 // ── Delete row ────────────────────────────────────────────────────────────────
