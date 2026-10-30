@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Booking slots | ScuffIQ Admin</title>
+<link rel="stylesheet" href="admin.css">
+<style>
+  .slot-form{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:end;margin-bottom:16px;}
+  .slot-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #222;font-size:14px;}
+  .slot-tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+  .tag{font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid rgba(0,212,255,.4);color:#00d4ff;}
+  .tag.booked{border-color:#555;color:#888;}
+  .msg{font-size:13px;margin-top:10px;min-height:18px;}
+  .msg.ok{color:#2ecc71;}
+  .msg.err{color:#ff6b6b;}
+  @media(max-width:700px){.slot-form{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="loginScreen" style="max-width:380px;margin:80px auto;padding:24px;">
+  <h2 style="margin-bottom:16px;">Admin sign-in</h2>
+  <div class="fg"><label for="email">Email</label><input id="email" type="email" autocomplete="username"></div>
+  <div class="fg"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
+  <button id="loginBtn" type="button">Sign in</button>
+  <p class="msg err" id="loginErr"></p>
+</div>
+
+<div id="app" style="display:none;max-width:760px;margin:24px auto;padding:0 16px;">
+  <h1 style="font-size:24px;margin-bottom:6px;">Booking slots</h1>
+  <p style="color:#888;font-size:14px;margin-bottom:20px;">Add the morning (AM) and afternoon (PM) slots you've confirmed with the technician. Customers can only book slots listed here.</p>
+
+  <div class="slot-form">
+    <div class="fg" style="margin:0;"><label for="slotDate">Date</label><input id="slotDate" type="date"></div>
+    <label style="display:flex;gap:6px;align-items:center;margin:0;"><input id="slotAm" type="checkbox"> AM</label>
+    <label style="display:flex;gap:6px;align-items:center;margin:0;"><input id="slotPm" type="checkbox"> PM</label>
+    <button id="addBtn" type="button">Add slots</button>
+  </div>
+  <p class="msg" id="msg" role="status"></p>
+
+  <div id="slotList"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://scohjgsjjxbkpfuhlmrz.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjb2hqZ3Nqanhia3BmdWhsbXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODgwNjYsImV4cCI6MjA5ODA2NDA2Nn0.V-VCy_R7MRFs9o1Ybr2Uvpis13XR45d6HE-hk6gHBpY";
+
+let authToken = null;
+let slots = [];
+
+function setMsg(text, kind) {
+  const el = document.getElementById("msg");
+  el.textContent = text;
+  el.className = "msg " + (kind || "");
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${authToken || SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// Sign in with the same email and password as admin.html.
+async function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const err = document.getElementById("loginErr");
+  err.textContent = "";
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.access_token) {
+      err.textContent = data.error_description || "Incorrect email or password";
+      return;
+    }
+    authToken = data.access_token;
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    await loadSlots();
+  } catch (e) {
+    err.textContent = "Sign-in failed. Please try again.";
+  }
+}
+
+async function loadSlots() {
+  const today = new Date().toISOString().slice(0, 10);
+  slots = await api(`booking_slots?slot_date=gte.${today}&select=id,slot_date,period,status&order=slot_date.asc`);
+  renderSlots();
+}
+
+function formatDate(isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+    weekday: "short", day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+function renderSlots() {
+  const list = document.getElementById("slotList");
+  if (!slots.length) {
+    list.innerHTML = '<p style="color:#888;font-size:14px;">No upcoming slots.</p>';
+    return;
+  }
+
+  const byDate = new Map();
+  for (const s of slots) {
+    if (!byDate.has(s.slot_date)) byDate.set(s.slot_date, []);
+    byDate.get(s.slot_date).push(s);
+  }
+
+  list.innerHTML = "";
+  for (const [date, daySlots] of byDate) {
+    const row = document.createElement("div");
+    row.className = "slot-row";
+    const tags = daySlots.map((s) => {
+      const booked = s.status !== "open";
+      const label = `${s.period.toUpperCase()}${booked ? " (" + s.status + ")" : ""}`;
+      return `<span class="tag ${booked ? "booked" : ""}">${label}</span>
+        <button type="button" data-remove="${s.id}" ${booked ? "disabled" : ""}>Remove ${s.period.toUpperCase()}</button>`;
+    }).join(" ");
+    row.innerHTML = `<strong>${formatDate(date)}</strong><span class="slot-tags">${tags}</span>`;
+    list.appendChild(row);
+  }
+}
+
+document.getElementById("addBtn").addEventListener("click", async () => {
+  const date = document.getElementById("slotDate").value;
+  const am = document.getElementById("slotAm").checked;
+  const pm = document.getElementById("slotPm").checked;
+  if (!date) return setMsg("Choose a date first.", "err");
+  if (!am && !pm) return setMsg("Tick AM, PM or both.", "err");
+
+  const periods = [];
+  if (am && !slots.some((s) => s.slot_date === date && s.period === "am")) periods.push("am");
+  if (pm && !slots.some((s) => s.slot_date === date && s.period === "pm")) periods.push("pm");
+  if (!periods.length) return setMsg("Those slots are already listed for that date.", "err");
+
+  try {
+    await api("booking_slots", {
+      method: "POST",
+      body: JSON.stringify(periods.map((period) => ({ slot_date: date, period, status: "open" }))),
+    });
+    document.getElementById("slotAm").checked = false;
+    document.getElementById("slotPm").checked = false;
+    await loadSlots();
+    setMsg("Slots added.", "ok");
+  } catch (e) {
+    console.error("Add slots error:", e);
+    setMsg("Could not add those slots. Please try again.", "err");
+  }
+});
+
+document.getElementById("slotList").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-remove]");
+  if (!button) return;
+  try {
+    await api(`booking_slots?id=eq.${button.dataset.remove}`, { method: "DELETE" });
+    await loadSlots();
+    setMsg("Slot removed.", "ok");
+  } catch (e) {
+    console.error("Remove slot error:", e);
+    setMsg("Could not remove that slot. Please try again.", "err");
+  }
+});
+
+document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("password").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
+</script>
+</body>
+</html>
