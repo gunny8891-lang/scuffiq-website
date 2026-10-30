@@ -402,6 +402,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               </select>
               <div class="field-error">Please select a service</div>
             </div>
+            <div class="fg" id="fg-dents">
+              <label>Dents require repair? *</label>
+              <select id="dents">
+                <option value="" disabled selected>Select yes or no</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+              <div class="field-error">Please tell us whether the dents need repair</div>
+            </div>
             <button class="btn-primary" onclick="goToStep2()">Continue to photo upload →</button>
             <p class="form-note">Your details are never shared with third parties.</p>
           </div>
@@ -738,6 +747,7 @@ function validateStep1() {
   check('model','fg-model', function(v){return v.length>0;});
   check('postcode','fg-postcode', function(v){return v.length>2;});
   check('service','fg-service', function(v){return v!=='';});
+  check('dents','fg-dents', function(v){return v!=='';});
   return ok;
 }
 
@@ -877,6 +887,7 @@ async function submitQuote() {
   var model    = document.getElementById('model').value.trim();
   var postcode = document.getElementById('postcode').value.trim();
   var service  = document.getElementById('service').value;
+  var dents    = document.getElementById('dents').value;
 
   var aiSummary = uploadedPhotos.map(function(p, i) {
     var r = p.result;
@@ -898,6 +909,7 @@ async function submitQuote() {
     vehicle_model:   model,
     postcode:        postcode,
     service_type:    service,
+    dents_repair:    dents,
     photo_count:     uploadedPhotos.length,
     ai_summary:      aiSummary,
     ai_results:      aiResults,
