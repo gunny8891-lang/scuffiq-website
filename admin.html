@@ -191,7 +191,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
 
     <!-- Filters -->
     <div class="filters">
-      <input type="text" id="searchInput" placeholder="Search name, email, vehicle, postcode…" oninput="filterTable()">
+      <input type="text" id="searchInput" placeholder="Search name, email, vehicle, postcode…" oninput="debouncedFilter()">
       <select id="statusFilter" onchange="filterTable()">
         <option value="">All statuses</option>
         <option value="pending">Pending</option>
@@ -432,7 +432,8 @@ function renderTable(rows) {
     return;
   }
 
-  tbody.innerHTML = rows.map(r => {
+  const shown = rows.slice(0, visibleCount);
+  tbody.innerHTML = shown.map(r => {
     const status  = getRowStatus(r);
 
     const pillCls = {
@@ -543,6 +544,13 @@ function renderTable(rows) {
       </td>
     </tr>`;
   }).join('');
+
+  if (rows.length > visibleCount) {
+    const left = rows.length - visibleCount;
+    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="15" style="text-align:center;padding:14px;">
+      <button class="btn-sm" onclick="showMore()">Show ${Math.min(PAGE_SIZE, left)} more (${left} left)</button>
+    </td></tr>`);
+  }
 }
 
 function populateTechnicianFilter() {
@@ -571,7 +579,24 @@ function clearFilters() {
   document.getElementById('filterCount').textContent = allRows.length + ' result' + (allRows.length !== 1 ? 's' : '');
 }
 
-function filterTable() {
+// Table shows 50 rows at a time. Search waits 250ms after typing before filtering.
+const PAGE_SIZE = 50;
+let visibleCount = PAGE_SIZE;
+let filterTimer = null;
+
+function debouncedFilter() {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => filterTable(), 250);
+}
+
+function showMore() {
+  visibleCount += PAGE_SIZE;
+  filterTable(true);
+}
+
+// keepCount is true only for "Show more", so any filter change starts again at 50 rows
+function filterTable(keepCount = false) {
+  if (!keepCount) visibleCount = PAGE_SIZE;
   const q          = document.getElementById('searchInput').value.toLowerCase();
   const status     = document.getElementById('statusFilter').value;
   const service    = document.getElementById('serviceFilter').value;
