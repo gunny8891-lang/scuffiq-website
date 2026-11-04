@@ -146,6 +146,10 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
     <p>Admin — Quote Submissions</p>
     <input type="email" id="emailInput" placeholder="Email address" autocomplete="email" onkeydown="if(event.key==='Enter')login()">
     <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--grey);margin:8px 0 12px;cursor:pointer;">
+      <input type="checkbox" onchange="document.getElementById('passwordInput').type = this.checked ? 'text' : 'password'" style="width:auto;margin:0;">
+      Show password
+    </label>
     <button class="btn-neon" onclick="login()">Sign in</button>
     <p class="login-err" id="loginErr">Incorrect email or password</p>
   </div>
