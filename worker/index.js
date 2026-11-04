@@ -176,10 +176,6 @@ async function handleNewQuote(request, env, corsHeaders) {
           <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;border-bottom:1px solid #1e1e1e;">Service</td>
           <td width="50%" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;text-align:right;border-bottom:1px solid #1e1e1e;">${escapeHtml(service_type || "")}</td>
         </tr>
-        <tr>
-          <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;">Response time</td>
-          <td width="50%" style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;text-align:right;">As soon as possible</td>
-        </tr>
       </table>
     </td>
   </tr>
