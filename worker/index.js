@@ -49,6 +49,11 @@ export default {
       return handleManualQuote(request, env, corsHeaders);
     }
 
+    // Admin only: sends the balance (confirmed price minus deposit paid) as a payment link
+    if (url.pathname === "/balance-link") {
+      return handleBalanceLink(request, env, corsHeaders);
+    }
+
     if (url.pathname === "/booking-slots") {
       return handleBookingSlots(request, env, corsHeaders);
     }
@@ -1276,6 +1281,12 @@ async function handleStripeWebhook(request, env) {
       }
     }
 
+    // Payment links (manual quotes and balances) carry a quote_id instead of a booking_id
+    const quoteId = session && session.metadata && session.metadata.quote_id;
+    if (event.type === "checkout.session.completed" && session.payment_status === "paid" && quoteId && !bookingId) {
+      await sendPaymentReceivedEmails(env, quoteId, session.amount_total);
+    }
+
     if (event.type === "checkout.session.expired" && bookingId) {
       const [booking] = await db(env, `bookings?id=eq.${bookingId}&status=eq.pending_payment`, {
         method: "PATCH",
@@ -1549,6 +1560,129 @@ async function handleManualQuote(request, env, corsHeaders) {
     console.error("Manual quote error:", error.message);
     return json({ success: false, error: "We couldn't create the payment link. Please try again." }, 500, corsHeaders);
   }
+}
+
+// Returns true only when the request is signed in as the admin account
+async function adminUserOk(request, env) {
+  const userToken = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!userToken) return false;
+  const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${userToken}` },
+  });
+  if (!res.ok) return false;
+  const user = await res.json();
+  return (user.email || "").toLowerCase() === ADMIN_EMAIL;
+}
+
+// Balance = confirmed customer price minus the deposits already paid for this quote
+async function handleBalanceLink(request, env, corsHeaders) {
+  try {
+    if (!(await adminUserOk(request, env))) {
+      return json({ success: false, error: "Not authorised. Sign in to the admin page again." }, 403, corsHeaders);
+    }
+
+    const { quote_id } = await request.json();
+    if (!UUID_RE.test(quote_id || "")) {
+      return json({ success: false, error: "Choose a request first." }, 400, corsHeaders);
+    }
+
+    const [quote] = await db(
+      env,
+      `quote_submissions?id=eq.${quote_id}&select=id,customer_name,customer_email,vehicle_make,vehicle_model,service_type,final_quote_given`
+    );
+    if (!quote) {
+      return json({ success: false, error: "That request could not be found." }, 404, corsHeaders);
+    }
+
+    const total = parseFloat(String(quote.final_quote_given || "").replace(/[^0-9.]/g, ""));
+    if (!total || total <= 0) {
+      return json({ success: false, error: "Set the confirmed price for this quote first." }, 400, corsHeaders);
+    }
+
+    const paidBookings = await db(env, `bookings?quote_id=eq.${quote.id}&status=eq.paid&select=deposit_pence`);
+    const depositPence = paidBookings.reduce((sum, b) => sum + (b.deposit_pence || 0), 0);
+    const totalPence = Math.round(total * 100);
+    const balancePence = totalPence - depositPence;
+    if (balancePence <= 0) {
+      return json({ success: false, error: "The deposit already covers the full price. No balance is due." }, 400, corsHeaders);
+    }
+
+    const vehicle = `${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim() || "your vehicle";
+    const service = quote.service_type || "Smart repair";
+    const balanceText = formatPence(balancePence);
+
+    const price = await stripeForm(env, "https://api.stripe.com/v1/prices", {
+      currency: "gbp",
+      unit_amount: String(balancePence),
+      "product_data[name]": `ScuffIQ balance: ${service}, ${vehicle}`,
+    });
+    const link = await stripeForm(env, "https://api.stripe.com/v1/payment_links", {
+      "line_items[0][price]": price.id,
+      "line_items[0][quantity]": "1",
+      "metadata[quote_id]": quote.id,
+      "metadata[type]": "balance",
+    });
+
+    const firstName = escapeHtml((quote.customer_name || "").split(" ")[0]);
+    await sendResendEmail(env, {
+      to: quote.customer_email,
+      subject: `Your ScuffIQ balance: ${balanceText}`,
+      html: scuffiqEmail({
+        preheader: "Your repair is complete",
+        heading: `Hi ${firstName},`,
+        intro: "Thanks again for choosing ScuffIQ. Please pay the balance below to complete your payment.",
+        rows: [
+          ["Vehicle", escapeHtml(vehicle)],
+          ["Service", escapeHtml(service)],
+          ["Total price", formatPence(totalPence)],
+          ["Deposit paid", formatPence(depositPence)],
+          ["Balance due", balanceText],
+        ],
+        body: `<p style="margin:0 0 16px;"><a href="${link.url}" style="display:inline-block;background:#00d4ff;color:#000000;font-weight:700;font-size:15px;padding:14px 32px;text-decoration:none;">Pay ${balanceText} securely</a></p>
+               <p style="margin:0;font-size:12px;color:#888888;word-break:break-all;">Or copy this link: <a href="${link.url}" style="color:#00d4ff;">${link.url}</a></p>`,
+      }),
+    });
+
+    return json({ success: true, url: link.url }, 200, corsHeaders);
+  } catch (error) {
+    console.error("Balance link error:", error.message);
+    return json({ success: false, error: "We couldn't create the balance link. Please try again." }, 500, corsHeaders);
+  }
+}
+
+// Emails you and the customer when a payment made through a quote's payment link is received
+async function sendPaymentReceivedEmails(env, quoteId, amountPence) {
+  const [quote] = await db(env, `quote_submissions?id=eq.${quoteId}&select=customer_name,customer_email,vehicle_make,vehicle_model`);
+  if (!quote) return;
+  const amount = formatPence(amountPence || 0);
+  const vehicle = `${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim();
+  const firstName = escapeHtml((quote.customer_name || "").split(" ")[0]);
+
+  await sendResendEmail(env, {
+    to: env.INTERNAL_EMAIL || "hello@scuffiq.com",
+    subject: `Payment received: ${escapeHtml(quote.customer_name)}, ${amount}`,
+    html: scuffiqEmail({
+      preheader: "Payment received",
+      heading: "Payment received",
+      intro: `<strong style="color:#e0e0e0;">${escapeHtml(quote.customer_name)}</strong> has paid ${amount} through a ScuffIQ payment link.`,
+      rows: [
+        ["Customer email", escapeHtml(quote.customer_email)],
+        ["Vehicle", escapeHtml(vehicle || "Not given")],
+        ["Amount", amount],
+      ],
+    }),
+  });
+
+  await sendResendEmail(env, {
+    to: quote.customer_email,
+    subject: `Thanks, we've received your payment of ${amount}`,
+    html: scuffiqEmail({
+      preheader: "Payment received",
+      heading: `Hi ${firstName},`,
+      intro: `Thanks, we've received your payment of <strong style="color:#e0e0e0;">${amount}</strong>. You don't need to do anything else.`,
+      rows: [["Amount paid", amount]],
+    }),
+  });
 }
 
 async function sendResendEmail(env, { to, subject, html, attachments = [] }) {
