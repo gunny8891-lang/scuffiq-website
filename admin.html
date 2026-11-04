@@ -159,6 +159,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       <span class="badge" id="headerBadge">Loading…</span>
       <button class="btn-sm" onclick="loadSubmissions()">↺ Refresh</button>
       <button class="btn-sm" id="slotsNavBtn" onclick="toggleSlots()">Booking slots</button>
+      <button class="btn-sm" id="bookingsNavBtn" onclick="toggleBookings()">Bookings</button>
       <button class="btn-sm" onclick="exportCSV()">↓ Export CSV</button>
       <button class="btn-sm" onclick="logout()">Sign out</button>
     </div>
@@ -177,6 +178,14 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       </div>
       <p id="slotMsg" style="font-size:13px;min-height:18px;margin-bottom:10px;"></p>
       <div id="slotList"></div>
+    </div>
+
+    <!-- Bookings panel (opened from the Bookings button) -->
+    <div id="bookingsPanel" style="display:none;">
+      <h2 style="font-size:20px;margin-bottom:6px;">Bookings</h2>
+      <p id="bookingSummary" style="color:var(--grey);font-size:14px;margin-bottom:12px;"></p>
+      <button class="btn-sm" onclick="loadBookings()" style="margin-bottom:12px;">↺ Refresh</button>
+      <div id="bookingList"></div>
     </div>
 
     <!-- Stats -->
@@ -1002,12 +1011,89 @@ function toggleSlots() {
   const panel = document.getElementById('slotsPanel');
   const opening = panel.style.display === 'none';
   Array.from(document.querySelector('.main').children).forEach((child) => {
+    if (child.id === 'bookingsPanel') return;
     if (child !== panel) child.style.display = opening ? 'none' : '';
   });
+  if (opening) document.getElementById('bookingsPanel').style.display = 'none';
   panel.style.display = opening ? 'block' : 'none';
   document.getElementById('slotsNavBtn').textContent = opening ? 'Back to submissions' : 'Booking slots';
+  document.getElementById('bookingsNavBtn').textContent = 'Bookings';
   if (opening) loadSlots();
 }
+
+// ── Bookings view ─────────────────────────────────────────────────────────────
+let bookingRows = [];
+
+function toggleBookings() {
+  const panel = document.getElementById('bookingsPanel');
+  const opening = panel.style.display === 'none';
+  Array.from(document.querySelector('.main').children).forEach((child) => {
+    if (child.id === 'slotsPanel') return;
+    if (child !== panel) child.style.display = opening ? 'none' : '';
+  });
+  if (opening) document.getElementById('slotsPanel').style.display = 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  document.getElementById('bookingsNavBtn').textContent = opening ? 'Back to submissions' : 'Bookings';
+  document.getElementById('slotsNavBtn').textContent = 'Booking slots';
+  if (opening) loadBookings();
+}
+
+async function loadBookings() {
+  const list = document.getElementById('bookingList');
+  list.innerHTML = '<p style="color:var(--grey);font-size:14px;">Loading bookings…</p>';
+  try {
+    bookingRows = await slotsApi(
+      'bookings?select=id,status,customer_name,customer_email,customer_phone,deposit_pence,created_at,cancelled_at,slot:booking_slots(slot_date,period)&order=created_at.desc&limit=200'
+    );
+    renderBookings();
+  } catch (e) {
+    console.error('Load bookings error:', e);
+    list.innerHTML = '<p style="color:var(--red);font-size:14px;">Could not load bookings. Please try again.</p>';
+  }
+}
+
+function renderBookings() {
+  const list = document.getElementById('bookingList');
+  const count = (s) => bookingRows.filter((b) => b.status === s).length;
+  document.getElementById('bookingSummary').textContent =
+    `${count('paid')} paid · ${count('pending_payment')} awaiting payment · ${count('cancelled')} cancelled`;
+
+  if (!bookingRows.length) {
+    list.innerHTML = '<p style="color:var(--grey);font-size:14px;">No bookings yet.</p>';
+    return;
+  }
+
+  const labels = { paid: 'Paid', pending_payment: 'Awaiting payment', cancelled: 'Cancelled', no_show: 'No show' };
+  const colours = { paid: 'var(--green)', pending_payment: 'var(--grey)', cancelled: 'var(--red)', no_show: 'var(--red)' };
+
+  list.innerHTML = bookingRows.map((b) => {
+    const slot = b.slot || {};
+    let when = '—';
+    if (slot.slot_date) {
+      const [y, m, d] = slot.slot_date.split('-').map(Number);
+      const day = new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      when = `${day}, ${slot.period === 'am' ? 'morning' : 'afternoon'}`;
+    }
+    const booked = new Date(b.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const deposit = `£${(b.deposit_pence / 100).toFixed(2)}`;
+    const colour = colours[b.status] || 'var(--grey)';
+    return `
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #222;font-size:14px;">
+        <div>
+          <strong>${esc(b.customer_name)}</strong>
+          <div style="color:var(--grey);font-size:13px;">${esc(b.customer_email)}${b.customer_phone ? ' · ' + esc(b.customer_phone) : ''}</div>
+          <div style="color:var(--grey);font-size:12px;margin-top:2px;">Booked ${esc(booked)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div><strong>${esc(when)}</strong></div>
+          <div style="color:var(--grey);font-size:13px;">Deposit ${deposit}</div>
+          <span style="display:inline-block;margin-top:4px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid ${colour};color:${colour};">${labels[b.status] || esc(b.status)}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Booking slots ─────────────────────────────────────────────────────────────
 
 function setSlotMsg(text, ok) {
   const el = document.getElementById('slotMsg');
