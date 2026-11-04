@@ -209,6 +209,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
         <option value="booked">Booked</option>
         <option value="quoted">Quoted</option>
         <option value="quote_sent">Quote sent to customer</option>
+        <option value="paid_in_full">Paid in full</option>
         <option value="done">Completed</option>
         <option value="rejected">Rejected</option>
         <option value="out_of_area">Out of area</option>
@@ -411,6 +412,7 @@ function getRowStatus(r) {
   if (r.status === 'rejected') return 'rejected';
   if (r.status === 'out_of_area') return 'rejected';
   if (r.status === 'no_response') return 'rejected';
+  if (r.status === 'paid_in_full') return 'paid_in_full';
   if (r.status === 'quote_sent') return 'quote_sent';
   if (r.final_quote_given) return 'quoted';
   return 'pending';
@@ -451,6 +453,7 @@ function renderTable(rows) {
       done:                   'pill-done',
       quoted:                 'pill-quoted',
       quote_sent:             'pill-quoted',
+      paid_in_full:           'pill-booked',
       pending:                'pill-pending',
       sent_to_technician:     'pill-sent',
       technician_confirmed:   'pill-tech',
@@ -462,6 +465,7 @@ function renderTable(rows) {
       done:                   'Completed',
       quoted:                 'Quoted',
       quote_sent:             'Quote sent to customer',
+      paid_in_full:           'Paid in full',
       pending:                'Pending',
       sent_to_technician:     'Sent to tech',
       technician_confirmed:   'Tech confirmed',
@@ -819,6 +823,7 @@ function buildModalHtml(r) {
             <option value="technician_confirmed"  ${status==='technician_confirmed'?'selected':''}>Tech confirmed</option>
             <option value="quoted"                ${status==='quoted'?'selected':''}>Quoted</option>
             <option value="quote_sent"            ${status==='quote_sent'?'selected':''}>Quote sent to customer</option>
+            <option value="paid_in_full"          ${status==='paid_in_full'?'selected':''}>Paid in full</option>
             <option value="done"                  ${status==='done'?'selected':''}>Completed</option>
             <option value="rejected"              ${status==='rejected'?'selected':''}>Rejected — not taking on</option>
             <option value="out_of_area"           ${status==='out_of_area'?'selected':''}>Out of area</option>

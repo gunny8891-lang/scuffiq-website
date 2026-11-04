@@ -1284,7 +1284,7 @@ async function handleStripeWebhook(request, env) {
     // Payment links (manual quotes and balances) carry a quote_id instead of a booking_id
     const quoteId = session && session.metadata && session.metadata.quote_id;
     if (event.type === "checkout.session.completed" && session.payment_status === "paid" && quoteId && !bookingId) {
-      await sendPaymentReceivedEmails(env, quoteId, session.amount_total);
+      await sendPaymentReceivedEmails(env, quoteId, session.amount_total, session.metadata.type);
     }
 
     if (event.type === "checkout.session.expired" && bookingId) {
@@ -1651,9 +1651,17 @@ async function handleBalanceLink(request, env, corsHeaders) {
 }
 
 // Emails you and the customer when a payment made through a quote's payment link is received
-async function sendPaymentReceivedEmails(env, quoteId, amountPence) {
+async function sendPaymentReceivedEmails(env, quoteId, amountPence, paymentType) {
   const [quote] = await db(env, `quote_submissions?id=eq.${quoteId}&select=customer_name,customer_email,vehicle_make,vehicle_model`);
   if (!quote) return;
+
+  // A balance payment means the job is paid in full
+  if (paymentType === "balance") {
+    await db(env, `quote_submissions?id=eq.${quoteId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "paid_in_full" }),
+    });
+  }
   const amount = formatPence(amountPence || 0);
   const vehicle = `${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim();
   const firstName = escapeHtml((quote.customer_name || "").split(" ")[0]);
