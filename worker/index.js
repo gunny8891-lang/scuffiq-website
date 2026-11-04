@@ -141,7 +141,7 @@ async function handleNewQuote(request, env, corsHeaders) {
         <tr>
           <td valign="middle" style="padding:16px;">
             <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#00d4ff;">Quote request received</p>
-            <p style="margin:0;font-size:12px;color:#667788;">We'll be in touch today</p>
+            <p style="margin:0;font-size:12px;color:#667788;">We'll be in touch shortly</p>
           </td>
         </tr>
       </table>
@@ -155,7 +155,7 @@ async function handleNewQuote(request, env, corsHeaders) {
         Thanks for getting in touch with ScuffIQ. We've received your photos and quote request — you're one step closer to having your car looking <span style="color:#e0e0e0;font-weight:600;">flawless again.</span>
       </p>
       <p style="margin:0;font-size:14px;line-height:1.7;color:#aaaaaa;">
-        A certified ScuffIQ technician is reviewing your submission and will get back to you today with a personalised quote. We cover North London, South London, Hertfordshire and Essex.
+        A ScuffIQ partner technician is reviewing your submission and will get back to you as soon as possible with a personalised quote. We cover North London, South London, Hertfordshire and Essex.
       </p>
     </td>
   </tr>
@@ -178,7 +178,7 @@ async function handleNewQuote(request, env, corsHeaders) {
         </tr>
         <tr>
           <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;">Response time</td>
-          <td width="50%" style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;text-align:right;">Same day</td>
+          <td width="50%" style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;text-align:right;">As soon as possible</td>
         </tr>
       </table>
     </td>
