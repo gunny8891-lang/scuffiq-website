@@ -758,6 +758,9 @@ function buildModalHtml(r) {
           <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}', ${combined})" style="background:var(--green);width:100%;">
             ✉ Send confirmed quote to ${esc(r.customer_name||'customer')}
           </button>
+          <button class="btn-save" onclick="sendManualQuote('${r.id}')" style="background:var(--neon,#00d4ff);color:#000;width:100%;margin-top:8px;">
+            £ Send payment link (enter amount)
+          </button>
           <p class="save-msg save-ok" id="emailSentOk" style="text-align:center;margin-top:8px;">✓ Quote email sent to customer</p>
           <p class="save-msg save-err" id="emailSentErr" style="text-align:center;margin-top:8px;">✗ Failed to send — check console</p>
         </div>
@@ -1019,6 +1022,34 @@ function toggleSlots() {
   document.getElementById('slotsNavBtn').textContent = opening ? 'Back to submissions' : 'Booking slots';
   document.getElementById('bookingsNavBtn').textContent = 'Bookings';
   if (opening) loadSlots();
+}
+
+// ── Manual payment link ───────────────────────────────────────────────────────
+// Creates a Stripe payment link for an amount you enter, and emails it to the customer.
+async function sendManualQuote(id) {
+  const row = allRows.find((r) => r.id === id);
+  if (!row) return;
+
+  const input = prompt(`Amount to charge ${row.customer_name || 'the customer'} (£):`, '');
+  if (input === null) return;
+  const amount = parseFloat(input);
+  if (!amount || amount < 1) return alert('Enter an amount in pounds, for example 40.');
+  if (!confirm(`Email ${row.customer_email} a payment link for £${amount.toFixed(2)}?`)) return;
+
+  try {
+    const res = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev/manual-quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify({ quote_id: id, amount }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.error || 'The payment link could not be sent.');
+    alert(`Payment link sent to ${row.customer_email}.`);
+    await loadSubmissions();
+  } catch (e) {
+    console.error('Manual payment link error:', e);
+    alert(e.message);
+  }
 }
 
 // ── Bookings view ─────────────────────────────────────────────────────────────

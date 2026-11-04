@@ -14,7 +14,7 @@ export default {
     const corsHeaders = {
       "Access-Control-Allow-Origin": env.ALLOWED_ORIGIN || "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     };
 
     if (request.method === "OPTIONS") {
@@ -44,6 +44,11 @@ export default {
     }
 
     // Customer booking (see BOOKINGS section below)
+    // Admin only: creates a Stripe payment link and emails it to the customer
+    if (url.pathname === "/manual-quote") {
+      return handleManualQuote(request, env, corsHeaders);
+    }
+
     if (url.pathname === "/booking-slots") {
       return handleBookingSlots(request, env, corsHeaders);
     }
@@ -1443,6 +1448,107 @@ function timingSafeEqual(a, b) {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MANUAL QUOTE — admin sets an amount, the worker creates a Stripe payment link
+// and emails it to the customer. Only the admin account can use it.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const ADMIN_EMAIL = "hello@scuffiq.com";
+
+async function stripeForm(env, url, fields) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(fields),
+  });
+  if (!res.ok) throw new Error(`Stripe ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function handleManualQuote(request, env, corsHeaders) {
+  try {
+    // Check the signed-in user is the admin, using the token the admin page holds
+    const userToken = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    if (!userToken) {
+      return json({ success: false, error: "Sign in to the admin page first." }, 401, corsHeaders);
+    }
+    const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${userToken}` },
+    });
+    if (!userRes.ok) {
+      return json({ success: false, error: "Your admin sign-in has expired. Sign in again." }, 401, corsHeaders);
+    }
+    const user = await userRes.json();
+    if ((user.email || "").toLowerCase() !== ADMIN_EMAIL) {
+      return json({ success: false, error: "Not authorised." }, 403, corsHeaders);
+    }
+
+    const { quote_id, amount } = await request.json();
+    if (!UUID_RE.test(quote_id || "")) {
+      return json({ success: false, error: "Choose a request first." }, 400, corsHeaders);
+    }
+    const pounds = Number(amount);
+    if (!Number.isFinite(pounds) || pounds < 1 || pounds > 5000) {
+      return json({ success: false, error: "Enter an amount between £1 and £5,000." }, 400, corsHeaders);
+    }
+
+    const [quote] = await db(
+      env,
+      `quote_submissions?id=eq.${quote_id}&select=id,customer_name,customer_email,vehicle_make,vehicle_model,service_type`
+    );
+    if (!quote) {
+      return json({ success: false, error: "That request could not be found." }, 404, corsHeaders);
+    }
+
+    const vehicle = `${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim() || "your vehicle";
+    const service = quote.service_type || "Smart repair";
+    const amountText = `£${pounds.toFixed(2)}`;
+
+    // A one-off price and a payment link for it
+    const price = await stripeForm(env, "https://api.stripe.com/v1/prices", {
+      currency: "gbp",
+      unit_amount: String(Math.round(pounds * 100)),
+      "product_data[name]": `ScuffIQ: ${service}, ${vehicle}`,
+    });
+    const link = await stripeForm(env, "https://api.stripe.com/v1/payment_links", {
+      "line_items[0][price]": price.id,
+      "line_items[0][quantity]": "1",
+      "metadata[quote_id]": quote.id,
+    });
+
+    const firstName = escapeHtml((quote.customer_name || "").split(" ")[0]);
+    await sendResendEmail(env, {
+      to: quote.customer_email,
+      subject: `Your ScuffIQ repair quote: ${amountText}`,
+      html: scuffiqEmail({
+        preheader: "Your repair quote is ready",
+        heading: `Hi ${firstName},`,
+        intro: `Thanks for getting in touch. Please pay securely below to confirm your repair.`,
+        rows: [
+          ["Vehicle", escapeHtml(vehicle)],
+          ["Service", escapeHtml(service)],
+          ["Amount", amountText],
+        ],
+        body: `<p style="margin:0 0 16px;"><a href="${link.url}" style="display:inline-block;background:#00d4ff;color:#000000;font-weight:700;font-size:15px;padding:14px 32px;text-decoration:none;">Pay ${amountText} securely</a></p>
+               <p style="margin:0;font-size:12px;color:#888888;word-break:break-all;">Or copy this link: <a href="${link.url}" style="color:#00d4ff;">${link.url}</a></p>`,
+      }),
+    });
+
+    await db(env, `quote_submissions?id=eq.${quote.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "quote_sent", final_quote_given: amountText }),
+    });
+
+    return json({ success: true, url: link.url }, 200, corsHeaders);
+  } catch (error) {
+    console.error("Manual quote error:", error.message);
+    return json({ success: false, error: "We couldn't create the payment link. Please try again." }, 500, corsHeaders);
+  }
 }
 
 async function sendResendEmail(env, { to, subject, html, attachments = [] }) {
