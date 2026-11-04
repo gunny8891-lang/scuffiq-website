@@ -1518,18 +1518,23 @@ async function handleManualQuote(request, env, corsHeaders) {
 
     const vehicle = `${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim() || "your vehicle";
     const service = quote.service_type || "Smart repair";
+    // The amount entered is the full repair price. The link charges the deposit now
+    // (20%, minimum £25, maximum £75), and the balance is paid after the job.
     const amountText = `£${pounds.toFixed(2)}`;
+    const depositPounds = Math.min(pounds, Math.min(75, Math.max(25, Math.round(pounds * 0.2))));
+    const depositText = `£${depositPounds.toFixed(2)}`;
+    const balanceText = `£${(pounds - depositPounds).toFixed(2)}`;
 
-    // A one-off price and a payment link for it
     const price = await stripeForm(env, "https://api.stripe.com/v1/prices", {
       currency: "gbp",
-      unit_amount: String(Math.round(pounds * 100)),
-      "product_data[name]": `ScuffIQ: ${service}, ${vehicle}`,
+      unit_amount: String(Math.round(depositPounds * 100)),
+      "product_data[name]": `ScuffIQ deposit: ${service}, ${vehicle}`,
     });
     const link = await stripeForm(env, "https://api.stripe.com/v1/payment_links", {
       "line_items[0][price]": price.id,
       "line_items[0][quantity]": "1",
       "metadata[quote_id]": quote.id,
+      "metadata[type]": "deposit",
     });
 
     const firstName = escapeHtml((quote.customer_name || "").split(" ")[0]);
@@ -1539,13 +1544,15 @@ async function handleManualQuote(request, env, corsHeaders) {
       html: scuffiqEmail({
         preheader: "Your repair quote is ready",
         heading: `Hi ${firstName},`,
-        intro: `Thanks for getting in touch. Please pay securely below to confirm your repair.`,
+        intro: `Thanks for getting in touch. Please pay the deposit below to secure your booking. The balance is paid after your repair is complete.`,
         rows: [
           ["Vehicle", escapeHtml(vehicle)],
           ["Service", escapeHtml(service)],
-          ["Amount", amountText],
+          ["Total price", amountText],
+          ["Deposit now", depositText],
+          ["Balance after completion", balanceText],
         ],
-        body: `<p style="margin:0 0 16px;"><a href="${link.url}" style="display:inline-block;background:#00d4ff;color:#000000;font-weight:700;font-size:15px;padding:14px 32px;text-decoration:none;">Pay ${amountText} securely</a></p>
+        body: `<p style="margin:0 0 16px;"><a href="${link.url}" style="display:inline-block;background:#00d4ff;color:#000000;font-weight:700;font-size:15px;padding:14px 32px;text-decoration:none;">Pay deposit ${depositText} securely</a></p>
                <p style="margin:0;font-size:12px;color:#888888;word-break:break-all;">Or copy this link: <a href="${link.url}" style="color:#00d4ff;">${link.url}</a></p>`,
       }),
     });
@@ -1588,7 +1595,7 @@ async function handleBalanceLink(request, env, corsHeaders) {
 
     const [quote] = await db(
       env,
-      `quote_submissions?id=eq.${quote_id}&select=id,customer_name,customer_email,vehicle_make,vehicle_model,service_type,final_quote_given`
+      `quote_submissions?id=eq.${quote_id}&select=id,customer_name,customer_email,vehicle_make,vehicle_model,service_type,final_quote_given,deposit_paid_pence`
     );
     if (!quote) {
       return json({ success: false, error: "That request could not be found." }, 404, corsHeaders);
@@ -1600,7 +1607,8 @@ async function handleBalanceLink(request, env, corsHeaders) {
     }
 
     const paidBookings = await db(env, `bookings?quote_id=eq.${quote.id}&status=eq.paid&select=deposit_pence`);
-    const depositPence = paidBookings.reduce((sum, b) => sum + (b.deposit_pence || 0), 0);
+    // Deposits paid through booking slots plus deposits paid through a payment link
+    const depositPence = paidBookings.reduce((sum, b) => sum + (b.deposit_pence || 0), 0) + (quote.deposit_paid_pence || 0);
     const totalPence = Math.round(total * 100);
     const balancePence = totalPence - depositPence;
     if (balancePence <= 0) {
@@ -1654,6 +1662,14 @@ async function handleBalanceLink(request, env, corsHeaders) {
 async function sendPaymentReceivedEmails(env, quoteId, amountPence, paymentType) {
   const [quote] = await db(env, `quote_submissions?id=eq.${quoteId}&select=customer_name,customer_email,vehicle_make,vehicle_model`);
   if (!quote) return;
+
+  // A deposit paid through a quote's payment link counts towards the balance
+  if (paymentType === "deposit") {
+    await db(env, `quote_submissions?id=eq.${quoteId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "deposit_paid", deposit_paid_pence: amountPence || 0 }),
+    });
+  }
 
   // A balance payment means the job is paid in full
   if (paymentType === "balance") {
