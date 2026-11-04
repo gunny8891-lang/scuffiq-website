@@ -1164,6 +1164,9 @@ async function createDepositSession(env, { quote, slot, booking, deposit, token 
   const body = new URLSearchParams({
     mode: "payment",
     customer_email: quote.customer_email,
+    // Stripe expires the session after 35 minutes if it isn't paid. The expired
+    // webhook then releases the held slot, so abandoned checkouts don't block it.
+    expires_at: String(Math.floor(Date.now() / 1000) + 35 * 60),
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "gbp",
     "line_items[0][price_data][unit_amount]": String(deposit),
@@ -1216,17 +1219,28 @@ async function handleBookingRequest(request, env, corsHeaders) {
     await sendResendEmail(env, {
       to: env.INTERNAL_EMAIL || "hello@scuffiq.com",
       subject: `Date request: ${escapeHtml(quote.customer_name)}, ${escapeHtml(when)}`,
-      html: `<p><strong>${escapeHtml(quote.customer_name)}</strong> (${escapeHtml(quote.customer_email)}) asked for <strong>${escapeHtml(when)}</strong>.</p>
-             ${cleanNote ? `<p>Note: ${escapeHtml(cleanNote)}</p>` : ""}
-             <p>No payment has been taken. Confirm the date with the technician, then send the payment link.</p>`,
+      html: scuffiqEmail({
+        preheader: "New date request",
+        heading: "Date request",
+        intro: "No payment has been taken. Confirm the date with the technician, then send the payment link.",
+        rows: [
+          ["Customer", escapeHtml(quote.customer_name)],
+          ["Email", escapeHtml(quote.customer_email)],
+          ["Requested", escapeHtml(when)],
+          ["Note", escapeHtml(cleanNote || "None")],
+        ],
+      }),
     });
 
     await sendResendEmail(env, {
       to: quote.customer_email,
       subject: "We've received your preferred date",
-      html: `<p>Hi ${escapeHtml((quote.customer_name || "").split(" ")[0])},</p>
-             <p>Thanks for asking for ${escapeHtml(when)}. We'll check it with your technician and confirm by email. No payment is needed until your date is confirmed.</p>
-             <p>ScuffIQ<br><a href="mailto:hello@scuffiq.com">hello@scuffiq.com</a></p>`,
+      html: scuffiqEmail({
+        preheader: "We've received your preferred date",
+        heading: `Hi ${escapeHtml((quote.customer_name || "").split(" ")[0])},`,
+        intro: `Thanks for asking for <strong style="color:#e0e0e0;">${escapeHtml(when)}</strong>. We'll check it with your technician and confirm by email. No payment is needed until your date is confirmed.`,
+        rows: [["Requested date", escapeHtml(when)]],
+      }),
     });
 
     return json({ success: true }, 200, corsHeaders);
@@ -1281,6 +1295,93 @@ async function handleStripeWebhook(request, env) {
   return new Response("ok", { status: 200 });
 }
 
+// Booking emails use the same look as the quote emails: dark panels, cyan accents, ScuffIQ footer
+function scuffiqEmail({ preheader, heading, intro, rows = [], body = "" }) {
+  const rowHtml = rows
+    .map(([label, value]) => `<tr><td width="45%" style="padding:13px 20px;font-size:13px;color:#666666;border-bottom:1px solid #1e1e1e;">${label}</td><td width="55%" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;text-align:right;border-bottom:1px solid #1e1e1e;">${value}</td></tr>`)
+    .join("");
+
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScuffIQ</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0d0d0d;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#0d0d0d;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="background-color:#111111;border:1px solid #222222;">
+
+  <tr>
+    <td align="center" style="background-color:#0a0a0a;padding:32px 40px 24px;border-bottom:3px solid #00d4ff;">
+      <img src="https://scuffiq.com/scuffiq-logo.png" alt="ScuffIQ" width="140" style="display:block;margin:0 auto 14px;width:140px;height:auto;" />
+      <p style="margin:0;font-size:11px;color:#888888;letter-spacing:1.5px;text-transform:uppercase;">Smart Repair Specialists</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:24px 36px 0;background-color:#111111;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#001f2b;border:1px solid #003d5c;">
+        <tr>
+          <td valign="middle" style="padding:16px;">
+            <p style="margin:0;font-size:14px;font-weight:600;color:#00d4ff;">${preheader}</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:28px 36px 0;background-color:#111111;">
+      <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#ffffff;">${heading}</p>
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#aaaaaa;">${intro}</p>
+    </td>
+  </tr>
+
+  ${rows.length ? `
+  <tr>
+    <td style="padding:24px 36px 0;background-color:#111111;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#181818;border:1px solid #252525;">
+        <tr>
+          <td colspan="2" style="padding:12px 20px;background-color:#001a20;border-bottom:1px solid #003040;">
+            <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00d4ff;">Booking details</p>
+          </td>
+        </tr>
+        ${rowHtml}
+      </table>
+    </td>
+  </tr>` : ""}
+
+  ${body ? `
+  <tr>
+    <td style="padding:24px 36px 0;background-color:#111111;">${body}</td>
+  </tr>` : ""}
+
+  <tr>
+    <td style="padding:28px 36px 36px;background-color:#111111;">
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#888888;">
+        Thanks,<br />
+        <span style="color:#00d4ff;font-weight:700;">The ScuffIQ Team</span>
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:24px 36px;background-color:#0a0a0a;border-top:1px solid #1a1a1a;" align="center">
+      <p style="margin:0 0 6px;font-size:12px;color:#444444;">
+        ScuffIQ Ltd &middot; North &amp; South London, Hertfordshire &amp; Essex<br />
+        <a href="mailto:hello@scuffiq.com" style="color:#00d4ff;">hello@scuffiq.com</a>&nbsp;&middot;&nbsp;<a href="https://www.scuffiq.com" style="color:#00d4ff;">scuffiq.com</a>
+      </p>
+    </td>
+  </tr>
+
+</table>
+</td></tr></table>
+</body>
+</html>`;
+}
+
 async function sendBookingEmails(env, booking) {
   const [slot] = await db(env, `booking_slots?id=eq.${booking.slot_id}&select=slot_date,period`);
   const when = formatSlot(slot.slot_date, slot.period);
@@ -1290,18 +1391,33 @@ async function sendBookingEmails(env, booking) {
   await sendResendEmail(env, {
     to: booking.customer_email,
     subject: `Your ScuffIQ booking is confirmed: ${when}`,
-    html: `<p>Hi ${firstName},</p>
-           <p>Your appointment is booked for <strong>${escapeHtml(when)}</strong>.</p>
-           <p>We've taken your deposit of <strong>${deposit}</strong>. The balance is due when the repair is complete, and the deposit comes off your final bill.</p>
-           <p>Need to change it? Cancel or reschedule free of charge with at least 48 hours' notice. Less notice may mean the deposit is kept. Reply to this email to get in touch.</p>
-           <p>ScuffIQ<br><a href="mailto:hello@scuffiq.com">hello@scuffiq.com</a></p>`,
+    html: scuffiqEmail({
+      preheader: "Your booking is confirmed",
+      heading: `Hi ${firstName},`,
+      intro: `Your appointment is booked for <strong style="color:#e0e0e0;">${escapeHtml(when)}</strong>. Thanks for paying your deposit.`,
+      rows: [
+        ["Appointment", escapeHtml(when)],
+        ["Deposit paid", deposit],
+        ["Balance", "Due when the repair is complete"],
+      ],
+      body: `<p style="margin:0;font-size:13px;line-height:1.7;color:#888888;">The deposit comes off your final bill. Need to change your appointment? Cancel or reschedule free of charge with at least 48 hours' notice. With less notice, the deposit may be kept. Reply to this email to get in touch.</p>`,
+    }),
   });
 
   await sendResendEmail(env, {
     to: env.INTERNAL_EMAIL || "hello@scuffiq.com",
     subject: `Booked and paid: ${escapeHtml(booking.customer_name)}, ${when}`,
-    html: `<p><strong>${escapeHtml(booking.customer_name)}</strong> (${escapeHtml(booking.customer_email)}${booking.customer_phone ? ", " + escapeHtml(booking.customer_phone) : ""}) booked <strong>${escapeHtml(when)}</strong>.</p>
-           <p>Deposit paid: ${deposit}</p>`,
+    html: scuffiqEmail({
+      preheader: "Booked and deposit paid",
+      heading: "New booking",
+      intro: `<strong style="color:#e0e0e0;">${escapeHtml(booking.customer_name)}</strong> has booked and paid the deposit.`,
+      rows: [
+        ["Appointment", escapeHtml(when)],
+        ["Customer email", escapeHtml(booking.customer_email)],
+        ["Phone", escapeHtml(booking.customer_phone || "Not given")],
+        ["Deposit paid", deposit],
+      ],
+    }),
   });
 }
 
