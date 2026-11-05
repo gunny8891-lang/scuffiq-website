@@ -79,6 +79,12 @@
       <div id="bookForm" class="hidden">
         <label for="phone">Mobile number</label>
         <input id="phone" type="tel" autocomplete="tel" placeholder="07700 900000">
+        <label for="address">Full address, including postcode</label>
+        <textarea id="address" rows="2" autocomplete="street-address" placeholder="e.g. 12 High Street, Croydon, CR0 1AB"></textarea>
+        <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:14px;color:var(--white);font-weight:600;margin:14px 0 4px;cursor:pointer;">
+          <input id="parking" type="checkbox" style="width:auto;margin-top:3px;">
+          <span>I confirm there is parking available at this address for the technician, with no restrictions.</span>
+        </label>
         <button id="payBtn" class="primary" type="button" disabled>Pay deposit and book</button>
         <p class="muted" style="margin-top:10px;">You'll pay securely on Stripe. Cancel or reschedule free with 48 hours' notice. <a href="terms.html" style="color:var(--neon);">Read our terms</a>.</p>
       </div>
@@ -217,12 +223,25 @@ async function loadBooking() {
 $("payBtn").addEventListener("click", async () => {
   if (!state.selectedSlot) return;
   const btn = $("payBtn");
+  const address = $("address").value.trim();
+  if (address.length < 10) {
+    showNotice("Please enter your full address, including the postcode.", "err");
+    $("address").focus();
+    return;
+  }
+  if (!$("parking").checked) {
+    showNotice("Please confirm that parking is available at this address, with no restrictions.", "err");
+    $("parking").focus();
+    return;
+  }
   btn.disabled = true;
   btn.textContent = "Taking you to payment…";
   const { data } = await post("/booking-checkout", {
     token,
     slot_id: state.selectedSlot,
     customer_phone: $("phone").value.trim(),
+    address,
+    parking_confirmed: $("parking").checked,
   });
   if (data.success && data.url) {
     window.location.href = data.url;

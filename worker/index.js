@@ -1101,8 +1101,16 @@ async function handleBookingCheckout(request, env, corsHeaders) {
   let booking = null;
   let slotId = null;
   try {
-    const { token, slot_id, customer_phone } = await request.json();
+    const { token, slot_id, customer_phone, address, parking_confirmed } = await request.json();
     slotId = slot_id;
+
+    // Address and parking must be confirmed before a slot is held
+    if (!address || String(address).trim().length < 10) {
+      return json({ success: false, error: "Please enter your full address, including the postcode." }, 400, corsHeaders);
+    }
+    if (parking_confirmed !== true) {
+      return json({ success: false, error: "Please confirm that parking is available at this address, with no restrictions." }, 400, corsHeaders);
+    }
 
     const quote = await quoteForToken(env, token);
     if (!quote) {
@@ -1136,6 +1144,8 @@ async function handleBookingCheckout(request, env, corsHeaders) {
         customer_name: quote.customer_name,
         customer_email: quote.customer_email,
         customer_phone: customer_phone || quote.customer_phone || null,
+        address: String(address).trim(),
+        parking_confirmed: true,
         deposit_pence: deposit,
       }),
     });
@@ -1416,6 +1426,8 @@ async function sendBookingEmails(env, booking) {
       intro: `Your appointment is booked for <strong style="color:#e0e0e0;">${escapeHtml(when)}</strong>. Thanks for paying your deposit.`,
       rows: [
         ["Appointment", escapeHtml(when)],
+        ["Address", escapeHtml(booking.address || "Not given")],
+        ["Parking", booking.parking_confirmed ? "Confirmed, no restrictions" : "Not confirmed"],
         ["Deposit paid", deposit],
         ["Balance", "Due when the repair is complete"],
       ],
@@ -1433,6 +1445,8 @@ async function sendBookingEmails(env, booking) {
       rows: [
         ["Appointment", escapeHtml(when)],
         ["Customer email", escapeHtml(booking.customer_email)],
+        ["Address", escapeHtml(booking.address || "Not given")],
+        ["Parking", booking.parking_confirmed ? "Confirmed, no restrictions" : "Not confirmed"],
         ["Phone", escapeHtml(booking.customer_phone || "Not given")],
         ["Deposit paid", deposit],
       ],
