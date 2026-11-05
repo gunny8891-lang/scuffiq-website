@@ -780,7 +780,19 @@ function buildModalHtml(r) {
             </div>
             <div>
               <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Customer price</label>
-              <p id="customerPriceDisplay" style="font-size:20px;font-weight:700;color:var(--neon);padding:9px 0;">£${initCustomer.toFixed(2)}</p>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:20px;font-weight:700;color:var(--neon);">£</span>
+                <input
+                  type="number"
+                  id="customerPriceInput"
+                  step="1"
+                  min="0"
+                  value="${Math.round(initCustomer)}"
+                  oninput="updateMarginFromCustomer(${combined})"
+                  title="Use the arrows to round the price up or down by £1"
+                  style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:18px;font-weight:700;color:var(--neon);outline:none;">
+              </div>
+              <p style="font-size:11px;color:var(--grey);margin-top:4px;">Use the arrows to round up or down. The margin updates to match.</p>
             </div>
           </div>
 
@@ -1361,9 +1373,17 @@ async function markAsBooked(id) {
 // ── Margin calculator ─────────────────────────────────────────────────────────
 // combinedPrice = tech price + 20% VAT (tech price * 1.2)
 function updateCustomerPrice(combinedPrice) {
+  // Margin changed: show the matching customer price
   const margin   = parseFloat(document.getElementById('marginPercent').value) || 0;
   const customer = combinedPrice * (1 + margin / 100);
-  document.getElementById('customerPriceDisplay').textContent = '£' + customer.toFixed(2);
+  document.getElementById('customerPriceInput').value = Math.round(customer);
+}
+
+// Customer price changed (arrows or typing): work out the margin that gives that price
+function updateMarginFromCustomer(combinedPrice) {
+  const customer = parseFloat(document.getElementById('customerPriceInput').value) || 0;
+  const margin   = combinedPrice > 0 ? ((customer / combinedPrice) - 1) * 100 : 0;
+  document.getElementById('marginPercent').value = margin.toFixed(2);
 }
 
 async function sendConfirmedQuoteEmail(id, combinedPrice) {
@@ -1377,7 +1397,9 @@ async function sendConfirmedQuoteEmail(id, combinedPrice) {
     const tech = parseFloat((row.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
     baseCombined = tech * 1.20; // tech price + 20% VAT
   }
-  const customerPrice = baseCombined * (1 + margin / 100);
+  // Use the customer price shown in the box (it may have been rounded with the arrows)
+  const shownPrice = parseFloat(document.getElementById('customerPriceInput')?.value);
+  const customerPrice = shownPrice > 0 ? shownPrice : baseCombined * (1 + margin / 100);
   const priceStr       = '£' + customerPrice.toFixed(2);
 
   const btn = document.getElementById('sendQuoteEmailBtn');
