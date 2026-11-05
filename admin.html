@@ -710,6 +710,23 @@ function buildModalHtml(r) {
     </div>
   </div>`;
 
+  // No technician price yet: enter it here so the confirmed quote can be sent
+  if (!(r.status === 'technician_confirmed' || r.technician_price)) {
+    html += `
+    <div class="m-section">
+      <div class="m-section-title">Enter quote manually</div>
+      <div class="tech-confirmed-panel">
+        <p style="font-size:13px;color:var(--grey);margin-bottom:12px;">The technician hasn't submitted a price. Enter the price you agreed, and the confirmed quote below will use it.</p>
+        <div class="m-grid">
+          <div class="m-field"><label>Technician price (£, before VAT)</label><input id="manualTechPrice" type="number" min="1" step="0.01" placeholder="e.g. 195" style="width:100%;"></div>
+          <div class="m-field"><label>Availability</label><input id="manualAvail" type="text" placeholder="e.g. Tuesday morning" style="width:100%;"></div>
+        </div>
+        <div class="m-field"><label>Notes for the customer (optional)</label><input id="manualNotes" type="text" style="width:100%;"></div>
+        <button class="btn-save" onclick="saveManualTechPrice('${r.id}')" style="width:100%;margin-top:10px;">Save price and show quote</button>
+      </div>
+    </div>`;
+  }
+
   // Technician confirmed panel
   if (r.status === 'technician_confirmed' || r.technician_price) {
     const techPrice = parseFloat((r.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
@@ -1067,6 +1084,30 @@ async function sendManualQuote(id) {
   } catch (e) {
     console.error('Manual payment link error:', e);
     alert(e.message);
+  }
+}
+
+// Saves a price entered by hand (when the technician hasn't submitted one), then shows the confirmed quote
+async function saveManualTechPrice(id) {
+  const price = parseFloat(document.getElementById('manualTechPrice').value);
+  if (!price || price < 1) return alert('Enter the price before VAT, for example 195.');
+  const avail = document.getElementById('manualAvail').value.trim();
+  const notes = document.getElementById('manualNotes').value.trim();
+  try {
+    await supaFetch(`quote_submissions?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        technician_price: `£${price.toFixed(2)}`,
+        technician_availability: avail || null,
+        technician_notes: notes || null,
+        status: 'technician_confirmed',
+      }),
+    });
+    await loadSubmissions();
+    openModal(id);
+  } catch (e) {
+    console.error('Save manual price error:', e);
+    alert('Could not save the price. Please try again.');
   }
 }
 
