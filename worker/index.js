@@ -518,7 +518,7 @@ async function handleConfirmedQuoteEmail(request, env, corsHeaders) {
   <tr>
     <td style="padding:28px 36px 0;background-color:#111111;" align="center">
       <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#aaaaaa;">
-        Ready to go ahead? Reply to this email or call us to confirm your booking — we'll come to you at a time that suits.
+        Ready to go ahead? Click <strong style="color:#e0e0e0;">Book my repair</strong> to choose a time and pay your deposit.
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
