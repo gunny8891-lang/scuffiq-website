@@ -449,7 +449,7 @@ async function handleConfirmedQuoteEmail(request, env, corsHeaders) {
         <tr>
           <td valign="middle" style="padding:16px;">
             <p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#00d4ff;">&#10003; Your confirmed quote is ready</p>
-            <p style="margin:0;font-size:12px;color:#667788;">A ScuffIQ technician has reviewed your photos</p>
+            <p style="margin:0;font-size:12px;color:#667788;">A ScuffIQ partner technician has reviewed your photos</p>
           </td>
         </tr>
       </table>
@@ -461,7 +461,7 @@ async function handleConfirmedQuoteEmail(request, env, corsHeaders) {
     <td style="padding:28px 36px 0;background-color:#111111;">
       <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#ffffff;">Hi ${firstName},</p>
       <p style="margin:0;font-size:14px;line-height:1.7;color:#aaaaaa;">
-        Great news — a ScuffIQ technician has reviewed your damage photos and confirmed a price for your repair. Here are the details:
+        Great news — a ScuffIQ partner technician has reviewed your damage photos and confirmed a price for your repair. Here are the details:
       </p>
     </td>
   </tr>
