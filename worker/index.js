@@ -1063,7 +1063,7 @@ function formatSlot(isoDate, period) {
   const day = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", {
     weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
   });
-  return `${day}, ${period === "am" ? "morning" : "afternoon"}`;
+  return `${day}, ${period === "am" ? "Morning" : "Afternoon"}`;
 }
 
 function formatPence(pence) {
