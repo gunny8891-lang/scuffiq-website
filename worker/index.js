@@ -1277,6 +1277,13 @@ async function handleStripeWebhook(request, env) {
           method: "PATCH",
           body: JSON.stringify({ status: "booked" }),
         });
+        // Booking deposit paid: show it on the request too (never overwrite a balance already paid)
+        if (booking.quote_id) {
+          await db(env, `quote_submissions?id=eq.${booking.quote_id}&status=neq.paid_in_full`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "deposit_paid" }),
+          });
+        }
         await sendBookingEmails(env, booking);
       }
     }
