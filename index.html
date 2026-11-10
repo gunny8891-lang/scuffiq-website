@@ -95,6 +95,18 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 .upload-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:3px;}
 .upload-hint{font-size:12px;color:var(--grey);}
 .upload-hint span{color:var(--neon);}
+.photo-req{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.45);border-radius:10px;padding:12px 14px;margin-bottom:13px;font-size:13px;line-height:1.5;color:var(--white);}
+.photo-req strong{color:var(--neon);}
+.photo-req ol{margin:6px 0 0;padding-left:20px;}
+.photo-req-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:18px;z-index:1000;}
+.photo-req-modal.open{display:flex;}
+.photo-req-box{background:#0b1719;border:1px solid var(--neon);border-radius:14px;max-width:420px;width:100%;padding:22px;color:var(--white);}
+.photo-req-box h3{margin:0 0 10px;font-size:18px;color:var(--neon);}
+.photo-req-box p{font-size:14px;line-height:1.5;margin:0 0 10px;color:var(--white);}
+.photo-req-box ol{margin:0 0 12px;padding-left:20px;font-size:14px;line-height:1.5;}
+.photo-req-box li{margin-bottom:6px;}
+.photo-req-box .req-note{font-size:13px;color:var(--grey);}
+.photo-req-box button{width:100%;padding:12px;border:0;border-radius:9px;background:var(--neon);color:#000;font-weight:800;font-size:15px;cursor:pointer;margin-top:6px;}
 .ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);color:var(--neon);font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;margin-top:8px;}
 .photo-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:13px;}
 .photo-card{background:#040d0f;border:1px solid rgba(0,212,255,0.2);border-radius:10px;overflow:hidden;}
@@ -415,8 +427,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <p class="form-note">Your details are never shared with third parties.</p>
           </div>
 
-          <!-- PANEL 2: Photo upload -->
+          <div id="photoReqModal" class="photo-req-modal" role="dialog" aria-modal="true" aria-labelledby="photoReqTitle">
+  <div class="photo-req-box">
+    <h3 id="photoReqTitle">Two photos are required</h3>
+    <p>To give you an accurate quote, please upload:</p>
+    <ol>
+      <li><strong>A close-up</strong> of the damage, from about 30 cm away, in good daylight.</li>
+      <li><strong>A wider shot</strong> of the whole panel that needs repairing, so we can see where it sits on the car.</li>
+    </ol>
+    <p class="req-note">Quotes can't be given without both photos. Blurry or dark photos may need a second look.</p>
+    <button type="button" onclick="closePhotoRequirements()">Got it, let me upload</button>
+  </div>
+</div>
+
+<!-- PANEL 2: Photo upload -->
           <div class="q-panel" id="panel-2">
+            <div class="photo-req">
+              <strong>Required: two photos for an accurate quote</strong>
+              <ol>
+                <li><strong>A close-up</strong> of the damage, from about 30 cm away.</li>
+                <li><strong>A wider shot</strong> of the whole panel, so we can see where it is on the car.</li>
+              </ol>
+            </div>
             <div class="photo-upload-zone" id="uploadZone">
               <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotos(event)">
               <div class="upload-icon">
@@ -727,6 +759,19 @@ function goToStep2() {
   });
   setStep(2);
   updateSubmitBtn();
+  showPhotoRequirementsOnce();
+}
+
+// Photo requirements pop-up: shown the first time a customer reaches the photo step in this visit
+function showPhotoRequirementsOnce() {
+  var seen = false;
+  try { seen = sessionStorage.getItem('photoRequirementsSeen') === '1'; } catch (e) {}
+  if (seen) return;
+  document.getElementById('photoReqModal').classList.add('open');
+}
+function closePhotoRequirements() {
+  document.getElementById('photoReqModal').classList.remove('open');
+  try { sessionStorage.setItem('photoRequirementsSeen', '1'); } catch (e) {}
 }
 
 // ── Validation ─────────────────────────────────────────────────
