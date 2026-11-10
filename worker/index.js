@@ -71,10 +71,53 @@ export default {
       return handleStripeWebhook(request, env);
     }
 
+    // Recent prices ScuffIQ has quoted for the same service, used to steer the AI estimate
+    if (url.pathname === "/price-examples") {
+      return handlePriceExamples(request, env, corsHeaders);
+    }
+
     // Default: handle new quote submission
     return handleNewQuote(request, env, corsHeaders);
   },
 };
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PRICE EXAMPLES — anonymised past quotes for the photo estimate
+// Only the vehicle, service, a short damage description and the price the
+// customer paid are returned. No names, contact details, postcodes or addresses.
+// ══════════════════════════════════════════════════════════════════════════════
+async function handlePriceExamples(request, env, corsHeaders) {
+  try {
+    const { service, make, model } = await request.json().catch(() => ({}));
+    if (!service) {
+      return json({ success: false, error: "Missing service" }, 400, corsHeaders);
+    }
+
+    const rows = await db(
+      env,
+      `quote_submissions?select=vehicle_make,vehicle_model,service_type,ai_assessment_1,final_quote_given,status` +
+        `&service_type=eq.${encodeURIComponent(service)}` +
+        `&final_quote_given=not.is.null&status=neq.rejected&order=submitted_at.desc&limit=60`
+    );
+
+    const wantMake = String(make || "").trim().toLowerCase();
+    const priced = rows
+      .map((r) => ({
+        vehicle: `${r.vehicle_make || ""} ${r.vehicle_model || ""}`.trim(),
+        sameMake: wantMake !== "" && String(r.vehicle_make || "").trim().toLowerCase() === wantMake,
+        damage: String(r.ai_assessment_1 || "").slice(0, 200),
+        price: parseFloat(String(r.final_quote_given).replace(/[^0-9.]/g, "")) || 0,
+      }))
+      .filter((r) => r.price > 0)
+      .sort((a, b) => Number(b.sameMake) - Number(a.sameMake));
+
+    const examples = priced.slice(0, 12).map(({ vehicle, damage, price }) => ({ vehicle, damage, price }));
+    return json({ success: true, examples }, 200, corsHeaders);
+  } catch (err) {
+    console.error("Price examples error:", err);
+    return json({ success: true, examples: [] }, 200, corsHeaders);
+  }
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // HANDLER 1 — New quote submission
