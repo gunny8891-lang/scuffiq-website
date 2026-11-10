@@ -954,7 +954,9 @@ async function submitQuote() {
 
     if (!response.ok) {
       var errorText = await response.text();
-      throw new Error(errorText || 'Failed to send quote request');
+      var friendly = errorText;
+      try { friendly = JSON.parse(errorText).error || errorText; } catch (parseErr) {}
+      throw new Error(friendly || 'Failed to send quote request');
     }
 
     document.getElementById('successEmail').textContent = email;

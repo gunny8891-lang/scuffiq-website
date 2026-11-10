@@ -107,6 +107,28 @@ function checkRealEmail(value) {
   return null;
 }
 
+// Asks DNS whether the email domain can receive mail (has MX records, or an A record as a fallback).
+// Returns true or false, or null if the lookup itself failed, in which case the address is allowed through.
+async function domainCanReceiveMail(domain) {
+  async function lookup(type) {
+    const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${type}`, {
+      headers: { Accept: "application/dns-json" },
+    });
+    if (!res.ok) throw new Error("DNS lookup failed");
+    return res.json();
+  }
+  try {
+    const mx = await lookup("MX");
+    if (mx.Status === 3) return false; // domain does not exist
+    if (Array.isArray(mx.Answer) && mx.Answer.length) return true;
+    const a = await lookup("A");
+    return Array.isArray(a.Answer) && a.Answer.length > 0;
+  } catch (err) {
+    console.error("Email domain check failed:", err);
+    return null;
+  }
+}
+
 async function handleNewQuote(request, env, corsHeaders) {
   try {
     const data = await request.json();
@@ -132,6 +154,10 @@ async function handleNewQuote(request, env, corsHeaders) {
     const emailError = checkRealEmail(customer_email);
     if (emailError) {
       return json({ success: false, error: emailError }, 400, corsHeaders);
+    }
+    const emailDomain = String(customer_email).trim().toLowerCase().split("@")[1];
+    if ((await domainCanReceiveMail(emailDomain)) === false) {
+      return json({ success: false, error: "We couldn't find that email domain. Please check the address." }, 400, corsHeaders);
     }
 
     // ── Internal notification email ────────────────────────────────────────
