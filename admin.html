@@ -717,7 +717,10 @@ function buildModalHtml(r) {
       <div class="m-section-title">Enter quote manually</div>
       <div class="tech-confirmed-panel">
         <p style="font-size:13px;color:var(--grey);margin-bottom:12px;">The technician hasn't submitted a price. Enter the price you agreed, and the confirmed quote below will use it.</p>
-        <div class="m-field"><label>Technician price (£, before VAT)</label><input id="manualTechPrice" type="number" min="1" step="0.01" placeholder="e.g. 195" style="width:100%;"></div>
+        <div class="m-grid">
+          <div class="m-field"><label>Technician price (£, before VAT)</label><input id="manualTechPrice" type="number" min="1" step="0.01" placeholder="e.g. 207.64" style="width:100%;"></div>
+          <div class="m-field"><label>All-in price the customer pays (£)</label><input id="manualTotalPrice" type="number" min="1" step="1" placeholder="e.g. 299" style="width:100%;"></div>
+        </div>
         <div class="m-field"><label>Notes for the customer (optional)</label><input id="manualNotes" type="text" style="width:100%;"></div>
         <button class="btn-save" onclick="saveManualTechPrice('${r.id}')" style="width:100%;margin-top:10px;">Save price and show quote</button>
       </div>
@@ -729,8 +732,10 @@ function buildModalHtml(r) {
     const techPrice = parseFloat((r.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
     const vat       = techPrice * 0.20;
     const combined  = techPrice + vat;
-    const initMargin   = parseFloat(document.getElementById('defaultMargin')?.value) || 20;
-    const initCustomer = combined * (1 + initMargin / 100);
+    // The all-in total (saved as the final quote) drives the margin; otherwise use the default margin
+    const savedTotal   = parseFloat(String(r.final_quote_given || '').replace(/[^0-9.]/g, '')) || 0;
+    const initMargin   = savedTotal > 0 && combined > 0 ? ((savedTotal / combined) - 1) * 100 : (parseFloat(document.getElementById('defaultMargin')?.value) || 20);
+    const initCustomer = savedTotal > 0 ? savedTotal : combined * (1 + initMargin / 100);
 
     html += `
     <div class="m-section">
@@ -776,7 +781,7 @@ function buildModalHtml(r) {
                 style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;color:var(--white);outline:none;">
             </div>
             <div>
-              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">Customer price</label>
+              <label style="font-size:11px;color:var(--grey);display:block;margin-bottom:4px;">All-in price (customer pays)</label>
               <div style="display:flex;align-items:center;gap:6px;">
                 <span style="font-size:20px;font-weight:700;color:var(--neon);">£</span>
                 <input
@@ -789,6 +794,7 @@ function buildModalHtml(r) {
                   title="Use the arrows to round the price up or down by £1"
                   style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:18px;font-weight:700;color:var(--neon);outline:none;">
               </div>
+              <p id="marginAmount" style="font-size:12px;color:#ccc;margin-top:6px;">ScuffIQ margin: £${(initCustomer - combined).toFixed(2)} (${initMargin.toFixed(1)}%)</p>
               <p style="font-size:11px;color:var(--grey);margin-top:4px;">Use the arrows to round up or down. The margin updates to match.</p>
             </div>
           </div>
@@ -1099,13 +1105,16 @@ async function sendManualQuote(id) {
 // Saves a price entered by hand (when the technician hasn't submitted one), then shows the confirmed quote
 async function saveManualTechPrice(id) {
   const price = parseFloat(document.getElementById('manualTechPrice').value);
-  if (!price || price < 1) return alert('Enter the price before VAT, for example 195.');
+  if (!price || price < 1) return alert('Enter the technician price before VAT, for example 195.');
+  const total = parseFloat(document.getElementById('manualTotalPrice').value);
+  if (!total || total < price * 1.2) return alert(`Enter the all-in price the customer pays. It must be at least £${(price * 1.2).toFixed(2)} (the technician price plus VAT).`);
   const notes = document.getElementById('manualNotes').value.trim();
   try {
     await supaFetch(`quote_submissions?id=eq.${id}`, {
       method: 'PATCH',
       body: JSON.stringify({
         technician_price: `£${price.toFixed(2)}`,
+        final_quote_given: `£${total.toFixed(2)}`,
         technician_availability: null,
         technician_notes: notes || null,
         status: 'technician_confirmed',
@@ -1373,6 +1382,16 @@ function updateCustomerPrice(combinedPrice) {
   const margin   = parseFloat(document.getElementById('marginPercent').value) || 0;
   const customer = combinedPrice * (1 + margin / 100);
   document.getElementById('customerPriceInput').value = Math.round(customer);
+  showMarginAmount(combinedPrice, Math.round(customer));
+}
+
+// Shows the ScuffIQ margin in pounds and as a percentage of the technician price plus VAT
+function showMarginAmount(combinedPrice, customer) {
+  const el = document.getElementById('marginAmount');
+  if (!el) return;
+  const margin = customer - combinedPrice;
+  const pct = combinedPrice > 0 ? (margin / combinedPrice) * 100 : 0;
+  el.textContent = `ScuffIQ margin: £${margin.toFixed(2)} (${pct.toFixed(1)}%)`;
 }
 
 // Customer price changed (arrows or typing): work out the margin that gives that price
@@ -1380,6 +1399,7 @@ function updateMarginFromCustomer(combinedPrice) {
   const customer = parseFloat(document.getElementById('customerPriceInput').value) || 0;
   const margin   = combinedPrice > 0 ? ((customer / combinedPrice) - 1) * 100 : 0;
   document.getElementById('marginPercent').value = margin.toFixed(2);
+  showMarginAmount(combinedPrice, customer);
 }
 
 async function sendConfirmedQuoteEmail(id, combinedPrice) {
