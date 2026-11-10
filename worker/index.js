@@ -413,7 +413,8 @@ async function handleConfirmedQuoteEmail(request, env, corsHeaders) {
 
     const firstName = escapeHtml((customer_name || "").split(" ")[0]);
     const price     = escapeHtml(technician_price || "");
-    const avail     = escapeHtml(technician_availability || "To be confirmed");
+    // Customers choose their time on the booking page, which shows the live slots
+    const avail     = "Choose your time on the next page";
     const notes     = technician_notes ? escapeHtml(technician_notes) : null;
 
     const confirmedQuoteHtml = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -503,7 +504,7 @@ async function handleConfirmedQuoteEmail(request, env, corsHeaders) {
           <td width="50%" style="padding:13px 20px;font-size:13px;color:#e0e0e0;font-weight:600;text-align:right;border-bottom:1px solid #1e1e1e;">${escapeHtml(postcode || "")}</td>
         </tr>
         <tr>
-          <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;${notes ? 'border-bottom:1px solid #1e1e1e;' : ''}">Technician availability</td>
+          <td width="50%" style="padding:13px 20px;font-size:13px;color:#666666;${notes ? 'border-bottom:1px solid #1e1e1e;' : ''}">Appointment</td>
           <td width="50%" style="padding:13px 20px;font-size:13px;color:#00d4ff;font-weight:600;text-align:right;${notes ? 'border-bottom:1px solid #1e1e1e;' : ''}">${avail}</td>
         </tr>
         ${notes ? `
