@@ -730,6 +730,28 @@ function goToStep2() {
 }
 
 // ── Validation ─────────────────────────────────────────────────
+// Returns an error message for an email that is not a real address, or '' if it looks fine.
+var COMMON_EMAIL_TYPOS = {
+  'gamil.com':'gmail.com', 'gmial.com':'gmail.com', 'gmai.com':'gmail.com', 'gmall.com':'gmail.com',
+  'gmail.co':'gmail.com', 'gmail.con':'gmail.com', 'gmail.cm':'gmail.com', 'gmsil.com':'gmail.com',
+  'gnail.com':'gmail.com', 'gmaill.com':'gmail.com', 'gmeil.com':'gmail.com', 'gmail.comm':'gmail.com',
+  'hotmial.com':'hotmail.com', 'hotmal.com':'hotmail.com', 'hotmai.com':'hotmail.com', 'hotmail.co':'hotmail.com',
+  'hotmail.con':'hotmail.com', 'hotmil.com':'hotmail.com', 'hitmail.com':'hotmail.com',
+  'yahoo.co':'yahoo.co.uk', 'yahooo.com':'yahoo.com', 'yaho.com':'yahoo.com', 'yahoo.con':'yahoo.com',
+  'outlok.com':'outlook.com', 'outlook.con':'outlook.com', 'outlok.co.uk':'outlook.co.uk',
+  'icloud.co':'icloud.com', 'iclod.com':'icloud.com'
+};
+function emailProblem(v) {
+  if (!v || v.length > 254) return 'Please enter a valid email address';
+  var m = v.toLowerCase().match(/^([^@\s]+)@([^@\s]+)$/);
+  if (!m) return 'Please enter a valid email address';
+  var local = m[1], domain = m[2];
+  if (local.length > 64 || /^\.|\.$|\.\./.test(local) || !/^[a-z0-9._%+-]+$/.test(local)) return 'Please enter a valid email address';
+  if (!/^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/.test(domain)) return 'Please enter a valid email address';
+  if (COMMON_EMAIL_TYPOS[domain]) return 'Did you mean ' + local + '@' + COMMON_EMAIL_TYPOS[domain] + '? Please correct the email address.';
+  return '';
+}
+
 function validateStep1() {
   var ok = true;
   function check(id, fgId, testFn) {
@@ -741,7 +763,9 @@ function validateStep1() {
   }
   check('fname','fg-fname', function(v){return v.length>0;});
   check('lname','fg-lname', function(v){return v.length>0;});
-  check('email','fg-email', function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);});
+  var emailErr = emailProblem(document.getElementById('email').value.trim());
+  document.querySelector('#fg-email .field-error').textContent = emailErr || 'Please enter a valid email address';
+  check('email','fg-email', function(){return !emailErr;});
   check('phone','fg-phone', function(v){return v.length>=7;});
   check('make','fg-make',   function(v){return v.length>0;});
   check('model','fg-model', function(v){return v.length>0;});
