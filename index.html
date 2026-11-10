@@ -857,6 +857,17 @@ function removePhoto(idx) {
 }
 
 // ── Panel and shot checks: each damaged panel needs a close-up and a whole-panel photo ──
+// Areas of the car a customer can pick from. Left and right are separate so two matching panels are tracked apart.
+var PANEL_OPTIONS = [
+  'Front bumper', 'Rear bumper', 'Bonnet', 'Roof', 'Boot lid / tailgate',
+  'Front wing (left)', 'Front wing (right)',
+  'Front door (left)', 'Front door (right)',
+  'Rear door (left)', 'Rear door (right)',
+  'Rear quarter panel (left)', 'Rear quarter panel (right)',
+  'Side skirt (left)', 'Side skirt (right)',
+  'Door mirror (left)', 'Door mirror (right)',
+  'Alloy wheel', 'Other'
+];
 function panelKey(name) { return (name || '').trim().toLowerCase(); }
 function lastPanelName() {
   return uploadedPhotos.length ? (uploadedPhotos[uploadedPhotos.length - 1].panel || '') : '';
@@ -877,7 +888,7 @@ function photoRequirementProblem() {
   for (var i = 0; i < uploadedPhotos.length; i++) {
     var p = uploadedPhotos[i];
     var key = panelKey(p.panel);
-    if (!key) return 'Name the panel in each photo, for example "Front bumper".';
+    if (!key) return 'Choose the area of the car for each photo.';
     if (!groups[key]) groups[key] = { name: p.panel.trim(), close: 0, wide: 0 };
     if (p.role === 'wide') groups[key].wide++; else groups[key].close++;
   }
@@ -926,7 +937,10 @@ function renderPhotoGrid() {
       bodyHtml = '<div style="font-size:12px;color:var(--grey);">Ready for AI analysis — click the button below</div>';
     }
     var tagHtml = '<div class="photo-tag">'
-      + '<input type="text" class="photo-panel-input" placeholder="Which panel? e.g. Front bumper" value="'+escAttr(p.panel)+'" oninput="setPhotoPanel('+i+', this.value)">'
+      + '<select class="photo-panel-input" onchange="setPhotoPanel('+i+', this.value)">'
+      + '<option value="">Which area of the car?</option>'
+      + PANEL_OPTIONS.map(function(o){ return '<option value="'+escAttr(o)+'"'+(p.panel===o?' selected':'')+'>'+o+'</option>'; }).join('')
+      + '</select>'
       + '<div class="shot-toggle">'
       + '<button type="button" class="shot-btn'+(p.role==='close'?' on':'')+'" onclick="setPhotoRole('+i+',\'close\')">Close-up</button>'
       + '<button type="button" class="shot-btn'+(p.role==='wide'?' on':'')+'" onclick="setPhotoRole('+i+',\'wide\')">Whole panel</button>'
