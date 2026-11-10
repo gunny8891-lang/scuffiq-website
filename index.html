@@ -98,6 +98,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.96);border-bottom:
 .photo-req{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.45);border-radius:10px;padding:12px 14px;margin-bottom:13px;font-size:13px;line-height:1.5;color:var(--white);}
 .photo-req strong{color:var(--neon);}
 .photo-req ol{margin:6px 0 0;padding-left:20px;}
+.photo-req-status{font-size:13px;font-weight:600;border-radius:9px;padding:9px 12px;margin-bottom:10px;}
+.photo-req-status.bad{background:#2a1212;border:1px solid #5c2424;color:#ffc4c4;}
+.photo-req-status.good{background:#0a2216;border:1px solid #1d5c36;color:#bff0d2;}
+.photo-tag{margin-bottom:10px;}
+.photo-panel-input{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--white);font-size:14px;margin-bottom:8px;}
+.shot-toggle{display:flex;gap:8px;}
+.shot-btn{flex:1;padding:9px 8px;border:1px solid var(--neon);border-radius:8px;background:transparent;color:var(--neon);font-size:13px;font-weight:700;cursor:pointer;}
+.shot-btn.on{background:var(--neon);color:#000;}
 .photo-req-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:18px;z-index:1000;}
 .photo-req-modal.open{display:flex;}
 .photo-req-box{background:#0b1719;border:1px solid var(--neon);border-radius:14px;max-width:420px;width:100%;padding:22px;color:var(--white);}
@@ -429,13 +437,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
           <div id="photoReqModal" class="photo-req-modal" role="dialog" aria-modal="true" aria-labelledby="photoReqTitle">
   <div class="photo-req-box">
-    <h3 id="photoReqTitle">A minimum of two photos is required</h3>
-    <p>For <strong>each damaged area or panel</strong>, please upload at least two photos:</p>
+    <h3 id="photoReqTitle">Two photos for each damaged panel</h3>
+    <p>For <strong>every panel that is damaged</strong>, we need two photos:</p>
     <ol>
       <li><strong>A close-up</strong> of the damage, from about 30 cm away, in good daylight.</li>
-      <li><strong>A wider shot</strong> of the whole panel that needs repairing, so we can see where it sits on the car.</li>
+      <li><strong>A photo of the whole panel</strong>, taken further back, so we can see where it sits on the car.</li>
     </ol>
-    <p class="req-note">Quotes can't be given with fewer than two photos per damaged area. Blurry or dark photos may need a second look.</p>
+    <p class="req-note">For each photo, name the panel and choose Close-up or Whole panel. We'll tell you if anything is missing. Blurry or dark photos may need a second look.</p>
     <button type="button" onclick="closePhotoRequirements()">Got it, let me upload</button>
   </div>
 </div>
@@ -443,10 +451,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- PANEL 2: Photo upload -->
           <div class="q-panel" id="panel-2">
             <div class="photo-req">
-              <strong>Required: a minimum of two photos for each damaged area or panel</strong>
+              <strong>Required: two photos for each damaged panel</strong>
               <ol>
                 <li><strong>A close-up</strong> of the damage, from about 30 cm away.</li>
-                <li><strong>A wider shot</strong> of the whole panel, so we can see where it is on the car.</li>
+                <li><strong>A photo of the whole panel</strong>, taken further back, so we can see where it is on the car.</li>
               </ol>
             </div>
             <div class="photo-upload-zone" id="uploadZone">
@@ -464,6 +472,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             <div class="photo-grid" id="photoGrid"></div>
 
+            <div id="photoReqStatus" class="photo-req-status bad" role="status">Add your photos to continue.</div>
             <button class="analyse-btn" id="analyseBtn" onclick="analyseAllPhotos()" disabled>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               Analyse all photos with AI
@@ -831,7 +840,8 @@ function handlePhotos(e) {
     reader.onload = function(ev) {
       var dataUrl = ev.target.result;
       var base64 = dataUrl.split(',')[1];
-      uploadedPhotos.push({file:file, dataUrl:dataUrl, base64:base64, name:file.name, size:file.size, result:null, analysing:false});
+      var panel = lastPanelName();
+      uploadedPhotos.push({file:file, dataUrl:dataUrl, base64:base64, name:file.name, size:file.size, result:null, analysing:false, panel:panel, role:suggestedRole(panel)});
       renderPhotoGrid();
       updateSubmitBtn();
     };
@@ -846,10 +856,63 @@ function removePhoto(idx) {
   updateSubmitBtn();
 }
 
+// ── Panel and shot checks: each damaged panel needs a close-up and a whole-panel photo ──
+function panelKey(name) { return (name || '').trim().toLowerCase(); }
+function lastPanelName() {
+  return uploadedPhotos.length ? (uploadedPhotos[uploadedPhotos.length - 1].panel || '') : '';
+}
+// Suggests the shot the customer still needs for this panel, so most customers never have to choose
+function suggestedRole(panel) {
+  var key = panelKey(panel);
+  var samePanel = uploadedPhotos.filter(function(p){ return panelKey(p.panel) === key && key !== ''; });
+  var hasClose = samePanel.some(function(p){ return p.role === 'close'; });
+  var hasWide = samePanel.some(function(p){ return p.role === 'wide'; });
+  if (hasClose && !hasWide) return 'wide';
+  return 'close';
+}
+// Returns a message describing what is still missing, or '' when every panel has both photos
+function photoRequirementProblem() {
+  if (!uploadedPhotos.length) return 'Add your photos to continue.';
+  var groups = {};
+  for (var i = 0; i < uploadedPhotos.length; i++) {
+    var p = uploadedPhotos[i];
+    var key = panelKey(p.panel);
+    if (!key) return 'Name the panel in each photo, for example "Front bumper".';
+    if (!groups[key]) groups[key] = { name: p.panel.trim(), close: 0, wide: 0 };
+    if (p.role === 'wide') groups[key].wide++; else groups[key].close++;
+  }
+  for (var k in groups) {
+    if (!groups[k].close) return groups[k].name + ': add a close-up of the damage.';
+    if (!groups[k].wide) return groups[k].name + ': add a photo of the whole panel, taken further away.';
+  }
+  return '';
+}
+function setPhotoPanel(idx, value) {
+  uploadedPhotos[idx].panel = value;
+  updatePhotoStatus();
+}
+function setPhotoRole(idx, role) {
+  uploadedPhotos[idx].role = role;
+  renderPhotoGrid();
+}
+function updatePhotoStatus() {
+  var el = document.getElementById('photoReqStatus');
+  var analyseBtn = document.getElementById('analyseBtn');
+  var problem = photoRequirementProblem();
+  var done = uploadedPhotos.length && uploadedPhotos.every(function(p){ return p.result; });
+  var busy = uploadedPhotos.some(function(p){ return p.analysing; });
+  if (el) {
+    el.textContent = problem || '✓ Each panel has a close-up and a whole-panel photo.';
+    el.className = 'photo-req-status ' + (problem ? 'bad' : 'good');
+  }
+  analyseBtn.disabled = !!problem || !!done || busy;
+}
+function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
 function renderPhotoGrid() {
   var grid = document.getElementById('photoGrid');
   var analyseBtn = document.getElementById('analyseBtn');
-  if (!uploadedPhotos.length) { grid.innerHTML = ''; analyseBtn.disabled = true; return; }
+  if (!uploadedPhotos.length) { grid.innerHTML = ''; updatePhotoStatus(); return; }
   grid.innerHTML = uploadedPhotos.map(function(p, i) {
     var sizeKb = Math.round(p.size/1024);
     var bodyHtml = '';
@@ -862,15 +925,21 @@ function renderPhotoGrid() {
     } else {
       bodyHtml = '<div style="font-size:12px;color:var(--grey);">Ready for AI analysis — click the button below</div>';
     }
+    var tagHtml = '<div class="photo-tag">'
+      + '<input type="text" class="photo-panel-input" placeholder="Which panel? e.g. Front bumper" value="'+escAttr(p.panel)+'" oninput="setPhotoPanel('+i+', this.value)">'
+      + '<div class="shot-toggle">'
+      + '<button type="button" class="shot-btn'+(p.role==='close'?' on':'')+'" onclick="setPhotoRole('+i+',\'close\')">Close-up</button>'
+      + '<button type="button" class="shot-btn'+(p.role==='wide'?' on':'')+'" onclick="setPhotoRole('+i+',\'wide\')">Whole panel</button>'
+      + '</div></div>';
     return '<div class="photo-card" id="card-'+i+'">'
       + '<div class="photo-card-header">'
       + '<img class="photo-thumb" src="'+p.dataUrl+'" alt="'+p.name+'">'
       + '<div class="photo-meta"><div class="photo-name">Photo '+(i+1)+': '+p.name+'</div><div class="photo-size">'+sizeKb+'KB</div></div>'
       + '<button class="photo-remove" onclick="removePhoto('+i+')" title="Remove">&#x2715;</button>'
-      + '</div><div class="photo-card-body">'+bodyHtml+'</div></div>';
+      + '</div><div class="photo-card-body">'+tagHtml+bodyHtml+'</div></div>';
   }).join('');
-  analyseBtn.disabled = uploadedPhotos.length === 0;
   document.getElementById('uploadZone').style.display = uploadedPhotos.length >= 6 ? 'none' : '';
+  updatePhotoStatus();
 }
 
 function updateSubmitBtn() {
@@ -959,8 +1028,9 @@ async function submitQuote() {
   var dents    = document.getElementById('dents').value;
 
   var aiSummary = uploadedPhotos.map(function(p, i) {
+    // the panel and shot type are included per photo
     var r = p.result;
-    return 'Photo ' + (i+1) + ':\n'
+    return 'Photo ' + (i+1) + ' (' + (p.panel || 'panel not named') + ', ' + (p.role === 'wide' ? 'whole panel' : 'close-up') + '):\n'
       + 'Assessment: ' + (r ? r.text : 'Pending') + '\n'
       + 'Price: ' + (r && r.price ? r.price.replace('Indicative price: ','') : 'Pending') + '\n'
       + 'Service: ' + (r && r.service ? r.service : service);
