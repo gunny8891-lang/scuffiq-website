@@ -80,6 +80,33 @@ export default {
 // HANDLER 1 — New quote submission
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Same rules as the home page form: a well-formed address on a domain that is not a common typo.
+const COMMON_EMAIL_TYPOS = {
+  "gamil.com": "gmail.com", "gmial.com": "gmail.com", "gmai.com": "gmail.com", "gmall.com": "gmail.com",
+  "gmail.co": "gmail.com", "gmail.con": "gmail.com", "gmail.cm": "gmail.com", "gmsil.com": "gmail.com",
+  "gnail.com": "gmail.com", "gmaill.com": "gmail.com", "gmeil.com": "gmail.com", "gmail.comm": "gmail.com",
+  "hotmial.com": "hotmail.com", "hotmal.com": "hotmail.com", "hotmai.com": "hotmail.com", "hotmail.co": "hotmail.com",
+  "hotmail.con": "hotmail.com", "hotmil.com": "hotmail.com", "hitmail.com": "hotmail.com",
+  "yahoo.co": "yahoo.co.uk", "yahooo.com": "yahoo.com", "yaho.com": "yahoo.com", "yahoo.con": "yahoo.com",
+  "outlok.com": "outlook.com", "outlook.con": "outlook.com", "outlok.co.uk": "outlook.co.uk",
+  "icloud.co": "icloud.com", "iclod.com": "icloud.com",
+};
+
+function checkRealEmail(value) {
+  const invalid = "Please enter a valid email address";
+  const email = String(value || "").trim().toLowerCase();
+  if (email.length > 254) return invalid;
+  const m = email.match(/^([^@\s]+)@([^@\s]+)$/);
+  if (!m) return invalid;
+  const [, local, domain] = m;
+  if (local.length > 64 || /^\.|\.$|\.\./.test(local) || !/^[a-z0-9._%+-]+$/.test(local)) return invalid;
+  if (!/^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/.test(domain)) return invalid;
+  if (COMMON_EMAIL_TYPOS[domain]) {
+    return `Did you mean ${local}@${COMMON_EMAIL_TYPOS[domain]}? Please correct the email address.`;
+  }
+  return null;
+}
+
 async function handleNewQuote(request, env, corsHeaders) {
   try {
     const data = await request.json();
@@ -101,6 +128,10 @@ async function handleNewQuote(request, env, corsHeaders) {
 
     if (!customer_email || !customer_name) {
       return json({ success: false, error: "Missing customer details" }, 400, corsHeaders);
+    }
+    const emailError = checkRealEmail(customer_email);
+    if (emailError) {
+      return json({ success: false, error: emailError }, 400, corsHeaders);
     }
 
     // ── Internal notification email ────────────────────────────────────────
