@@ -93,25 +93,37 @@ async function handlePriceExamples(request, env, corsHeaders) {
       return json({ success: false, error: "Missing service" }, 400, corsHeaders);
     }
 
+    // Jobs with an all-in price entered in admin are used as they are. Jobs with only a
+    // technician price are used as an estimate: technician price + VAT + the default 20% margin.
     const rows = await db(
       env,
-      `quote_submissions?select=vehicle_make,vehicle_model,service_type,ai_assessment_1,final_quote_given,status` +
+      `quote_submissions?select=vehicle_make,vehicle_model,service_type,ai_assessment_1,final_quote_given,technician_price,status` +
         `&service_type=eq.${encodeURIComponent(service)}` +
-        `&final_quote_given=not.is.null&status=neq.rejected&order=submitted_at.desc&limit=60`
+        `&or=(final_quote_given.not.is.null,technician_price.not.is.null)` +
+        `&status=neq.rejected&order=submitted_at.desc&limit=80`
     );
 
+    const parseMoney = (v) => parseFloat(String(v || "").replace(/[^0-9.]/g, "")) || 0;
     const wantMake = String(make || "").trim().toLowerCase();
     const priced = rows
-      .map((r) => ({
-        vehicle: `${r.vehicle_make || ""} ${r.vehicle_model || ""}`.trim(),
-        sameMake: wantMake !== "" && String(r.vehicle_make || "").trim().toLowerCase() === wantMake,
-        damage: String(r.ai_assessment_1 || "").slice(0, 200),
-        price: parseFloat(String(r.final_quote_given).replace(/[^0-9.]/g, "")) || 0,
-      }))
+      .map((r) => {
+        const quoted = parseMoney(r.final_quote_given);
+        const techPrice = parseMoney(r.technician_price);
+        const source = quoted > 0 ? "quoted" : "estimate";
+        const price = quoted > 0 ? quoted : Math.round(techPrice * 1.2 * 1.2);
+        return {
+          vehicle: `${r.vehicle_make || ""} ${r.vehicle_model || ""}`.trim(),
+          sameMake: wantMake !== "" && String(r.vehicle_make || "").trim().toLowerCase() === wantMake,
+          damage: String(r.ai_assessment_1 || "").slice(0, 200),
+          price,
+          source,
+        };
+      })
       .filter((r) => r.price > 0)
-      .sort((a, b) => Number(b.sameMake) - Number(a.sameMake));
+      // real quoted prices first, then estimates; same make before others
+      .sort((a, b) => (a.source === b.source ? Number(b.sameMake) - Number(a.sameMake) : a.source === "quoted" ? -1 : 1));
 
-    const examples = priced.slice(0, 12).map(({ vehicle, damage, price }) => ({ vehicle, damage, price }));
+    const examples = priced.slice(0, 12).map(({ vehicle, damage, price, source }) => ({ vehicle, damage, price, source }));
     return json({ success: true, examples }, 200, corsHeaders);
   } catch (err) {
     console.error("Price examples error:", err);

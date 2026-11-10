@@ -983,7 +983,8 @@ async function loadPriceExamples() {
     if (data.success && data.examples && data.examples.length) {
       priceExamplesBlock = '\n\nRECENT SCUFFIQ QUOTES FOR SIMILAR JOBS (prices the customer actually paid, including VAT). Where the vehicle and damage are similar, base your price on these. Use the price guide only where none are similar:\n'
         + data.examples.map(function(e) {
-            return '- ' + e.vehicle + ', ' + e.damage + ' → £' + Math.round(e.price);
+            return '- ' + e.vehicle + ', ' + e.damage + ' → £' + Math.round(e.price)
+              + (e.source === 'estimate' ? ' (estimated from a technician price, not a confirmed quote)' : ' (confirmed quote)');
           }).join('\n');
     }
   } catch (err) {
