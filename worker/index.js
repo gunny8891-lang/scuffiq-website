@@ -54,6 +54,11 @@ export default {
       return handleBalanceLink(request, env, corsHeaders);
     }
 
+    // Admin only: tells the customer we can't take the job and marks it rejected
+    if (url.pathname === "/send-decline") {
+      return handleDeclineEmail(request, env, corsHeaders);
+    }
+
     if (url.pathname === "/booking-slots") {
       return handleBookingSlots(request, env, corsHeaders);
     }
@@ -1601,6 +1606,58 @@ function timingSafeEqual(a, b) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const ADMIN_EMAIL = "hello@scuffiq.com";
+
+// Admin only: sends the "we can't take this job" email and marks the quote rejected
+async function handleDeclineEmail(request, env, corsHeaders) {
+  try {
+    if (!(await adminUserOk(request, env))) {
+      return json({ success: false, error: "Not authorised. Sign in to the admin page again." }, 403, corsHeaders);
+    }
+
+    const { quote_id } = await request.json();
+    if (!UUID_RE.test(quote_id || "")) {
+      return json({ success: false, error: "Choose a request first." }, 400, corsHeaders);
+    }
+
+    const [quote] = await db(
+      env,
+      `quote_submissions?id=eq.${quote_id}&select=id,customer_name,customer_email,vehicle_make,vehicle_model,service_type`
+    );
+    if (!quote || !quote.customer_email) {
+      return json({ success: false, error: "That request could not be found." }, 404, corsHeaders);
+    }
+
+    const firstName = escapeHtml((quote.customer_name || "").split(" ")[0] || "there");
+    const vehicle = escapeHtml(`${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim() || "Your vehicle");
+    const service = escapeHtml(quote.service_type || "Smart repair");
+
+    await sendResendEmail(env, {
+      to: quote.customer_email,
+      subject: "Your ScuffIQ repair enquiry",
+      html: scuffiqEmail({
+        preheader: "An update on your repair enquiry",
+        heading: `Hi ${firstName},`,
+        intro: "Thank you for sending us your photos and details. Unfortunately we don't currently have any availability for this repair in your area, so we're unable to take the job on this occasion.",
+        rows: [
+          ["Vehicle", vehicle],
+          ["Service", service],
+        ],
+        body: `<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:#888888;">We'd advise you to seek quotes from other providers in your area. We're sorry we couldn't help on this occasion.</p>
+<p style="margin:0;font-size:13px;line-height:1.7;color:#888888;">Thank you for thinking of ScuffIQ.</p>`,
+      }),
+    });
+
+    await db(env, `quote_submissions?id=eq.${quote.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "rejected" }),
+    });
+
+    return json({ success: true }, 200, corsHeaders);
+  } catch (err) {
+    console.error("Decline email error:", err);
+    return json({ success: false, error: "The decline email could not be sent. Please try again." }, 500, corsHeaders);
+  }
+}
 
 async function stripeForm(env, url, fields) {
   const res = await fetch(url, {

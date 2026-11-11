@@ -710,6 +710,16 @@ function buildModalHtml(r) {
     </div>
   </div>`;
 
+  // Decline: for jobs we can't take. Sends the customer a polite "no availability" email.
+  if (r.status !== 'rejected') {
+    html += `
+    <div class="m-section">
+      <div class="m-section-title">Decline job</div>
+      <p style="font-size:13px;color:var(--grey);margin-bottom:10px;">Use this if we can't take the job, for example because we have no availability in the area. It sends the customer a short email suggesting other providers, and marks the job Rejected.</p>
+      <button class="btn-save" onclick="declineJob('${r.id}')" style="background:#c0392b;color:#fff;width:100%;">✉ Send decline email to ${esc(r.customer_name||'customer')}</button>
+    </div>`;
+  }
+
   // No technician price yet: enter it here so the confirmed quote can be sent
   if (!(r.status === 'technician_confirmed' || r.technician_price)) {
     html += `
@@ -1146,6 +1156,29 @@ async function sendBalanceLink(id) {
     await loadSubmissions();
   } catch (e) {
     console.error('Balance link error:', e);
+    alert(e.message);
+  }
+}
+
+// Sends the decline email (we can't take this job) and marks the job rejected
+async function declineJob(id) {
+  const row = allRows.find((r) => r.id === id);
+  if (!row) return;
+  if (!confirm(`Send ${row.customer_name || 'the customer'} the decline email now? Their job will be marked Rejected.`)) return;
+
+  try {
+    const res = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev/send-decline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify({ quote_id: id }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.error || 'The decline email could not be sent.');
+    alert(`Decline email sent to ${row.customer_email}.`);
+    await loadSubmissions();
+    openModal(id);
+  } catch (e) {
+    console.error('Decline error:', e);
     alert(e.message);
   }
 }
