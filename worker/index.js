@@ -354,7 +354,7 @@ async function handleNewQuote(request, env, corsHeaders) {
     });
 
     let submissionId = null;
-    if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+    if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
       try {
         const imageUrls = [];
         const validPhotos = photos.filter(p => p && p.dataUrl && p.name).slice(0, 6);
@@ -378,7 +378,7 @@ async function handleNewQuote(request, env, corsHeaders) {
             {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+                Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
                 "Content-Type": photo.dataUrl.split(";")[0].split(":")[1] || "image/jpeg",
                 "x-upsert": "false",
               },
@@ -418,8 +418,8 @@ async function handleNewQuote(request, env, corsHeaders) {
         const dbRes = await fetch(`${env.SUPABASE_URL}/rest/v1/quote_submissions`, {
           method: "POST",
           headers: {
-            Authorization:  `Bearer ${env.SUPABASE_ANON_KEY}`,
-            apikey:          env.SUPABASE_ANON_KEY,
+            Authorization:  `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            apikey:          env.SUPABASE_SERVICE_KEY,
             "Content-Type": "application/json",
             Prefer:         "return=representation",
           },
@@ -500,14 +500,14 @@ async function handleConfirmedQuoteEmail(request, env, corsHeaders) {
 
     // Fetch technician's Calendly link from Supabase
     let calendlyLink = "https://calendly.com/gunny8891/30min"; // fallback
-    if (assigned_technician_id && env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+    if (assigned_technician_id && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
       try {
         const techRes = await fetch(
           `${env.SUPABASE_URL}/rest/v1/technicians?id=eq.${assigned_technician_id}&select=calendly_link,name`,
           {
             headers: {
-              Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
-              apikey: env.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+              apikey: env.SUPABASE_SERVICE_KEY,
             },
           }
         );
@@ -909,8 +909,8 @@ async function autoAllocateTechnician({ env, submissionId, postcode, customer_na
     `${env.SUPABASE_URL}/rest/v1/technicians?select=*&active=eq.true&order=name.asc`,
     {
       headers: {
-        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
-        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        apikey: env.SUPABASE_SERVICE_KEY,
         "Content-Type": "application/json",
       },
     }
@@ -955,8 +955,8 @@ async function autoAllocateTechnician({ env, submissionId, postcode, customer_na
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
-        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        apikey: env.SUPABASE_SERVICE_KEY,
         "Content-Type": "application/json",
         Prefer: "return=representation",
       },
