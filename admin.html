@@ -164,6 +164,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       <button class="btn-sm" onclick="loadSubmissions()">↺ Refresh</button>
       <button class="btn-sm" id="slotsNavBtn" onclick="toggleSlots()">Booking slots</button>
       <button class="btn-sm" id="bookingsNavBtn" onclick="toggleBookings()">Bookings</button>
+      <button class="btn-sm" id="candidatesNavBtn" onclick="toggleCandidates()">Candidates</button>
       <button class="btn-sm" onclick="exportCSV()">↓ Export CSV</button>
       <button class="btn-sm" onclick="logout()">Sign out</button>
     </div>
@@ -190,6 +191,32 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
       <p id="bookingSummary" style="color:var(--grey);font-size:14px;margin-bottom:12px;"></p>
       <button class="btn-sm" onclick="loadBookings()" style="margin-bottom:12px;">↺ Refresh</button>
       <div id="bookingList"></div>
+    </div>
+
+    <!-- Technician candidates panel (opened from the Candidates button) -->
+    <div id="candidatesPanel" style="display:none;">
+      <h2 style="font-size:20px;margin-bottom:6px;">Technician candidates</h2>
+      <p style="color:var(--grey);font-size:14px;margin-bottom:14px;">People we may invite to join ScuffIQ. Nothing is sent from here. Check their details, then send the invitation yourself.</p>
+
+      <h3 style="font-size:15px;margin-bottom:8px;">Invitation text</h3>
+      <textarea id="candidateInvite" rows="10" style="width:100%;"></textarea>
+      <button class="btn-sm" onclick="copyInvite()" style="margin:8px 0 18px;">Copy invitation</button>
+
+      <h3 style="font-size:15px;margin-bottom:8px;">Add a candidate</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Name *</label><input id="candName" type="text" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Business name</label><input id="candBusiness" type="text" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Area covered</label><input id="candArea" type="text" placeholder="e.g. North London" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Postcode</label><input id="candPostcode" type="text" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Email</label><input id="candEmail" type="email" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Phone</label><input id="candPhone" type="text" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Where found</label><input id="candSource" type="text" placeholder="e.g. Google listing" style="width:100%;"></div>
+        <div><label style="font-size:11px;text-transform:uppercase;color:var(--grey);">Notes</label><input id="candNotes" type="text" style="width:100%;"></div>
+      </div>
+      <button class="btn-sm" onclick="addCandidate()" style="margin-bottom:18px;">Add candidate</button>
+
+      <h3 style="font-size:15px;margin-bottom:8px;">Candidates</h3>
+      <div id="candidateList"></div>
     </div>
 
     <!-- Stats -->
@@ -1074,6 +1101,7 @@ function toggleSlots() {
   const opening = panel.style.display === 'none';
   Array.from(document.querySelector('.main').children).forEach((child) => {
     if (child.id === 'bookingsPanel') return;
+    if (child.id === 'candidatesPanel') { child.style.display = 'none'; return; }
     if (child !== panel) child.style.display = opening ? 'none' : '';
   });
   if (opening) document.getElementById('bookingsPanel').style.display = 'none';
@@ -1160,6 +1188,118 @@ async function sendBalanceLink(id) {
   }
 }
 
+// ── Technician candidates ─────────────────────────────────────────────────────
+let candidateRows = [];
+const CANDIDATE_STATUSES = ['to_contact', 'invited', 'applied', 'vetted', 'onboarded', 'declined'];
+const INVITE_TEXT = `Subject: Smart repair work in North and East London
+
+Hi [name],
+
+ScuffIQ is a smart repair company, and we're looking for self-employed technicians in North and East London.
+
+We'd like someone who already does scratch, scuff and dent repair, has their own van, holds current public liability insurance, and can take jobs we book for them.
+
+If that sounds like you, please complete our short application form: [application form link]
+
+Thanks,
+ScuffIQ`;
+
+function toggleCandidates() {
+  const panel = document.getElementById('candidatesPanel');
+  const opening = panel.style.display === 'none';
+  Array.from(document.querySelector('.main').children).forEach((child) => {
+    if (child.id === 'slotsPanel' || child.id === 'bookingsPanel') return;
+    if (child !== panel) child.style.display = opening ? 'none' : '';
+  });
+  document.getElementById('slotsPanel').style.display = 'none';
+  document.getElementById('bookingsPanel').style.display = 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  document.getElementById('candidatesNavBtn').textContent = opening ? 'Back to submissions' : 'Candidates';
+  if (opening) {
+    document.getElementById('candidateInvite').value = INVITE_TEXT;
+    loadCandidates();
+  }
+}
+
+async function loadCandidates() {
+  const list = document.getElementById('candidateList');
+  list.innerHTML = '<p style="color:var(--grey);font-size:14px;">Loading candidates…</p>';
+  try {
+    candidateRows = await slotsApi('technician_candidates?select=*&order=created_at.desc');
+    renderCandidates();
+  } catch (e) {
+    console.error('Load candidates error:', e);
+    list.innerHTML = '<p style="color:var(--red);font-size:14px;">Could not load candidates. Please try again.</p>';
+  }
+}
+
+function renderCandidates() {
+  const list = document.getElementById('candidateList');
+  if (!candidateRows.length) {
+    list.innerHTML = '<p style="color:var(--grey);font-size:14px;">No candidates yet. Add someone below.</p>';
+    return;
+  }
+  list.innerHTML = candidateRows.map((c) => `
+    <div class="m-section" style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>${esc(c.name || 'Unnamed')}${c.business ? ' · ' + esc(c.business) : ''}</strong>
+        <select onchange="updateCandidateStatus('${c.id}', this.value)" style="width:auto;">
+          ${CANDIDATE_STATUSES.map((s) => `<option value="${s}" ${c.status === s ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
+        </select>
+      </div>
+      <p style="font-size:13px;color:var(--grey);margin-top:6px;">${esc(c.area || '—')} · ${esc(c.postcode || '—')} · ${esc(c.email || 'no email')} · ${esc(c.phone || 'no phone')}</p>
+      ${c.source ? `<p style="font-size:12px;color:var(--grey);">Found via: ${esc(c.source)}</p>` : ''}
+      ${c.notes ? `<p style="font-size:13px;">${esc(c.notes)}</p>` : ''}
+    </div>`).join('');
+}
+
+async function addCandidate() {
+  const get = (id) => document.getElementById(id).value.trim();
+  const name = get('candName');
+  if (!name) return alert("Enter the person's name.");
+  const body = {
+    name,
+    business: get('candBusiness') || null,
+    area: get('candArea') || null,
+    postcode: get('candPostcode') || null,
+    email: get('candEmail') || null,
+    phone: get('candPhone') || null,
+    source: get('candSource') || null,
+    notes: get('candNotes') || null,
+  };
+  try {
+    await slotsApi('technician_candidates', { method: 'POST', body: JSON.stringify(body) });
+    ['candName', 'candBusiness', 'candArea', 'candPostcode', 'candEmail', 'candPhone', 'candSource', 'candNotes']
+      .forEach((id) => { document.getElementById(id).value = ''; });
+    await loadCandidates();
+  } catch (e) {
+    console.error('Add candidate error:', e);
+    alert('Could not add this candidate. Please try again.');
+  }
+}
+
+async function updateCandidateStatus(id, status) {
+  try {
+    await slotsApi(`technician_candidates?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    const row = candidateRows.find((c) => c.id === id);
+    if (row) row.status = status;
+  } catch (e) {
+    console.error('Update candidate error:', e);
+    alert('Could not update the status. Please try again.');
+    await loadCandidates();
+  }
+}
+
+function copyInvite() {
+  const text = document.getElementById('candidateInvite');
+  text.select();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text.value).then(() => alert('Invitation copied. Personalise it and send it yourself.'));
+  } else {
+    document.execCommand('copy');
+  }
+}
+
 // Sends the decline email (we can't take this job) and marks the job rejected
 async function declineJob(id) {
   const row = allRows.find((r) => r.id === id);
@@ -1191,6 +1331,7 @@ function toggleBookings() {
   const opening = panel.style.display === 'none';
   Array.from(document.querySelector('.main').children).forEach((child) => {
     if (child.id === 'slotsPanel') return;
+    if (child.id === 'candidatesPanel') { child.style.display = 'none'; return; }
     if (child !== panel) child.style.display = opening ? 'none' : '';
   });
   if (opening) document.getElementById('slotsPanel').style.display = 'none';
