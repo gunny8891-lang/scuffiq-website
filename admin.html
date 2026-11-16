@@ -747,19 +747,24 @@ function buildModalHtml(r) {
     </div>`;
   }
 
-  // No technician price yet: enter it here so the confirmed quote can be sent
+  // Option 2: no technician price. Admin enters the all-in total and sends it.
   if (!(r.status === 'technician_confirmed' || r.technician_price)) {
+    const savedManualTotal = r.final_quote_given || '';
     html += `
     <div class="m-section">
-      <div class="m-section-title">Enter quote manually</div>
+      <div class="m-section-title">Enter total price manually</div>
       <div class="tech-confirmed-panel">
-        <p style="font-size:13px;color:var(--grey);margin-bottom:12px;">The technician hasn't submitted a price. Enter the price you agreed, and the confirmed quote below will use it.</p>
-        <div class="m-grid">
-          <div class="m-field"><label>Technician price (£, before VAT)</label><input id="manualTechPrice" type="number" min="1" step="0.01" placeholder="e.g. 207.64" style="width:100%;"></div>
-          <div class="m-field"><label>All-in price the customer pays (£)</label><input id="manualTotalPrice" type="number" min="1" step="1" placeholder="e.g. 299" style="width:100%;"></div>
-        </div>
-        <div class="m-field"><label>Notes for the customer (optional)</label><input id="manualNotes" type="text" style="width:100%;"></div>
-        <button class="btn-save" onclick="saveManualTechPrice('${r.id}')" style="width:100%;margin-top:10px;">Save price and show quote</button>
+        <p style="font-size:13px;color:var(--grey);margin-bottom:12px;">The technician hasn't submitted a price. Enter the all-in total the customer should pay, then send it.</p>
+        <div class="m-field"><label>All-in price the customer pays (£)</label><input id="manualTotalPrice" type="number" min="1" step="1" placeholder="e.g. 299" value="${esc(savedManualTotal.replace(/[^0-9.]/g, ''))}" style="width:100%;"></div>
+        <div class="m-field"><label>Notes (optional)</label><input id="manualNotes" type="text" value="${esc(r.technician_notes || '')}" style="width:100%;"></div>
+        <button class="btn-save" onclick="saveManualTotal('${r.id}')" style="width:100%;margin-top:10px;">Save total</button>
+        ${savedManualTotal ? `
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,170,0,0.2);">
+          <p style="font-size:13px;color:var(--grey);margin-bottom:8px;">Total saved: <strong style="color:#fff;">${esc(savedManualTotal)}</strong></p>
+          <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}', 0)" style="background:var(--green);width:100%;">✉ Send quote of ${esc(savedManualTotal)} to ${esc(r.customer_name||'customer')}</button>
+          <p class="save-msg save-ok" id="emailSentOk" style="text-align:center;margin-top:8px;">✓ Quote email sent to customer</p>
+          <p class="save-msg save-err" id="emailSentErr" style="text-align:center;margin-top:8px;">✗ Failed to send — check console</p>
+        </div>` : ''}
       </div>
     </div>`;
   }
@@ -1140,29 +1145,24 @@ async function sendManualQuote(id) {
   }
 }
 
-// Saves a price entered by hand (when the technician hasn't submitted one), then shows the confirmed quote
-async function saveManualTechPrice(id) {
-  const price = parseFloat(document.getElementById('manualTechPrice').value);
-  if (!price || price < 1) return alert('Enter the technician price before VAT, for example 195.');
+// Option 2: admin enters the all-in total only (no technician price). Saved as the quote total, ready to send.
+async function saveManualTotal(id) {
   const total = parseFloat(document.getElementById('manualTotalPrice').value);
-  if (!total || total < price * 1.2) return alert(`Enter the all-in price the customer pays. It must be at least £${(price * 1.2).toFixed(2)} (the technician price plus VAT).`);
+  if (!total || total < 1) return alert('Enter the all-in price the customer pays, for example 299.');
   const notes = document.getElementById('manualNotes').value.trim();
   try {
     await supaFetch(`quote_submissions?id=eq.${id}`, {
       method: 'PATCH',
       body: JSON.stringify({
-        technician_price: `£${price.toFixed(2)}`,
         final_quote_given: `£${total.toFixed(2)}`,
-        technician_availability: null,
         technician_notes: notes || null,
-        status: 'technician_confirmed',
       }),
     });
     await loadSubmissions();
     openModal(id);
   } catch (e) {
-    console.error('Save manual price error:', e);
-    alert('Could not save the price. Please try again.');
+    console.error('Save total error:', e);
+    alert('Could not save the total. Please try again.');
   }
 }
 
@@ -1582,17 +1582,22 @@ async function sendConfirmedQuoteEmail(id, combinedPrice) {
   const row = allRows.find(r => r.id === id);
   if (!row) { alert('Job not found.'); return; }
 
-  // Calculate customer price: (tech price + VAT) with margin applied on top
-  const margin = parseFloat(document.getElementById('marginPercent')?.value) || 0;
-  let baseCombined = combinedPrice;
-  if (!baseCombined) {
-    const tech = parseFloat((row.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
-    baseCombined = tech * 1.20; // tech price + 20% VAT
+  let priceStr;
+  if (!row.technician_price && row.final_quote_given) {
+    // Option 2: the admin-entered total is the price the customer pays
+    priceStr = row.final_quote_given;
+  } else {
+    // Option 1: (tech price + VAT) with margin applied on top, or the price shown in the box
+    const margin = parseFloat(document.getElementById('marginPercent')?.value) || 0;
+    let baseCombined = combinedPrice;
+    if (!baseCombined) {
+      const tech = parseFloat((row.technician_price || '0').toString().replace(/[^0-9.]/g, '')) || 0;
+      baseCombined = tech * 1.20; // tech price + 20% VAT
+    }
+    const shownPrice = parseFloat(document.getElementById('customerPriceInput')?.value);
+    const customerPrice = shownPrice > 0 ? shownPrice : baseCombined * (1 + margin / 100);
+    priceStr = '£' + customerPrice.toFixed(2);
   }
-  // Use the customer price shown in the box (it may have been rounded with the arrows)
-  const shownPrice = parseFloat(document.getElementById('customerPriceInput')?.value);
-  const customerPrice = shownPrice > 0 ? shownPrice : baseCombined * (1 + margin / 100);
-  const priceStr       = '£' + customerPrice.toFixed(2);
 
   const btn = document.getElementById('sendQuoteEmailBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
