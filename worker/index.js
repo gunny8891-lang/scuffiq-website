@@ -1794,7 +1794,11 @@ async function handleDeclineEmail(request, env, corsHeaders) {
 
     await db(env, `quote_submissions?id=eq.${quote.id}`, {
       method: "PATCH",
-      body: JSON.stringify({ status: "rejected" }),
+      body: JSON.stringify({
+        status: "rejected",
+        customer_response_at: new Date().toISOString(),
+        customer_response_type: isBodyShop ? "Body shop referral" : "Decline",
+      }),
     });
 
     return json({ success: true }, 200, corsHeaders);
@@ -1908,7 +1912,12 @@ async function handleManualQuote(request, env, corsHeaders) {
 
     await db(env, `quote_submissions?id=eq.${quote.id}`, {
       method: "PATCH",
-      body: JSON.stringify({ status: "quote_sent", final_quote_given: amountText }),
+      body: JSON.stringify({
+        status: "quote_sent",
+        final_quote_given: amountText,
+        customer_response_at: new Date().toISOString(),
+        customer_response_type: "Deposit link",
+      }),
     });
 
     return json({ success: true, url: link.url }, 200, corsHeaders);
@@ -2010,6 +2019,14 @@ async function handleBalanceLink(request, env, corsHeaders) {
         ["Deposit paid", formatPence(depositPence)],
         ["Balance due", balanceText],
       ],
+    });
+
+    await db(env, `quote_submissions?id=eq.${quote.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        customer_response_at: new Date().toISOString(),
+        customer_response_type: "Balance link",
+      }),
     });
 
     return json({ success: true, url: link.url }, 200, corsHeaders);

@@ -315,6 +315,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
             <th>Status</th>
             <th>Booked</th>
             <th>Date</th>
+            <th>Sent to customer</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -605,6 +606,11 @@ function renderTable(rows) {
         }
       </td>
       <td class="td-date">${date}</td>
+      <td style="white-space:nowrap;font-size:12px;">${
+        r.customer_response_at
+          ? `<div style="color:#ddd;font-weight:600;">${new Date(r.customer_response_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div><div style="color:var(--grey);font-size:11px;margin-top:2px;">${esc(r.customer_response_type || '')}</div>`
+          : '<span style="color:var(--grey);">—</span>'
+      }</td>
       <td style="white-space:nowrap;min-width:100px;">
         <div style="display:flex;flex-direction:column;gap:5px;">
           <button class="assign-btn" onclick="event.stopPropagation(); openAssignModal('${r.id}')">
@@ -1703,13 +1709,17 @@ async function sendConfirmedQuoteEmail(id, combinedPrice) {
     await supaFetch(`quote_submissions?id=eq.${id}`, {
       method: 'PATCH',
       body: JSON.stringify({
-        status:            'quoted',
-        final_quote_given: priceStr,
+        status:                  'quoted',
+        final_quote_given:       priceStr,
+        customer_response_at:    new Date().toISOString(),
+        customer_response_type:  'Confirmed quote',
       }),
     });
 
     const idx = allRows.findIndex(r => r.id === id);
     if (idx !== -1) {
+      allRows[idx].customer_response_at = new Date().toISOString();
+      allRows[idx].customer_response_type = 'Confirmed quote';
       allRows[idx].status = 'quoted';
       allRows[idx].final_quote_given = priceStr;
     }
