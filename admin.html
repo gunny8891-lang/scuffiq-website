@@ -796,6 +796,8 @@ function buildModalHtml(r) {
           <button class="btn-save" id="sendQuoteEmailBtn" onclick="sendConfirmedQuoteEmail('${r.id}', 0)" style="background:var(--green);width:100%;">✉ Send quote of ${esc(savedManualTotal)} to ${esc(r.customer_name||'customer')}</button>
           <p class="save-msg save-ok" id="emailSentOk" style="text-align:center;margin-top:8px;">✓ Quote email sent to customer</p>
           <p class="save-msg save-err" id="emailSentErr" style="text-align:center;margin-top:8px;">✗ Failed to send — check console</p>
+          <button class="btn-save" onclick="sendManualQuote('${r.id}')" style="background:var(--neon,#00d4ff);color:#000;width:100%;margin-top:8px;">£ Send deposit link (enter total price)</button>
+          <button class="btn-save" onclick="sendBalanceLink('${r.id}')" style="background:var(--green);width:100%;margin-top:8px;">£ Send balance after job (deposit deducted)</button>
         </div>` : ''}
       </div>
     </div>`;
