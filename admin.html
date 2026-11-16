@@ -999,8 +999,39 @@ function exportCSV() {
 }
 
 // ── Technician Assignment ─────────────────────────────────────────────────────
+// Shows the WhatsApp step after a technician is assigned. The admin presses send in WhatsApp; nothing is sent automatically.
+let lastWhatsAppText = '';
+function showWhatsAppStep(techName, techPhone, reviewLink, row) {
+  const text =
+    `Hi ${techName}, you have a new ScuffIQ job to review.\n\n` +
+    `Vehicle: ${row.vehicle_make || ''} ${row.vehicle_model || ''}\n` +
+    `Service: ${row.service_type || ''}\n` +
+    `Postcode: ${row.postcode || ''}\n\n` +
+    `Review the job and send your price here:\n${reviewLink}`;
+  lastWhatsAppText = text;
+
+  const digits = String(techPhone || '').replace(/[^0-9]/g, '');
+  const intl = digits.startsWith('0') ? '44' + digits.slice(1) : digits;
+  const waLink = intl ? `https://wa.me/${intl}?text=${encodeURIComponent(text)}` : null;
+
+  document.getElementById('assignMeta').innerHTML = `
+    <p style="margin-bottom:10px;">✓ Technician assigned. Send the job to ${esc(techName)} on WhatsApp:</p>
+    ${waLink
+      ? `<a class="btn-save" href="${waLink}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">Open WhatsApp message</a>`
+      : `<p style="color:var(--red);margin-bottom:8px;">No WhatsApp number on file for ${esc(techName)}. Use the copy button and send it another way.</p>`}
+    <button class="btn-sm" onclick="copyWhatsAppText()" style="width:100%;margin-bottom:8px;padding:10px;">Copy message</button>
+    <button class="btn-sm" onclick="closeAssignModal(); loadSubmissions();" style="width:100%;padding:10px;">Done</button>`;
+}
+
+function copyWhatsAppText() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(lastWhatsAppText).then(() => alert('Message copied.'));
+  }
+}
+
 async function openAssignModal(quoteId) {
   document.getElementById('assignQuoteId').value = quoteId;
+  document.getElementById('sendTechBtn').style.display = '';
   document.getElementById('technicianSelect').innerHTML = '<option>Loading technicians…</option>';
   document.getElementById('assignMeta').textContent = 'Loading active technicians from Supabase…';
   document.getElementById('assignModal').classList.add('open');
@@ -1015,7 +1046,7 @@ async function openAssignModal(quoteId) {
     }
 
     document.getElementById('technicianSelect').innerHTML = techs.map(t =>
-      `<option value="${t.id}" data-name="${esc(t.name)}" data-email="${esc(t.email)}" data-area="${esc(t.postcode_area || '')}">
+      `<option value="${t.id}" data-name="${esc(t.name)}" data-email="${esc(t.email)}" data-phone="${esc(t.phone || '')}" data-area="${esc(t.postcode_area || '')}">
         ${esc(t.name)} — ${esc(t.postcode_area || 'No area')}
       </option>`
     ).join('');
@@ -1091,14 +1122,14 @@ async function sendToTechnician() {
           }),
         }
       );
-      alert('Technician assigned and email sent to ' + selected.dataset.name + '.\n\nReview link:\n' + reviewLink);
     } catch (emailErr) {
       console.error('Technician email error:', emailErr);
-      alert('Technician assigned successfully.\n\nEmail could not be sent automatically — review link:\n' + reviewLink);
+      alert('Technician assigned successfully.\n\nEmail could not be sent automatically. Send the link on WhatsApp below.');
     }
 
-    closeAssignModal();
-    loadSubmissions();
+    // Option 2: prefilled WhatsApp message the admin sends themselves
+    btn.style.display = 'none';
+    showWhatsAppStep(selected.dataset.name, selected.dataset.phone, reviewLink, row);
   } catch (e) {
     console.error(e);
     alert('Failed to assign technician. Check console for details.');
