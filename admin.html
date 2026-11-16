@@ -55,6 +55,19 @@ header{background:var(--carbon);border-bottom:1px solid var(--border);padding:14
 .table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow-x:auto;}
 .table-scroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:6px;}
 .table-scroll-top>div{height:1px;}
+
+/* Job table styling */
+.table-scroll-top{height:12px;margin-bottom:8px;}
+.table-wrap{border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);}
+.table-wrap table{border-collapse:separate;border-spacing:0;}
+.table-wrap thead th{background:#0c0c0c;font-size:10.5px;letter-spacing:.09em;padding:14px 14px;border-bottom:1px solid #222;white-space:nowrap;}
+.table-wrap tbody td{padding:14px;border-bottom:1px solid #1c1c1c;vertical-align:middle;}
+.table-wrap tbody tr:last-child td{border-bottom:none;}
+.table-wrap tbody tr:hover td{background:rgba(0,212,255,.04);}
+.table-wrap::-webkit-scrollbar,.table-scroll-top::-webkit-scrollbar{height:10px;}
+.table-wrap::-webkit-scrollbar-track,.table-scroll-top::-webkit-scrollbar-track{background:#0f0f0f;border-radius:6px;}
+.table-wrap::-webkit-scrollbar-thumb,.table-scroll-top::-webkit-scrollbar-thumb{background:rgba(0,212,255,.4);border-radius:6px;}
+.table-wrap::-webkit-scrollbar-thumb:hover,.table-scroll-top::-webkit-scrollbar-thumb:hover{background:var(--neon);}
 table{width:100%;border-collapse:collapse;min-width:1400px;}
 thead tr{background:#0a0a0a;border-bottom:1px solid var(--border);}
 th{padding:11px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);text-align:left;white-space:nowrap;}
