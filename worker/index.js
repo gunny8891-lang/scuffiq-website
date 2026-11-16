@@ -1621,6 +1621,26 @@ function timingSafeEqual(a, b) {
 
 const ADMIN_EMAIL = "hello@scuffiq.com";
 
+// Copy of a customer email sent from the admin page, so the team has a record of what the customer was told
+async function copyToTeam(env, { subject, heading, intro, rows }) {
+  try {
+    await sendResendEmail(env, {
+      to: env.INTERNAL_EMAIL || "hello@scuffiq.com",
+      subject,
+      html: scuffiqEmail({
+        preheader: heading,
+        heading,
+        intro,
+        rows,
+        body: "",
+      }),
+    });
+  } catch (err) {
+    // A failed copy must not stop the customer's email from being reported as sent
+    console.error("Team copy failed:", err.message);
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // TECHNICIAN JOB PAGE — read and update a job using the technician's review token.
 // The token is the only key: the page never has direct database access.
@@ -1873,6 +1893,19 @@ async function handleManualQuote(request, env, corsHeaders) {
       }),
     });
 
+    await copyToTeam(env, {
+      subject: `Deposit link sent: ${quote.customer_name || "customer"}`,
+      heading: "Deposit link sent",
+      intro: `A deposit payment link (${depositText} now, ${amountText} total) was sent to <strong style="color:#e0e0e0;">${escapeHtml(quote.customer_name || "the customer")}</strong> (${escapeHtml(quote.customer_email)}).`,
+      rows: [
+        ["Vehicle", escapeHtml(vehicle)],
+        ["Service", escapeHtml(service)],
+        ["Total price", amountText],
+        ["Deposit now", depositText],
+        ["Balance after completion", balanceText],
+      ],
+    });
+
     await db(env, `quote_submissions?id=eq.${quote.id}`, {
       method: "PATCH",
       body: JSON.stringify({ status: "quote_sent", final_quote_given: amountText }),
@@ -1965,6 +1998,18 @@ async function handleBalanceLink(request, env, corsHeaders) {
         body: `<p style="margin:0 0 16px;"><a href="${link.url}" style="display:inline-block;background:#00d4ff;color:#000000;font-weight:700;font-size:15px;padding:14px 32px;text-decoration:none;">Pay ${balanceText} securely</a></p>
                <p style="margin:0;font-size:12px;color:#888888;word-break:break-all;">Or copy this link: <a href="${link.url}" style="color:#00d4ff;">${link.url}</a></p>`,
       }),
+    });
+
+    await copyToTeam(env, {
+      subject: `Balance link sent: ${quote.customer_name || "customer"}`,
+      heading: "Balance link sent",
+      intro: `A balance payment link of <strong style="color:#e0e0e0;">${balanceText}</strong> was sent to <strong style="color:#e0e0e0;">${escapeHtml(quote.customer_name || "the customer")}</strong> (${escapeHtml(quote.customer_email)}).`,
+      rows: [
+        ["Vehicle", escapeHtml(vehicle)],
+        ["Total price", formatPence(totalPence)],
+        ["Deposit paid", formatPence(depositPence)],
+        ["Balance due", balanceText],
+      ],
     });
 
     return json({ success: true, url: link.url }, 200, corsHeaders);
