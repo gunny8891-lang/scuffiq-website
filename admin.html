@@ -524,6 +524,11 @@ function renderTable(rows) {
     let marginDisplay = '—';
     let customerPriceDisplay = '—';
 
+    // Total entered without a technician price: show the saved total; VAT and margin need the technician price
+    if (!r.technician_price && r.final_quote_given) {
+      customerPriceDisplay = `<span style="color:var(--neon);font-weight:600;">${esc(r.final_quote_given)}</span>`;
+    }
+
     if (r.technician_price) {
       const tech     = parseFloat(r.technician_price.toString().replace(/[^0-9.]/g, '')) || 0;
       const vat      = tech * 0.20;
@@ -754,8 +759,11 @@ function buildModalHtml(r) {
     <div class="m-section">
       <div class="m-section-title">Enter total price manually</div>
       <div class="tech-confirmed-panel">
-        <p style="font-size:13px;color:var(--grey);margin-bottom:12px;">The technician hasn't submitted a price. Enter the all-in total the customer should pay, then send it.</p>
-        <div class="m-field"><label>All-in price the customer pays (£)</label><input id="manualTotalPrice" type="number" min="1" step="1" placeholder="e.g. 299" value="${esc(savedManualTotal.replace(/[^0-9.]/g, ''))}" style="width:100%;"></div>
+        <p style="font-size:13px;color:var(--grey);margin-bottom:12px;">The technician hasn't submitted a price. Enter the all-in total the customer should pay. If you also enter the technician price (before VAT), the VAT, margin and breakdown are worked out from it.</p>
+        <div class="m-grid">
+          <div class="m-field"><label>Technician price (£, before VAT) — optional</label><input id="manualTechPrice" type="number" min="1" step="0.01" placeholder="e.g. 207.64" style="width:100%;"></div>
+          <div class="m-field"><label>All-in price the customer pays (£)</label><input id="manualTotalPrice" type="number" min="1" step="1" placeholder="e.g. 299" value="${esc(savedManualTotal.replace(/[^0-9.]/g, ''))}" style="width:100%;"></div>
+        </div>
         <div class="m-field"><label>Notes (optional)</label><input id="manualNotes" type="text" value="${esc(r.technician_notes || '')}" style="width:100%;"></div>
         <button class="btn-save" onclick="saveManualTotal('${r.id}')" style="width:100%;margin-top:10px;">Save total</button>
         ${savedManualTotal ? `
@@ -1145,18 +1153,28 @@ async function sendManualQuote(id) {
   }
 }
 
-// Option 2: admin enters the all-in total only (no technician price). Saved as the quote total, ready to send.
+// Manual entry: the all-in total is required. The technician price is optional; if entered, it is saved
+// and the VAT, margin and breakdown are worked out from it (the job then shows as confirmed).
 async function saveManualTotal(id) {
   const total = parseFloat(document.getElementById('manualTotalPrice').value);
   if (!total || total < 1) return alert('Enter the all-in price the customer pays, for example 299.');
+  const tech = parseFloat(document.getElementById('manualTechPrice').value) || 0;
+  if (tech && total < tech * 1.2) {
+    return alert(`The all-in price must be at least £${(tech * 1.2).toFixed(2)} (the technician price plus VAT).`);
+  }
   const notes = document.getElementById('manualNotes').value.trim();
+  const payload = {
+    final_quote_given: `£${total.toFixed(2)}`,
+    technician_notes: notes || null,
+  };
+  if (tech) {
+    payload.technician_price = `£${tech.toFixed(2)}`;
+    payload.status = 'technician_confirmed';
+  }
   try {
     await supaFetch(`quote_submissions?id=eq.${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({
-        final_quote_given: `£${total.toFixed(2)}`,
-        technician_notes: notes || null,
-      }),
+      body: JSON.stringify(payload),
     });
     await loadSubmissions();
     openModal(id);
