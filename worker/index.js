@@ -1668,8 +1668,6 @@ async function handleTechnicianUpdate(request, env, corsHeaders) {
         technician_notes: text(body.notes, 1000),
         technician_status: "confirmed",
         status: "technician_confirmed",
-        final_quote_given: formatted,
-        actual_job_cost: formatted,
       };
     } else if (body.action === "more_info") {
       patch = {
