@@ -1703,7 +1703,8 @@ async function handleDeclineEmail(request, env, corsHeaders) {
       return json({ success: false, error: "Not authorised. Sign in to the admin page again." }, 403, corsHeaders);
     }
 
-    const { quote_id } = await request.json();
+    const payload = await request.json();
+    const quote_id = payload.quote_id;
     if (!UUID_RE.test(quote_id || "")) {
       return json({ success: false, error: "Choose a request first." }, 400, corsHeaders);
     }
@@ -1720,19 +1721,30 @@ async function handleDeclineEmail(request, env, corsHeaders) {
     const vehicle = escapeHtml(`${quote.vehicle_make || ""} ${quote.vehicle_model || ""}`.trim() || "Your vehicle");
     const service = escapeHtml(quote.service_type || "Smart repair");
 
+    // Two versions: "no availability" (default) and "damage needs a body shop"
+    const isBodyShop = payload.reason === "body_shop";
+    const intro = isBodyShop
+      ? "Thank you for sending us your photos and details. Unfortunately, on this occasion we'd advise you to get in touch with a body shop, as the damage needs more extensive repair than our smart repair service can provide."
+      : "Thank you for sending us your photos and details. Unfortunately we don't currently have any availability for this repair in your area, so we're unable to take the job on this occasion.";
+    const closing = isBodyShop
+      ? `<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:#888888;">A local body shop can assess the damage in person and give you a proper quote for the work.</p>
+<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:#888888;">We're sorry we couldn't help you this time.</p>
+<p style="margin:0;font-size:13px;line-height:1.7;color:#888888;">Kind regards,<br>The ScuffIQ team</p>`
+      : `<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:#888888;">We'd advise you to seek quotes from other providers in your area. We're sorry we couldn't help on this occasion.</p>
+<p style="margin:0;font-size:13px;line-height:1.7;color:#888888;">Thank you for thinking of ScuffIQ.</p>`;
+
     await sendResendEmail(env, {
       to: quote.customer_email,
       subject: "Your ScuffIQ repair enquiry",
       html: scuffiqEmail({
         preheader: "An update on your repair enquiry",
         heading: `Hi ${firstName},`,
-        intro: "Thank you for sending us your photos and details. Unfortunately we don't currently have any availability for this repair in your area, so we're unable to take the job on this occasion.",
+        intro,
         rows: [
           ["Vehicle", vehicle],
           ["Service", service],
         ],
-        body: `<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:#888888;">We'd advise you to seek quotes from other providers in your area. We're sorry we couldn't help on this occasion.</p>
-<p style="margin:0;font-size:13px;line-height:1.7;color:#888888;">Thank you for thinking of ScuffIQ.</p>`,
+        body: closing,
       }),
     });
 
