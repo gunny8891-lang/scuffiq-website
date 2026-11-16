@@ -59,6 +59,14 @@ export default {
       return handleDeclineEmail(request, env, corsHeaders);
     }
 
+    // Technician job page: read the job and send back confirm / more info / decline
+    if (url.pathname === "/technician-job") {
+      return handleTechnicianJob(request, env, corsHeaders);
+    }
+    if (url.pathname === "/technician-update") {
+      return handleTechnicianUpdate(request, env, corsHeaders);
+    }
+
     if (url.pathname === "/booking-slots") {
       return handleBookingSlots(request, env, corsHeaders);
     }
@@ -1606,6 +1614,89 @@ function timingSafeEqual(a, b) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const ADMIN_EMAIL = "hello@scuffiq.com";
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TECHNICIAN JOB PAGE — read and update a job using the technician's review token.
+// The token is the only key: the page never has direct database access.
+// ══════════════════════════════════════════════════════════════════════════════
+const TECH_JOB_FIELDS = [
+  "id", "customer_name", "customer_phone", "vehicle_make", "vehicle_model", "postcode",
+  "service_type", "dents_repair", "technician_price", "technician_availability",
+  "technician_notes", "technician_status", "status",
+  ...[1, 2, 3, 4, 5, 6].flatMap((n) => [`image_url_${n}`, `ai_assessment_${n}`, `ai_price_${n}`, `ai_confidence_${n}`]),
+].join(",");
+
+async function handleTechnicianJob(request, env, corsHeaders) {
+  try {
+    const { token } = await request.json().catch(() => ({}));
+    if (!UUID_RE.test(token || "")) {
+      return json({ success: false, error: "Invalid review link. No technician review token was found." }, 400, corsHeaders);
+    }
+    const rows = await db(env, `quote_submissions?technician_review_token=eq.${token}&select=${TECH_JOB_FIELDS}&limit=1`);
+    if (!rows.length) {
+      return json({ success: false, error: "This job could not be found. The review link may be invalid or expired." }, 404, corsHeaders);
+    }
+    return json({ success: true, job: rows[0] }, 200, corsHeaders);
+  } catch (err) {
+    console.error("Technician job error:", err);
+    return json({ success: false, error: "The job could not be loaded. Please try again." }, 500, corsHeaders);
+  }
+}
+
+async function handleTechnicianUpdate(request, env, corsHeaders) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    if (!UUID_RE.test(body.token || "")) {
+      return json({ success: false, error: "Invalid review link." }, 400, corsHeaders);
+    }
+    const [quote] = await db(env, `quote_submissions?technician_review_token=eq.${body.token}&select=id&limit=1`);
+    if (!quote) {
+      return json({ success: false, error: "This job could not be found. The review link may be invalid or expired." }, 404, corsHeaders);
+    }
+
+    const text = (v, max) => String(v || "").trim().slice(0, max) || null;
+    let patch;
+    if (body.action === "submit") {
+      const price = parseFloat(String(body.price || "").replace(/[^0-9.]/g, "")) || 0;
+      if (price <= 0) {
+        return json({ success: false, error: "Enter your price before submitting." }, 400, corsHeaders);
+      }
+      const formatted = `£${price.toFixed(2)}`;
+      patch = {
+        technician_price: formatted,
+        technician_availability: text(body.availability, 500),
+        technician_notes: text(body.notes, 1000),
+        technician_status: "confirmed",
+        status: "technician_confirmed",
+        final_quote_given: formatted,
+        actual_job_cost: formatted,
+      };
+    } else if (body.action === "more_info") {
+      patch = {
+        technician_status: "more_info_requested",
+        status: "technician_more_info",
+        technician_notes: text(body.notes, 1000),
+      };
+    } else if (body.action === "decline") {
+      patch = {
+        technician_status: "declined",
+        status: "technician_declined",
+        technician_notes: text(body.notes, 1000) || "Technician declined job",
+      };
+    } else {
+      return json({ success: false, error: "Unknown action." }, 400, corsHeaders);
+    }
+
+    await db(env, `quote_submissions?id=eq.${quote.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+    return json({ success: true }, 200, corsHeaders);
+  } catch (err) {
+    console.error("Technician update error:", err);
+    return json({ success: false, error: "Your update could not be saved. Please contact ScuffIQ." }, 500, corsHeaders);
+  }
+}
 
 // Admin only: sends the "we can't take this job" email and marks the quote rejected
 async function handleDeclineEmail(request, env, corsHeaders) {

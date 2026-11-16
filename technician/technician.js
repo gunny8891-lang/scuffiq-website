@@ -20,6 +20,22 @@ function getTokenFromUrl() {
   return params.get("token");
 }
 
+// Job reads and updates go through the ScuffIQ worker, using the review token
+const WORKER_URL = "https://plain-math-71e8scuffiq-api.gunny8891.workers.dev";
+
+async function postTechnicianUpdate(body) {
+  const res = await fetch(`${WORKER_URL}/technician-update`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: getTokenFromUrl(), ...body }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || "Update failed");
+  }
+  return data;
+}
+
 
 async function supaFetch(path, options = {}) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -459,9 +475,13 @@ async function loadTechnicianQuote() {
       "Loading ScuffIQ technician job..."
     );
 
-    const rows = await supaFetch(
-      `quote_submissions?select=*&technician_review_token=eq.${encodeURIComponent(token)}&limit=1`
-    );
+    const jobRes = await fetch(`${WORKER_URL}/technician-job`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const jobData = await jobRes.json().catch(() => ({}));
+    const rows = jobData.success && jobData.job ? [jobData.job] : [];
 
 
     if (!Array.isArray(rows) || rows.length === 0) {
@@ -819,15 +839,12 @@ async function submitTechnicianQuote() {
 
   try {
 
-    const result = await supaFetch(
-      `quote_submissions?id=eq.${encodeURIComponent(
-        currentQuote.id
-      )}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify(payload)
-      }
-    );
+    const result = await postTechnicianUpdate({
+      action: "submit",
+      price: price,
+      availability: availability,
+      notes: notes
+    });
 
 
     console.log(
@@ -893,26 +910,10 @@ async function requestMoreInformation(notes) {
 
   try {
 
-    await supaFetch(
-      `quote_submissions?id=eq.${encodeURIComponent(
-        currentQuote.id
-      )}`,
-      {
-        method: "PATCH",
-
-        body: JSON.stringify({
-
-          technician_status:
-            "more_info_requested",
-
-          status:
-            "technician_more_info",
-
-          technician_notes:
-            notes
-        })
-      }
-    );
+    await postTechnicianUpdate({
+      action: "more_info",
+      notes: notes
+    });
 
 
     showSuccess(
@@ -991,27 +992,10 @@ async function declineJob() {
 
   try {
 
-    await supaFetch(
-      `quote_submissions?id=eq.${encodeURIComponent(
-        currentQuote.id
-      )}`,
-      {
-        method: "PATCH",
-
-        body: JSON.stringify({
-
-          technician_status:
-            "declined",
-
-          status:
-            "technician_declined",
-
-          technician_notes:
-            notes ||
-            "Technician declined job"
-        })
-      }
-    );
+    await postTechnicianUpdate({
+      action: "decline",
+      notes: notes
+    });
 
 
     showSuccess(
