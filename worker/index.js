@@ -1754,6 +1754,24 @@ async function handleDeclineEmail(request, env, corsHeaders) {
       }),
     });
 
+    // Copy to hello@scuffiq.com so the team has a record of what the customer was told
+    const label = isBodyShop ? "Body shop referral" : "Decline";
+    await sendResendEmail(env, {
+      to: env.INTERNAL_EMAIL || "hello@scuffiq.com",
+      subject: `${label} sent: ${escapeHtml(quote.customer_name || "customer")}`,
+      html: scuffiqEmail({
+        preheader: `${label} email sent to the customer`,
+        heading: `${label} sent`,
+        intro: `A ${isBodyShop ? "body shop referral" : "decline"} email was sent to <strong style="color:#e0e0e0;">${escapeHtml(quote.customer_name || "the customer")}</strong> (${escapeHtml(quote.customer_email)}). The job is marked Rejected.`,
+        rows: [
+          ["Vehicle", vehicle],
+          ["Service", service],
+          ["Reason", isBodyShop ? "Damage needs a body shop" : "No availability in the area"],
+        ],
+        body: "",
+      }),
+    });
+
     await db(env, `quote_submissions?id=eq.${quote.id}`, {
       method: "PATCH",
       body: JSON.stringify({ status: "rejected" }),
