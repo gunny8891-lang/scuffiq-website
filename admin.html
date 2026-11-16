@@ -1727,9 +1727,12 @@ function esc(v) {
   const table = wrap.querySelector('table');
   let syncing = false;
 
+  // The table is held to the width of its box, so compare the box's scroll width with what is visible
   function sizeTop() {
-    topInner.style.width = table.scrollWidth + 'px';
-    top.style.display = table.scrollWidth > wrap.clientWidth ? 'block' : 'none';
+    const fullWidth = wrap.scrollWidth;
+    topInner.style.width = fullWidth + 'px';
+    top.style.display = fullWidth > wrap.clientWidth + 1 ? 'block' : 'none';
+    top.scrollLeft = wrap.scrollLeft;
   }
   top.addEventListener('scroll', () => {
     if (syncing) return;
@@ -1739,7 +1742,9 @@ function esc(v) {
     if (syncing) return;
     syncing = true; top.scrollLeft = wrap.scrollLeft; syncing = false;
   });
+  new ResizeObserver(sizeTop).observe(wrap);
   new ResizeObserver(sizeTop).observe(table);
+  new MutationObserver(sizeTop).observe(table, { childList: true, subtree: true });
   window.addEventListener('resize', sizeTop);
   sizeTop();
 })();
