@@ -826,7 +826,7 @@ function buildModalHtml(r) {
                 placeholder="e.g. 20"
                 min="0"
                 max="100"
-                value="${initMargin}"
+                value="${initMargin.toFixed(2)}"
                 oninput="updateCustomerPrice(${combined})"
                 style="width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;color:var(--white);outline:none;">
             </div>
