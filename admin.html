@@ -749,6 +749,8 @@ function buildModalHtml(r) {
       <div class="m-section-title">Decline job</div>
       <p style="font-size:13px;color:var(--grey);margin-bottom:10px;">Use this if we can't take the job, for example because we have no availability in the area. It sends the customer a short email suggesting other providers, and marks the job Rejected.</p>
       <button class="btn-save" onclick="declineJob('${r.id}')" style="background:#c0392b;color:#fff;width:100%;">✉ Send decline email to ${esc(r.customer_name||'customer')}</button>
+      <p style="font-size:13px;color:var(--grey);margin:14px 0 10px;">Damage too extensive for smart repair? This sends the customer a short email advising them to contact a body shop, and marks the job Rejected.</p>
+      <button class="btn-save" onclick="declineJob('${r.id}', 'body_shop')" style="background:#7f8c8d;color:#fff;width:100%;">✉ Send body shop referral to ${esc(r.customer_name||'customer')}</button>
     </div>`;
   }
 
@@ -1321,16 +1323,18 @@ function copyInvite() {
 }
 
 // Sends the decline email (we can't take this job) and marks the job rejected
-async function declineJob(id) {
+// reason: '' for "no availability", 'body_shop' for "damage needs a body shop"
+async function declineJob(id, reason = '') {
   const row = allRows.find((r) => r.id === id);
   if (!row) return;
-  if (!confirm(`Send ${row.customer_name || 'the customer'} the decline email now? Their job will be marked Rejected.`)) return;
+  const what = reason === 'body_shop' ? 'the body shop referral email' : 'the decline email';
+  if (!confirm(`Send ${row.customer_name || 'the customer'} ${what} now? Their job will be marked Rejected.`)) return;
 
   try {
     const res = await fetch('https://plain-math-71e8scuffiq-api.gunny8891.workers.dev/send-decline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
-      body: JSON.stringify({ quote_id: id }),
+      body: JSON.stringify({ quote_id: id, reason }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.success) throw new Error(data.error || 'The decline email could not be sent.');
