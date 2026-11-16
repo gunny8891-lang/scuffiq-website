@@ -434,6 +434,12 @@ async function handleNewQuote(request, env, corsHeaders) {
           body: JSON.stringify(row),
         });
 
+        if (!dbRes.ok) {
+          // Previously this failed silently. Log the reason and tell the customer to try again.
+          console.error("Quote save failed:", dbRes.status, await dbRes.text());
+          return json({ success: false, error: "We couldn't save your request. Please try again, or email hello@scuffiq.com." }, 500, corsHeaders);
+        }
+
         if (dbRes.ok) {
           const dbData = await dbRes.json();
           submissionId = dbData[0]?.id || null;
