@@ -53,6 +53,8 @@ header{background:var(--carbon);border-bottom:1px solid var(--border);padding:14
 
 /* TABLE */
 .table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow-x:auto;}
+.table-scroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:6px;}
+.table-scroll-top>div{height:1px;}
 table{width:100%;border-collapse:collapse;min-width:1400px;}
 thead tr{background:#0a0a0a;border-bottom:1px solid var(--border);}
 th{padding:11px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);text-align:left;white-space:nowrap;}
@@ -281,6 +283,7 @@ td{padding:12px 14px;font-size:13px;color:#ccc;vertical-align:middle;}
     </div>
 
     <!-- Table -->
+    <div class="table-scroll-top" id="tableScrollTop" style="display:none;"><div id="tableScrollTopInner"></div></div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -1714,6 +1717,32 @@ function esc(v) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
+
+// Scrollbar above the table, kept in step with the one below it
+(function () {
+  const wrap = document.querySelector('.table-wrap');
+  const top = document.getElementById('tableScrollTop');
+  const topInner = document.getElementById('tableScrollTopInner');
+  if (!wrap || !top || !topInner) return;
+  const table = wrap.querySelector('table');
+  let syncing = false;
+
+  function sizeTop() {
+    topInner.style.width = table.scrollWidth + 'px';
+    top.style.display = table.scrollWidth > wrap.clientWidth ? 'block' : 'none';
+  }
+  top.addEventListener('scroll', () => {
+    if (syncing) return;
+    syncing = true; wrap.scrollLeft = top.scrollLeft; syncing = false;
+  });
+  wrap.addEventListener('scroll', () => {
+    if (syncing) return;
+    syncing = true; top.scrollLeft = wrap.scrollLeft; syncing = false;
+  });
+  new ResizeObserver(sizeTop).observe(table);
+  window.addEventListener('resize', sizeTop);
+  sizeTop();
+})();
 </script>
 </body>
 </html>
